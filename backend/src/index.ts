@@ -22,6 +22,11 @@ import { globalRateLimiter } from './middlewares/rateLimiter.middleware.js';
 
 const app = express();
 
+const apiStatus = {
+  success: true,
+  message: 'Kargar FM API is running',
+};
+
 // ============================================
 // MIDDLEWARE STACK
 // ============================================
@@ -70,12 +75,27 @@ app.use(globalRateLimiter);
 
 // Health check
 app.get('/api/health', (_req, res) => {
+  res.json(apiStatus);
+});
+
+app.get('/', (_req, res) => {
+  res.json(apiStatus);
+});
+
+app.get('/api', (_req, res) => {
   res.json({
-    success: true,
-    message: 'Kargar FM API is running',
-    data: { status: 'healthy', timestamp: new Date().toISOString() },
-    timestamp: new Date().toISOString(),
-    requestId: 'health-check',
+    ...apiStatus,
+    endpoints: [
+      '/api/health',
+      '/api/services',
+      '/api/client-logos',
+      '/api/faq',
+      '/api/stats',
+      '/api/contact',
+      '/api/reviews',
+      '/api/newsletter',
+      '/api/admin',
+    ],
   });
 });
 
@@ -86,6 +106,13 @@ app.use('/api/contacts', contactRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/newsletter', newsletterRoutes);
 app.use('/api/admin', adminRoutes);
+
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    message: `Route not found: ${req.method} ${req.originalUrl}`,
+  });
+});
 
 // ============================================
 // ERROR HANDLING

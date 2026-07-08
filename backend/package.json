@@ -2,7 +2,11 @@
   "name": "kargar-fm-backend",
   "version": "1.0.0",
   "description": "Kargar Facility Management — Backend API",
+  "type": "commonjs",
   "main": "dist/src/index.js",
+  "engines": {
+    "node": "22.x"
+  },
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",

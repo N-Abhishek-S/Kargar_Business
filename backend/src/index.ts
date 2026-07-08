@@ -97,11 +97,14 @@ app.use(errorHandler);
 // START SERVER
 // ============================================
 
-const PORT = env.PORT;
-app.listen(PORT, () => {
-  logger.info(`🚀 Kargar FM API running on port ${PORT}`);
-  logger.info(`📍 Environment: ${env.NODE_ENV}`);
-  logger.info(`🌐 Frontend URL: ${env.FRONTEND_URL}`);
-});
+if (!process.env.VERCEL && env.NODE_ENV !== 'test') {
+  const PORT = env.PORT;
+  app.listen(PORT, () => {
+    logger.info(`🚀 Kargar FM API running on port ${PORT}`);
+    logger.info(`📍 Environment: ${env.NODE_ENV}`);
+    logger.info(`🌐 Frontend URL: ${env.FRONTEND_URL}`);
+  });
+}
 
+export default app;
 export { app };

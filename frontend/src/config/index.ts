@@ -14,11 +14,14 @@ function getEnvVar(key: string, fallback?: string): string {
 }
 
 export const config = {
-  /** Backend API base URL */
-  apiUrl: getEnvVar('VITE_API_URL', 'http://localhost:4000/api'),
+  /** Supabase browser client configuration */
+  supabase: {
+    url: getEnvVar('VITE_SUPABASE_URL'),
+    anonKey: getEnvVar('VITE_SUPABASE_ANON_KEY'),
+  },
 
   /** Public site URL */
-  siteUrl: getEnvVar('VITE_SITE_URL', 'http://localhost:5173'),
+  siteUrl: getEnvVar('VITE_SITE_URL', 'https://www.kargar.co.in'),
 
   /** Site name */
   siteName: getEnvVar('VITE_SITE_NAME', 'Kargar Facility Management'),

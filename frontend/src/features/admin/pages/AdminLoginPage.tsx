@@ -7,7 +7,7 @@ import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { Shield, KeyRound, Mail } from 'lucide-react';
-import { loginAdmin } from '@/api/admin';
+import { loginAdmin } from '@/services/admin.service';
 
 const loginSchema = z.object({
   email: z.string().regex(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, 'Invalid email address'),
@@ -28,8 +28,7 @@ export default function AdminLoginPage() {
 
   const onSubmit = async (data: LoginValues) => {
     try {
-      const session = await loginAdmin(data);
-      localStorage.setItem('admin_token', session.token);
+      await loginAdmin(data);
       toast.success('Logged in successfully');
       void navigate('/admin');
     } catch {

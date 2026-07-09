@@ -6,7 +6,7 @@ import {
   fetchServiceOptions,
   submitPublicReview,
   type ReviewListParams,
-} from '@/api/reviews';
+} from '@/services/reviews.service';
 import type { ReviewSubmissionPayload } from '@/types';
 
 interface QueryStateOptions {

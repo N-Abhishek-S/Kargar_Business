@@ -30,7 +30,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { BrandLogo } from '@/components/ui/BrandLogo';
-import { apiClient } from '@/api/client';
+import { submitContactMessage } from '@/services/contact.service';
 import { ReviewsSection } from '@/features/reviews/components/ReviewsSection';
 import { TrustedClientsSection } from '@/features/reviews/components/TrustedClientsSection';
 
@@ -516,6 +516,11 @@ function ContactInfo({ icon: Icon, title, text }: { icon: LucideIcon; title: str
   );
 }
 
+function getFormString(formData: FormData, key: string): string {
+  const value = formData.get(key);
+  return typeof value === 'string' ? value : '';
+}
+
 function ContactForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -527,13 +532,13 @@ function ContactForm() {
     setIsSubmitting(true);
 
     try {
-      await apiClient.post('/contact', {
-        name: String(formData.get('name') ?? ''),
-        email: String(formData.get('email') ?? ''),
-        phone: String(formData.get('phone') ?? ''),
-        company: String(formData.get('company') ?? ''),
-        subject: String(formData.get('subject') ?? ''),
-        message: String(formData.get('message') ?? ''),
+      await submitContactMessage({
+        name: getFormString(formData, 'name'),
+        email: getFormString(formData, 'email'),
+        phone: getFormString(formData, 'phone'),
+        company: getFormString(formData, 'company'),
+        subject: getFormString(formData, 'subject'),
+        message: getFormString(formData, 'message'),
       });
 
       toast.success('Message sent. We will get back to you shortly.');

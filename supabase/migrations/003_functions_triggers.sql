@@ -63,7 +63,7 @@ $$;
 -- ----------------------------------------------------------
 -- is_admin()
 -- Returns true when the current request is made by:
---   1. The service_role (backend server), OR
+--   1. The service_role trusted runtime, OR
 --   2. A user whose JWT app_metadata.role is admin/super_admin
 -- Used in RLS policies for admin-gated tables.
 -- ----------------------------------------------------------

@@ -9,8 +9,8 @@ import { Textarea } from '@/components/ui/Textarea';
 import { Select } from '@/components/ui/Select';
 import { Button } from '@/components/ui/Button';
 import { MapPin, Phone, Mail, Send } from 'lucide-react';
-import { apiClient } from '@/api/client';
 import { useScrollReveal } from '@/hooks/animations';
+import { submitContactMessage } from '@/services/contact.service';
 
 const contactSchema = z.object({
   name: z.string().min(2, 'Name is required'),
@@ -45,7 +45,7 @@ export function ContactSection() {
 
   const onSubmit = async (data: ContactFormValues) => {
     try {
-      await apiClient.post('/contacts', data);
+      await submitContactMessage(data);
       toast.success('Message sent successfully! We will get back to you soon.');
       reset();
     } catch {

@@ -6,9 +6,9 @@ import toast from 'react-hot-toast';
 import { Container } from '../ui/Container';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
-import { apiClient } from '@/api/client';
 import { config } from '@/config';
 import { BrandLogo } from '../ui/BrandLogo';
+import { subscribeToNewsletter } from '@/services/newsletter.service';
 
 // Inline SVGs for social icons to avoid lucide-react brand icon issues
 const FacebookIcon = ({ className }: { className?: string }) => (
@@ -48,8 +48,7 @@ export function Footer() {
 
   const onSubscribe = async (data: SubscribeFormValues) => {
     try {
-      // We will connect this to the real endpoint later
-      await apiClient.post('/newsletter', data);
+      await subscribeToNewsletter(data.email);
       toast.success('Successfully subscribed to our newsletter!');
       reset();
     } catch {

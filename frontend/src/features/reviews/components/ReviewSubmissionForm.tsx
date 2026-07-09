@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { CheckCircle2, ImagePlus, Lock, Send } from 'lucide-react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import toast from 'react-hot-toast';
 import { z } from 'zod';
 import { StarRating } from '@/components/ui/StarRating';
@@ -17,14 +17,14 @@ const logoTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml'] as 
 const reviewFormSchema = z.object({
   customerName: z.string().trim().min(2, 'Enter your full name').max(120),
   companyName: z.string().trim().max(160).optional(),
-  email: z.string().trim().email('Enter a valid email address').max(160),
+  email: z.string().trim().max(160).pipe(z.email('Enter a valid email address')),
   phone: z
     .string()
     .trim()
     .regex(/^[+()\-\s\d]{7,20}$/, 'Enter a valid phone number')
     .optional()
     .or(z.literal('')),
-  serviceId: z.string().uuid('Select a service'),
+  serviceId: z.uuid('Select a service'),
   location: z.string().trim().max(120).optional(),
   rating: z.number().int().min(1, 'Select a rating').max(5),
   reviewTitle: z.string().trim().min(4, 'Enter a review title').max(140),
@@ -47,6 +47,10 @@ function isAllowedContentType(
 function getDuplicateTimestamp(): number {
   const value = window.localStorage.getItem('kargar_review_submitted_at');
   return value ? Number(value) : 0;
+}
+
+function currentTimestamp(): number {
+  return Date.now();
 }
 
 async function compressRasterImage(file: File, maxDimension: number): Promise<Blob> {
@@ -136,13 +140,12 @@ export function ReviewSubmissionForm() {
   const [fileError, setFileError] = useState<string | null>(null);
 
   const serviceOptions = useMemo(() => services ?? [], [services]);
-  const duplicateBlocked = Date.now() - getDuplicateTimestamp() < duplicateWindowMs;
 
   const {
     register,
     handleSubmit,
     setValue,
-    watch,
+    control,
     reset,
     formState: { errors, isSubmitting },
   } = useForm<ReviewFormValues>({
@@ -163,8 +166,8 @@ export function ReviewSubmissionForm() {
     },
   });
 
-  const rating = watch('rating');
-  const reviewText = watch('reviewText');
+  const rating = useWatch({ control, name: 'rating' });
+  const reviewText = useWatch({ control, name: 'reviewText' });
 
   const handleFileChange = (kind: UploadKind, fileList: FileList | null) => {
     setFileError(null);
@@ -192,7 +195,7 @@ export function ReviewSubmissionForm() {
   };
 
   const onSubmit = async (values: ReviewFormValues) => {
-    if (duplicateBlocked) {
+    if (currentTimestamp() - getDuplicateTimestamp() < duplicateWindowMs) {
       toast.error('A review was already submitted recently.');
       return;
     }
@@ -218,7 +221,7 @@ export function ReviewSubmissionForm() {
       if (companyLogo) payload.companyLogo = await fileToUpload(companyLogo, 'logo');
 
       await submitReview.mutateAsync(payload);
-      window.localStorage.setItem('kargar_review_submitted_at', String(Date.now()));
+      window.localStorage.setItem('kargar_review_submitted_at', String(currentTimestamp()));
       toast.success('Review submitted for approval.');
       reset();
       setProfileImage(null);
@@ -281,7 +284,14 @@ export function ReviewSubmissionForm() {
 
       <fieldset className="kb-review-form__rating">
         <legend>Rating <b>*</b></legend>
-        <StarRating rating={rating} readonly={false} size={26} onChange={(nextRating) => setValue('rating', nextRating, { shouldValidate: true })} />
+        <StarRating
+          rating={rating}
+          readonly={false}
+          size={26}
+          onChange={(nextRating) => {
+            setValue('rating', nextRating, { shouldValidate: true });
+          }}
+        />
         {errors.rating ? <span>{errors.rating.message}</span> : null}
       </fieldset>
 
@@ -308,13 +318,25 @@ export function ReviewSubmissionForm() {
         <label>
           <ImagePlus size={18} />
           Upload Company Logo
-          <input type="file" accept={logoTypes.join(',')} onChange={(event) => handleFileChange('logo', event.currentTarget.files)} />
+          <input
+            type="file"
+            accept={logoTypes.join(',')}
+            onChange={(event) => {
+              handleFileChange('logo', event.currentTarget.files);
+            }}
+          />
           {companyLogo ? <small>{companyLogo.name}</small> : null}
         </label>
         <label>
           <ImagePlus size={18} />
           Upload Profile Photo
-          <input type="file" accept={profileTypes.join(',')} onChange={(event) => handleFileChange('profile', event.currentTarget.files)} />
+          <input
+            type="file"
+            accept={profileTypes.join(',')}
+            onChange={(event) => {
+              handleFileChange('profile', event.currentTarget.files);
+            }}
+          />
           {profileImage ? <small>{profileImage.name}</small> : null}
         </label>
       </div>
@@ -332,7 +354,7 @@ export function ReviewSubmissionForm() {
         </div>
       ) : null}
 
-      <button className="kb-btn kb-btn--primary" type="submit" disabled={isSubmitting || submitReview.isPending || duplicateBlocked}>
+      <button className="kb-btn kb-btn--primary" type="submit" disabled={isSubmitting || submitReview.isPending}>
         {isSubmitting || submitReview.isPending ? 'Submitting...' : 'Submit Review'} <Send size={18} />
       </button>
       <small className="kb-review-form__privacy"><Lock size={15} /> Your contact details remain private.</small>

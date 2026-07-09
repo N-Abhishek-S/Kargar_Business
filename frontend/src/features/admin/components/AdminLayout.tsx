@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router';
 import { 
   LayoutDashboard, 
@@ -11,6 +11,8 @@ import {
 import { clsx } from 'clsx';
 import { Button } from '@/components/ui/Button';
 import { BrandLogo } from '@/components/ui/BrandLogo';
+import { Spinner } from '@/components/ui/Spinner';
+import { getCurrentAdmin, logoutAdmin, type AdminSession } from '@/services/admin.service';
 
 const ADMIN_NAV = [
   { label: 'Dashboard', href: '/admin', icon: LayoutDashboard },
@@ -20,12 +22,51 @@ const ADMIN_NAV = [
 
 export function AdminLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [admin, setAdmin] = useState<AdminSession | null>(null);
+  const [isCheckingSession, setIsCheckingSession] = useState(true);
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    localStorage.removeItem('admin_token');
+  useEffect(() => {
+    let active = true;
+
+    void getCurrentAdmin()
+      .then((session) => {
+        if (!active) return;
+        if (!session) {
+          void navigate('/admin/login', { replace: true });
+          return;
+        }
+        setAdmin(session);
+      })
+      .catch(() => {
+        if (!active) return;
+        void navigate('/admin/login', { replace: true });
+      })
+      .finally(() => {
+        if (active) setIsCheckingSession(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [navigate]);
+
+  const handleLogout = async () => {
+    await logoutAdmin();
     void navigate('/admin/login');
   };
+
+  if (isCheckingSession) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+        <Spinner size="lg" />
+      </div>
+    );
+  }
+
+  if (!admin) {
+    return null;
+  }
 
   return (
     <div className="flex min-h-screen bg-gray-50">
@@ -112,7 +153,7 @@ export function AdminLayout() {
           
           <div className="ml-auto flex items-center gap-4">
             <div className="hidden sm:block text-sm text-gray-500 font-medium">
-              Welcome, Admin
+              Welcome, {admin.email}
             </div>
             <div className="h-8 w-8 rounded-full bg-orange-100 border border-orange-200 flex items-center justify-center font-bold text-orange-700 uppercase">
               A

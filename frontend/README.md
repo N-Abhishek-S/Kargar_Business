@@ -1,32 +1,48 @@
-# React + TypeScript + Vite
+# Kargar Facility Management Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Single deployable Vite + React application for Kargar Facility Management.
 
-Currently, two official plugins are available:
+## Architecture
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```text
+React + Vite
+  -> Supabase Auth
+  -> Supabase Database
+  -> Supabase Storage
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+There is no separate server, Node API, API gateway, or second Vercel deployment.
+
+## Environment
+
+Create `frontend/.env` with:
+
+```env
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your-anon-key
+VITE_SITE_URL=https://your-frontend.vercel.app
+VITE_SITE_NAME=Kargar Facility Management
+```
+
+Optional analytics variables may remain empty.
+
+## Development
+
+```bash
+npm install
+npm run dev
+```
+
+## Validation
+
+```bash
+npm run type-check
+npm run lint
+npm run build
+```
+
+## Deployment
+
+Deploy only the `frontend/` directory to Vercel.
+
+Admin access uses Supabase Auth. Admin users must have `app_metadata.role` set to `admin` or `super_admin` so the existing Supabase RLS policies allow admin reads and writes.

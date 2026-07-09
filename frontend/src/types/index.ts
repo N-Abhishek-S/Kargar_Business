@@ -3,22 +3,6 @@
  * Feature-specific types live in their respective feature folders.
  */
 
-/** Standard API response envelope */
-export interface ApiResponse<T> {
-  success: boolean;
-  message: string;
-  data: T | null;
-  errors?: ApiError[];
-  timestamp: string;
-  requestId: string;
-}
-
-/** API error detail */
-export interface ApiError {
-  field?: string;
-  message: string;
-}
-
 /** Navigation item for navbar/footer */
 export interface NavItem {
   label: string;
@@ -104,7 +88,7 @@ export interface ReviewStats {
   recommendationRate: number;
 }
 
-/** Review image payload sent to the backend */
+/** Review image payload uploaded to Supabase Storage */
 export interface ReviewImageUpload {
   fileName: string;
   contentType: 'image/jpeg' | 'image/png' | 'image/webp' | 'image/svg+xml';
@@ -179,8 +163,8 @@ export interface ContactMessage {
   company: string | null;
   subject: string;
   message: string;
-  status: 'new' | 'in_progress' | 'closed';
-  priority: 'low' | 'medium' | 'high';
+  status: 'new' | 'in_progress' | 'resolved' | 'closed';
+  priority: 'low' | 'medium' | 'high' | 'urgent';
   assigned_to: string | null;
   notes: string | null;
   created_at: string;

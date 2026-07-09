@@ -9,7 +9,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { Modal } from '@/components/ui/Modal';
 import { Spinner } from '@/components/ui/Spinner';
 import { StarRating } from '@/components/ui/StarRating';
-import { deleteAdminReview, fetchAdminReviews, updateAdminReview } from '@/api/admin';
+import { deleteAdminReview, fetchAdminReviews, updateAdminReview } from '@/services/admin.service';
 import type { AdminReview } from '@/types';
 
 type ReviewStatus = AdminReview['status'];

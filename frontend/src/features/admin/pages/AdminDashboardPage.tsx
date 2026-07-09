@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { Users, MessageSquare, Star, TrendingUp } from 'lucide-react';
 import { Skeleton } from '@/components/ui/Skeleton';
-import { fetchAdminDashboard } from '@/api/admin';
+import { fetchAdminDashboard } from '@/services/admin.service';
 
 export default function AdminDashboardPage() {
   const { data: stats, isLoading, isError, refetch } = useQuery({

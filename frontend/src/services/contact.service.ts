@@ -1,7 +1,3 @@
-import { supabase } from '@/supabase/client';
-import { throwSupabaseError } from '@/lib/supabaseError';
-import type { Inserts } from '@/supabase/types';
-
 export interface ContactSubmission {
   name: string;
   email: string;
@@ -12,32 +8,43 @@ export interface ContactSubmission {
   message: string;
 }
 
-function nullableText(value: string | undefined): string | null {
-  const trimmed = value?.trim();
-  if (!trimmed) return null;
-  return trimmed;
-}
+export async function submitContactMessage(input: ContactSubmission): Promise<{ success: boolean }> {
+  // If we are in local development without a running Vercel server, /api/contact won't exist natively.
+  // We point to /api/contact and let Vercel handle it in production.
+  const response = await fetch('/api/contact', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(input),
+  });
 
-export async function submitContactMessage(input: ContactSubmission): Promise<string> {
-  const subject = nullableText(input.subject) ?? `Service: ${nullableText(input.service) ?? 'General inquiry'}`;
-
-  const payload: Inserts<'contact_messages'> = {
-    name: input.name.trim(),
-    email: input.email.trim().toLowerCase(),
-    phone: nullableText(input.phone),
-    company: nullableText(input.company),
-    subject,
-    message: input.message.trim(),
-    status: 'new',
-    priority: 'medium',
-    source: 'website',
-  };
-
-  const { data, error } = await supabase.from('contact_messages').insert(payload).select('id').single();
-  throwSupabaseError(error, 'Contact form submission failed');
-  if (!data) {
-    throw new Error('Contact form submission failed');
+  interface ApiErrorResponse {
+    error?: string;
   }
 
-  return data.id;
+  if (!response.ok) {
+    let errorMessage = 'Failed to submit proposal/contact message.';
+    try {
+      const errorData = (await response.json()) as ApiErrorResponse;
+      if (errorData.error) {
+        errorMessage = errorData.error;
+      }
+    } catch {
+      // Ignore JSON parse errors if the server returns non-JSON
+    }
+    throw new Error(errorMessage);
+  }
+
+  interface ApiSuccessResponse {
+    success: boolean;
+  }
+
+  const result = (await response.json()) as ApiSuccessResponse;
+  
+  if (!result.success) {
+    throw new Error('Server reported failure without specific error message.');
+  }
+
+  return { success: true };
 }

@@ -15,6 +15,7 @@ export interface ReviewListParams {
   limit?: number;
   featured?: boolean;
   sortBy?: 'featured' | 'newest' | 'rating';
+  fetchAll?: boolean;
 }
 
 export interface ReviewSubmissionResponse {
@@ -22,8 +23,9 @@ export interface ReviewSubmissionResponse {
   status: 'pending';
 }
 
-type ActiveReviewRow = Views<'v_active_reviews'>;
+
 type ReviewSummaryRow = Views<'v_review_summary'>;
+type ActiveReviewRow = Views<'v_active_reviews'>;
 type ClientLogoRow = Tables<'client_logos'>;
 type ServiceRow = Tables<'services'>;
 type ReviewImageUploadPayload = NonNullable<ReviewSubmissionPayload['profileImage']>;
@@ -53,12 +55,10 @@ function mapActiveReview(row: ActiveReviewRow): PublicReview {
     featured: row.is_featured,
     createdAt: row.created_at,
     approvedAt: row.approved_at,
-    reply: row.admin_reply
-      ? {
-          text: row.admin_reply,
-          repliedAt: row.admin_replied_at ?? row.approved_at ?? row.created_at,
-        }
-      : null,
+    reply: row.admin_reply ? {
+      text: row.admin_reply,
+      repliedAt: row.admin_replied_at ?? '',
+    } : null,
   };
 }
 
@@ -121,18 +121,15 @@ async function uploadReviewImage(
     upsert: false,
   });
 
-  throwSupabaseError(error, 'Image upload failed');
+  if (error) {
+    throwSupabaseError(error, 'Image upload failed');
+  }
 
   const { data } = supabase.storage.from(reviewImageBucket).getPublicUrl(path);
   return data.publicUrl;
 }
 
 export async function fetchPublicReviews(params: ReviewListParams = {}): Promise<PaginatedResponse<PublicReview>> {
-  const page = params.page ?? 1;
-  const limit = params.limit ?? 12;
-  const from = (page - 1) * limit;
-  const to = from + limit - 1;
-
   let query = supabase.from('v_active_reviews').select('*', { count: 'exact' });
 
   if (params.featured) {
@@ -150,8 +147,24 @@ export async function fetchPublicReviews(params: ReviewListParams = {}): Promise
       .order('created_at', { ascending: false });
   }
 
-  const { data, error, count } = await query.range(from, to);
-  throwSupabaseError(error, 'Reviews could not be loaded');
+  let page = 1;
+  let limit = 1000; // default large limit if fetching all
+  
+  if (!params.fetchAll) {
+    page = params.page ?? 1;
+    limit = params.limit ?? 12;
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+    query = query.range(from, to);
+  } else {
+    // Even when fetching all, Supabase has a default limit of 1000 rows.
+    query = query.limit(1000);
+  }
+
+  const { data, error, count } = await query;
+  if (error) {
+    throwSupabaseError(error, 'Reviews could not be loaded');
+  }
 
   const total = count ?? 0;
   return {
@@ -226,14 +239,11 @@ export async function submitPublicReview(payload: ReviewSubmissionPayload): Prom
     },
   };
 
-  const { data, error } = await supabase.from('reviews').insert(record).select('id, status').single();
+  const { error } = await supabase.from('reviews').insert(record);
   throwSupabaseError(error, 'Review submission failed');
-  if (!data) {
-    throw new Error('Review submission failed');
-  }
 
   return {
-    id: data.id,
+    id: 'submitted',
     status: 'pending',
   };
 }

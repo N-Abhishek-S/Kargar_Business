@@ -1,5 +1,7 @@
 import { type SyntheticEvent, useEffect, useState } from 'react';
 import { useLocation } from 'react-router';
+import { useInView } from 'react-intersection-observer';
+import CountUpModule from 'react-countup';
 import toast from 'react-hot-toast';
 import {
   ArrowRight,
@@ -34,6 +36,11 @@ import { submitContactMessage } from '@/services/contact.service';
 import { ReviewsSection } from '@/features/reviews/components/ReviewsSection';
 import { TrustedClientsSection } from '@/features/reviews/components/TrustedClientsSection';
 
+const CountUp =
+  typeof CountUpModule === 'function'
+    ? CountUpModule
+    : (CountUpModule as unknown as { default: typeof CountUpModule }).default;
+
 interface NavItem {
   label: string;
   href: string;
@@ -53,6 +60,8 @@ interface StatItem {
   note?: string;
   icon: LucideIcon;
   accent?: boolean;
+  countTo?: number;
+  suffix?: string;
 }
 
 interface FeatureItem {
@@ -112,10 +121,10 @@ const services: ServiceItem[] = [
 ];
 
 const heroStats: StatItem[] = [
-  { value: '10+', label: 'Years of Experience', icon: ShieldCheck },
-  { value: '2,000+', label: 'Skilled Workforce', icon: Users },
-  { value: '50+', label: 'Sites Managed', icon: Building2 },
-  { value: '10,000+', label: 'Happy Clients', icon: Smile },
+  { value: '10+', countTo: 10, suffix: '+', label: 'Years of Experience', icon: ShieldCheck },
+  { value: '2,000+', countTo: 2000, suffix: '+', label: 'Skilled Workforce', icon: Users },
+  { value: '50+', countTo: 50, suffix: '+', label: 'Sites Managed', icon: Building2 },
+  { value: '10,000+', countTo: 10000, suffix: '+', label: 'Happy Clients', icon: Smile },
 ];
 
 const serviceStats: StatItem[] = [
@@ -299,15 +308,87 @@ function HomeHero() {
   );
 }
 
-function StatsOverlay({ stats }: { stats: StatItem[] }) {
+function usePrefersReducedMotion() {
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+  );
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+    const handleChange = (event: MediaQueryListEvent) => {
+      setPrefersReducedMotion(event.matches);
+    };
+
+    mediaQuery.addEventListener('change', handleChange);
+
+    return () => {
+      mediaQuery.removeEventListener('change', handleChange);
+    };
+  }, []);
+
+  return prefersReducedMotion;
+}
+
+function AnimatedStatValue({
+  value,
+  countTo,
+  suffix = '',
+  active,
+  reducedMotion,
+  delay,
+}: {
+  value: string;
+  countTo?: number;
+  suffix?: string;
+  active: boolean;
+  reducedMotion: boolean;
+  delay: number;
+}) {
+  if (reducedMotion) {
+    return <>{value}</>;
+  }
+
+  if (!active || countTo === undefined) {
+    return <>0{suffix}</>;
+  }
+
   return (
-    <div className="kb-hero-stats">
-      {stats.map(({ value, label, icon: Icon }) => (
-        <article key={label}>
-          <Icon size={35} />
+    <CountUp
+      start={0}
+      end={countTo}
+      duration={2.15}
+      delay={delay}
+      suffix={suffix}
+      separator=","
+      useEasing
+    />
+  );
+}
+
+function StatsOverlay({ stats }: { stats: StatItem[] }) {
+  const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.35 });
+  const prefersReducedMotion = usePrefersReducedMotion();
+
+  return (
+    <div className="kb-hero-stats" ref={ref} role="list" aria-label="Kargar operational performance statistics">
+      {stats.map(({ value, countTo, suffix, label, icon: Icon }, index) => (
+        <article key={label} role="listitem" aria-label={`${value} ${label}`}>
+          <span className="kb-hero-stat-card__icon" aria-hidden="true">
+            <Icon size={34} strokeWidth={2.35} />
+          </span>
           <div>
-            <strong>{value}</strong>
-            <span>{label}</span>
+            <strong className="kb-hero-stat-card__value" aria-hidden="true">
+              <AnimatedStatValue
+                value={value}
+                countTo={countTo}
+                suffix={suffix}
+                active={inView}
+                reducedMotion={prefersReducedMotion}
+                delay={index * 0.12}
+              />
+            </strong>
+            <span className="kb-hero-stat-card__label">{label}</span>
           </div>
         </article>
       ))}
@@ -541,7 +622,7 @@ function ContactForm() {
         message: getFormString(formData, 'message'),
       });
 
-      toast.success('Message sent. We will get back to you shortly.');
+      toast.success('Proposal submitted successfully! We will get back to you shortly.');
       form.reset();
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Message could not be sent.';

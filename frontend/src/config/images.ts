@@ -86,16 +86,3 @@ export const serviceImages: Record<string, ImageConfig> = {
     sizes: '(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 20vw',
   },
 };
-
-/**
- * Client logos for the infinite slider.
- * Grayscale by default, color on hover (handled in CSS).
- */
-export const clientLogos: ImageConfig[] = [
-  { src: '/images/clients/cbre.svg', alt: 'CBRE', width: 120, height: 40 },
-  { src: '/images/clients/iss.svg', alt: 'ISS Facility Services', width: 120, height: 40 },
-  { src: '/images/clients/jll.svg', alt: 'JLL', width: 120, height: 40 },
-  { src: '/images/clients/sodexo.svg', alt: 'Sodexo', width: 120, height: 40 },
-  { src: '/images/clients/quess.svg', alt: 'Quess Corp', width: 120, height: 40 },
-  { src: '/images/clients/knight-frank.svg', alt: 'Knight Frank', width: 120, height: 40 },
-];

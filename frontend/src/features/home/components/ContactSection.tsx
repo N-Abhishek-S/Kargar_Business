@@ -46,10 +46,10 @@ export function ContactSection() {
   const onSubmit = async (data: ContactFormValues) => {
     try {
       await submitContactMessage(data);
-      toast.success('Message sent successfully! We will get back to you soon.');
+      toast.success('Proposal submitted successfully! We will get back to you soon.');
       reset();
     } catch {
-      toast.error('Failed to send message. Please try again.');
+      toast.error('Unable to send message. Please try again.');
     }
   };
 

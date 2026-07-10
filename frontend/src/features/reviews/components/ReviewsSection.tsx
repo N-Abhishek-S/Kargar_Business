@@ -33,17 +33,13 @@ function ReviewCard({ review }: { review: PublicReview }) {
   return (
     <article className="kb-review-card">
       <div className="kb-review-card__top">
-        {review.profileImage ? (
-          <img src={review.profileImage} alt={`${review.customerName} profile`} loading="lazy" decoding="async" />
-        ) : (
-          <span aria-hidden="true">{getInitials(review.customerName)}</span>
-        )}
+        <span aria-hidden="true">{getInitials(review.customerName)}</span>
         <div>
           <strong>{review.customerName}</strong>
           <small>{review.companyName}</small>
         </div>
         {review.companyLogo ? (
-          <img className="kb-review-card__logo" src={review.companyLogo} alt={`${review.companyName} logo`} loading="lazy" decoding="async" />
+          <img className="kb-review-card__logo" src={review.companyLogo} alt={`${review.companyName} logo`} loading="lazy" decoding="async" style={{ objectFit: 'contain' }} />
         ) : null}
       </div>
 
@@ -57,6 +53,18 @@ function ReviewCard({ review }: { review: PublicReview }) {
       <Quote className="kb-review-card__quote" size={34} aria-hidden="true" />
       <h3>{review.reviewTitle}</h3>
       <p>{review.reviewText}</p>
+
+      {review.profileImage ? (
+        <div className="mt-4 mb-4 w-full rounded-xl overflow-hidden shadow-sm border border-gray-100">
+          <img 
+            src={review.profileImage} 
+            alt="Review gallery" 
+            loading="lazy" 
+            decoding="async" 
+            className="w-full h-48 object-cover transition-transform hover:scale-105 duration-500" 
+          />
+        </div>
+      ) : null}
 
       <div className="kb-review-card__meta">
         <span>{review.serviceName}</span>
@@ -87,7 +95,7 @@ function ReviewSkeleton() {
 
 export function ReviewsSection() {
   const { ref, inView } = useInView({ triggerOnce: true, rootMargin: '220px' });
-  const reviewsQuery = usePublicReviews({ page: 1, limit: 9, sortBy: 'featured' }, { enabled: inView });
+  const reviewsQuery = usePublicReviews({ sortBy: 'featured', fetchAll: true }, { enabled: inView });
   const statsQuery = useReviewStats({ enabled: inView });
   const [swiper, setSwiper] = useState<SwiperCore | null>(null);
 
@@ -188,7 +196,10 @@ export function ReviewsSection() {
                   disableOnInteraction: false,
                   pauseOnMouseEnter: true,
                 }}
+                observer={true}
+                observeParents={true}
                 lazyPreloadPrevNext={1}
+                autoHeight={true}
                 breakpoints={{
                   760: { slidesPerView: 2 },
                   1180: { slidesPerView: 2 },

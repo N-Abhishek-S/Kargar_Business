@@ -20,6 +20,13 @@ export const config = {
     anonKey: getEnvVar('VITE_SUPABASE_ANON_KEY'),
   },
 
+  /** EmailJS email delivery configuration */
+  emailjs: {
+    publicKey: getEnvVar('VITE_EMAILJS_PUBLIC_KEY'),
+    serviceId: getEnvVar('VITE_EMAILJS_SERVICE_ID'),
+    templateId: getEnvVar('VITE_EMAILJS_TEMPLATE_ID'),
+  },
+
   /** Public site URL */
   siteUrl: getEnvVar('VITE_SITE_URL', 'https://www.kargar.co.in'),
 

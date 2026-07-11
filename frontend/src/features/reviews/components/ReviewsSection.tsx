@@ -1,107 +1,21 @@
-import { useMemo, useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useInView } from 'react-intersection-observer';
-import type SwiperCore from 'swiper';
-import { A11y, Autoplay, Keyboard, Pagination } from 'swiper/modules';
-import { Swiper, SwiperSlide } from 'swiper/react';
-import 'swiper/css';
-import 'swiper/css/pagination';
-import { BadgeCheck, ChevronLeft, ChevronRight, MapPin, Quote, RefreshCw } from 'lucide-react';
-import { StarRating } from '@/components/ui/StarRating';
+import { PenLine } from 'lucide-react';
 import { config } from '@/config';
-import { usePublicReviews, useReviewStats } from '@/features/reviews/hooks';
-import type { PublicReview } from '@/types';
+import { useReviewStats } from '@/features/reviews/hooks';
 import { ReviewSubmissionForm } from './ReviewSubmissionForm';
-
-function formatReviewDate(value: string): string {
-  return new Intl.DateTimeFormat('en-IN', {
-    month: 'short',
-    year: 'numeric',
-  }).format(new Date(value));
-}
-
-function getInitials(name: string): string {
-  return name
-    .split(' ')
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? '')
-    .join('');
-}
-
-function ReviewCard({ review }: { review: PublicReview }) {
-  return (
-    <article className="kb-review-card">
-      <div className="kb-review-card__top">
-        <span aria-hidden="true">{getInitials(review.customerName)}</span>
-        <div>
-          <strong>{review.customerName}</strong>
-          <small>{review.companyName}</small>
-        </div>
-        {review.companyLogo ? (
-          <img className="kb-review-card__logo" src={review.companyLogo} alt={`${review.companyName} logo`} loading="lazy" decoding="async" style={{ objectFit: 'contain' }} />
-        ) : null}
-      </div>
-
-      <div className="kb-review-card__rating">
-        <StarRating rating={review.rating} size={18} />
-        {review.verified ? (
-          <span><BadgeCheck size={15} /> Verified</span>
-        ) : null}
-      </div>
-
-      <Quote className="kb-review-card__quote" size={34} aria-hidden="true" />
-      <h3>{review.reviewTitle}</h3>
-      <p>{review.reviewText}</p>
-
-      {review.profileImage ? (
-        <div className="mt-4 mb-4 w-full rounded-xl overflow-hidden shadow-sm border border-gray-100">
-          <img 
-            src={review.profileImage} 
-            alt="Review gallery" 
-            loading="lazy" 
-            decoding="async" 
-            className="w-full h-48 object-cover transition-transform hover:scale-105 duration-500" 
-          />
-        </div>
-      ) : null}
-
-      <div className="kb-review-card__meta">
-        <span>{review.serviceName}</span>
-        {review.location ? <span><MapPin size={14} /> {review.location}</span> : null}
-        <time dateTime={review.createdAt}>{formatReviewDate(review.createdAt)}</time>
-      </div>
-
-      {review.reply ? (
-        <div className="kb-review-card__reply">
-          <strong>Kargar reply</strong>
-          <p>{review.reply.text}</p>
-        </div>
-      ) : null}
-    </article>
-  );
-}
-
-function ReviewSkeleton() {
-  return (
-    <div className="kb-review-skeleton" aria-hidden="true">
-      <span />
-      <span />
-      <span />
-      <span />
-    </div>
-  );
-}
+import { ReviewsCarousel } from './ReviewsCarousel';
+import { ReviewsHeader } from './ReviewsHeader';
+import { ReviewTrustBar } from './ReviewTrustBar';
+import { Modal } from '@/components/ui/Modal';
 
 export function ReviewsSection() {
   const { ref, inView } = useInView({ triggerOnce: true, rootMargin: '220px' });
-  const reviewsQuery = usePublicReviews({ sortBy: 'featured', fetchAll: true }, { enabled: inView });
   const statsQuery = useReviewStats({ enabled: inView });
-  const [swiper, setSwiper] = useState<SwiperCore | null>(null);
+  const [isFormOpen, setIsFormOpen] = useState(false);
 
-  const reviews = reviewsQuery.data?.items ?? [];
   const stats = statsQuery.data;
-  const hasReviews = reviews.length > 0;
 
   const aggregateSchema = useMemo(() => {
     if (!stats || stats.totalReviews === 0) return null;
@@ -122,102 +36,51 @@ export function ReviewsSection() {
   }, [stats]);
 
   return (
-    <section className="kb-reviews" id="reviews" ref={ref}>
-      {aggregateSchema ? (
+    <section className="relative w-full py-20 lg:py-32 bg-(--surface-secondary) overflow-hidden" id="reviews" ref={ref}>
+      {aggregateSchema && (
         <Helmet>
           <script type="application/ld+json">{JSON.stringify(aggregateSchema)}</script>
         </Helmet>
-      ) : null}
+      )}
 
-      <div className="kb-container">
-        <div className="kb-reviews__header">
-          <div>
-            <p className="kb-eyebrow">Client Reviews</p>
-            <h2>Verified feedback from business teams we support</h2>
-            <span aria-hidden="true" />
-          </div>
-          <div className="kb-reviews__stats" aria-label="Review statistics">
-            <article>
-              <strong>{stats ? stats.averageRating.toFixed(1) : '0.0'}</strong>
-              <span>Average Rating</span>
-            </article>
-            <article>
-              <strong>{stats?.totalReviews ?? 0}</strong>
-              <span>Total Reviews</span>
-            </article>
-            <article>
-              <strong>{stats?.recommendationRate ?? 0}%</strong>
-              <span>Recommend</span>
-            </article>
-          </div>
-        </div>
+      {/* Decorative Background Blob */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[1200px] h-[500px] bg-blue-50/50 rounded-full blur-3xl opacity-50 pointer-events-none" aria-hidden="true" />
 
-        <div className="kb-reviews__grid">
-          <div className="kb-reviews__carousel">
-            <div className="kb-reviews__controls">
-              <button type="button" aria-label="Previous review" onClick={() => swiper?.slidePrev()}>
-                <ChevronLeft size={20} />
-              </button>
-              <button type="button" aria-label="Next review" onClick={() => swiper?.slideNext()}>
-                <ChevronRight size={20} />
-              </button>
-            </div>
-
-            {reviewsQuery.isLoading || !inView ? (
-              <div className="kb-review-skeleton-grid">
-                <ReviewSkeleton />
-                <ReviewSkeleton />
+      <div className="relative z-10 w-full">
+        <ReviewsHeader />
+        
+        {/* Full width carousel */}
+        <ReviewsCarousel inView={inView} onOpenForm={() => { setIsFormOpen(true); }} />
+        
+        <div className="max-w-[1440px] mx-auto px-[clamp(24px,4vw,80px)] mt-8">
+          <ReviewTrustBar />
+          
+          <div className="mt-12 flex justify-center">
+            <button
+              onClick={() => { setIsFormOpen(true); }}
+              className="group relative inline-flex items-center gap-3 px-8 py-4 bg-(--surface-primary) border border-gray-200 shadow-(--shadow-premium-card) rounded-full hover:shadow-(--shadow-premium-hover) hover:-translate-y-1 transition-all duration-(--duration-slow) ease-(--ease-spring)"
+            >
+              <div className="flex items-center justify-center w-10 h-10 bg-orange-50 text-(--text-accent) rounded-full group-hover:bg-(--text-accent) group-hover:text-white transition-colors duration-300">
+                <PenLine size={20} />
               </div>
-            ) : reviewsQuery.isError ? (
-              <div className="kb-review-state" role="alert">
-                <h3>Reviews could not be loaded</h3>
-                <p>Please try again.</p>
-                <button type="button" onClick={() => { void reviewsQuery.refetch(); }}>
-                  <RefreshCw size={16} /> Retry
-                </button>
-              </div>
-            ) : !hasReviews ? (
-              <div className="kb-review-state">
-                <h3>No approved reviews yet</h3>
-                <p>Approved customer reviews will appear here automatically.</p>
-              </div>
-            ) : (
-              <Swiper
-                modules={[A11y, Autoplay, Keyboard, Pagination]}
-                onSwiper={setSwiper}
-                slidesPerView={1}
-                spaceBetween={22}
-                loop={reviews.length > 2}
-                grabCursor
-                keyboard={{ enabled: true }}
-                pagination={{ clickable: true }}
-                autoplay={{
-                  delay: 5200,
-                  disableOnInteraction: false,
-                  pauseOnMouseEnter: true,
-                }}
-                observer={true}
-                observeParents={true}
-                lazyPreloadPrevNext={1}
-                autoHeight={true}
-                breakpoints={{
-                  760: { slidesPerView: 2 },
-                  1180: { slidesPerView: 2 },
-                }}
-                className="kb-review-swiper"
-              >
-                {reviews.map((review) => (
-                  <SwiperSlide key={review.id}>
-                    <ReviewCard review={review} />
-                  </SwiperSlide>
-                ))}
-              </Swiper>
-            )}
+              <span className="text-(--text-primary) font-bold tracking-tight text-lg pr-2">
+                Write a Review
+              </span>
+            </button>
           </div>
-
-          <ReviewSubmissionForm />
         </div>
       </div>
+
+      <Modal
+        isOpen={isFormOpen}
+        onClose={() => { setIsFormOpen(false); }}
+        maxWidth="2xl"
+        className="!p-0 overflow-hidden"
+      >
+        <div className="bg-(--surface-primary) p-2 sm:p-4">
+          <ReviewSubmissionForm />
+        </div>
+      </Modal>
     </section>
   );
 }

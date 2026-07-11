@@ -45,11 +45,17 @@ export function ContactSection() {
 
   const onSubmit = async (data: ContactFormValues) => {
     try {
-      await submitContactMessage(data);
-      toast.success('Proposal submitted successfully! We will get back to you soon.');
+      const result = await submitContactMessage(data);
+
+      if (result.emailSent) {
+        toast.success('Proposal submitted successfully! Our team will contact you shortly.');
+      } else {
+        toast.success('Proposal received successfully! Our team has your request.\nEmail notification is temporarily unavailable.', { duration: 5000 });
+      }
+
       reset();
     } catch {
-      toast.error('Unable to send message. Please try again.');
+      toast.error('Unable to submit request. Please try again.');
     }
   };
 

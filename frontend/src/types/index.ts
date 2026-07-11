@@ -70,6 +70,7 @@ export interface PublicReview {
   reviewText: string;
   recommend: boolean;
   profileImage: string | null;
+  images?: string[];
   companyLogo: string | null;
   verified: boolean;
   featured: boolean;

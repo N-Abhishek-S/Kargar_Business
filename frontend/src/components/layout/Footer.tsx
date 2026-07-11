@@ -2,6 +2,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Mail, MapPin, Phone } from 'lucide-react';
+import { Link } from 'react-router';
 import toast from 'react-hot-toast';
 import { Container } from '../ui/Container';
 import { Button } from '../ui/Button';
@@ -145,6 +146,7 @@ export function Footer() {
             <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
             <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
             <a href="#" className="hover:text-white transition-colors">Sitemap</a>
+            <Link to="/admin/login" className="hover:text-white transition-colors">Admin Portal</Link>
           </div>
         </div>
       </Container>

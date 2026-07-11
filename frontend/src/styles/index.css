@@ -1,4 +1,6 @@
 @import 'tailwindcss';
+@import './tokens.css';
+
 
 /* ============================================
    KARGAR FM — Design System
@@ -5742,7 +5744,7 @@
   place-items: center;
   border: 1px solid rgb(226 232 240 / 0.95);
   border-radius: 24px;
-  padding: 28px;
+  padding: 16px;
   color: inherit;
   background: rgb(255 255 255 / 0.96);
   box-shadow: 0 20px 60px rgb(15 23 42 / 0.08);
@@ -5788,33 +5790,33 @@
 }
 
 .kb-client-logo-card[data-logo-shape='ultrawide'] {
-  --kb-logo-inline-size: 80%;
-  --kb-logo-max-inline: 80%;
-  --kb-logo-max-block: 48%;
+  --kb-logo-inline-size: 92%;
+  --kb-logo-max-inline: 92%;
+  --kb-logo-max-block: 85%;
 }
 
 .kb-client-logo-card[data-logo-shape='wide'] {
-  --kb-logo-inline-size: 76%;
-  --kb-logo-max-inline: 76%;
-  --kb-logo-max-block: 58%;
+  --kb-logo-inline-size: 88%;
+  --kb-logo-max-inline: 88%;
+  --kb-logo-max-block: 85%;
 }
 
 .kb-client-logo-card[data-logo-shape='balanced'] {
-  --kb-logo-block-size: 66%;
-  --kb-logo-max-inline: 72%;
-  --kb-logo-max-block: 66%;
+  --kb-logo-block-size: 85%;
+  --kb-logo-max-inline: 88%;
+  --kb-logo-max-block: 85%;
 }
 
 .kb-client-logo-card[data-logo-shape='square'] {
-  --kb-logo-block-size: 68%;
-  --kb-logo-max-inline: 64%;
-  --kb-logo-max-block: 68%;
+  --kb-logo-block-size: 88%;
+  --kb-logo-max-inline: 88%;
+  --kb-logo-max-block: 88%;
 }
 
 .kb-client-logo-card[data-logo-shape='tall'] {
-  --kb-logo-block-size: 72%;
-  --kb-logo-max-inline: 50%;
-  --kb-logo-max-block: 72%;
+  --kb-logo-block-size: 92%;
+  --kb-logo-max-inline: 80%;
+  --kb-logo-max-block: 92%;
 }
 
 .kb-client-carousel__controls {

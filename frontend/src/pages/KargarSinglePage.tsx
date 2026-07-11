@@ -613,7 +613,7 @@ function ContactForm() {
     setIsSubmitting(true);
 
     try {
-      await submitContactMessage({
+      const result = await submitContactMessage({
         name: getFormString(formData, 'name'),
         email: getFormString(formData, 'email'),
         phone: getFormString(formData, 'phone'),
@@ -622,10 +622,15 @@ function ContactForm() {
         message: getFormString(formData, 'message'),
       });
 
-      toast.success('Proposal submitted successfully! We will get back to you shortly.');
+      if (result.emailSent) {
+        toast.success('Proposal submitted successfully! Our team will contact you shortly.');
+      } else {
+        toast.success('Proposal received successfully! Our team has your request.\nEmail notification is temporarily unavailable.', { duration: 5000 });
+      }
+
       form.reset();
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Message could not be sent.';
+      const message = error instanceof Error ? error.message : 'Unable to submit request. Please try again.';
       toast.error(message);
     } finally {
       setIsSubmitting(false);

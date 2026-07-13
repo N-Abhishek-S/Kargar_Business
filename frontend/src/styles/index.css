@@ -630,7 +630,7 @@
 
 .k-building__tower--main {
   right: 80px;
-  width: 390px;
+  width: 100%; max-width: 390px;
   height: 390px;
   padding: 64px 28px 28px;
   display: grid;
@@ -668,7 +668,7 @@
   position: absolute;
   right: 62px;
   bottom: 40px;
-  width: 520px;
+  width: 100%; max-width: 520px;
   height: 84px;
   border-radius: 8px;
   transform: skewX(-18deg);
@@ -4419,30 +4419,32 @@
     display: none;
   }
 
-  .kb-home-hero__inner {
+  .kb-site .kb-home-hero__inner {
     min-height: auto;
     padding-block: 28px 0;
+    justify-content: center;
   }
 
-  .kb-home-hero__copy,
-  .kb-services-hero__copy {
+  .kb-site .kb-home-hero__copy,
+  .kb-site .kb-services-hero__copy {
     width: 100%;
-    max-width: calc(100vw - 28px);
-    min-width: 0;
+    max-width: 384px;
+    margin-inline: auto;
+    padding-inline: 16px;
   }
 
-  .kb-home-hero h1,
-  .kb-services-hero h1,
-  .kb-contact-left h1 {
+  .kb-site .kb-home-hero h1,
+  .kb-site .kb-services-hero h1,
+  .kb-site .kb-contact-left h1 {
     font-size: 36px;
     line-height: 1.12;
     max-width: 100%;
     overflow-wrap: normal;
   }
 
-  .kb-home-hero h1,
-  .kb-home-hero__copy > p:not(.kb-eyebrow) {
-    width: min(100%, calc(100vw - 56px));
+  .kb-site .kb-home-hero h1,
+  .kb-site .kb-home-hero__copy > p:not(.kb-eyebrow) {
+    width: 100%;
   }
 
   .kb-home-hero h1 span {

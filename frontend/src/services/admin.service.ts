@@ -26,22 +26,25 @@ type ReviewRow = Tables<'reviews'>;
 type ServiceRow = Tables<'services'>;
 type ContactRow = Tables<'contact_messages'>;
 
-function getAdminRole(user: User): AdminSession['role'] | null {
-  const metadata = user.app_metadata as Record<string, unknown>;
-  const role = metadata.role;
-  return role === 'admin' || role === 'super_admin' ? role : null;
-}
+async function mapAdminSession(user: User): Promise<AdminSession> {
+  const { data, error } = await supabase
+    .from('admin_users')
+    .select('role, is_active')
+    .eq('id', user.id)
+    .single();
 
-function mapAdminSession(user: User): AdminSession {
-  const role = getAdminRole(user);
-  if (!role) {
+  if (error) {
     throw new Error('This account is not authorized for the admin portal');
+  }
+
+  if (!data.is_active) {
+    throw new Error('This admin account has been deactivated');
   }
 
   return {
     userId: user.id,
     email: user.email ?? '',
-    role,
+    role: data.role as 'admin' | 'super_admin',
   };
 }
 
@@ -98,7 +101,7 @@ async function fetchServiceNameMap(rows: ReviewRow[]): Promise<Map<string, strin
   const { data, error } = await supabase.from('services').select('id, name').in('id', serviceIds);
   throwSupabaseError(error, 'Service names could not be loaded');
 
-  return new Map((data ?? []).map((service: Pick<ServiceRow, 'id' | 'name'>) => [service.id, service.name]));
+  return new Map(data.map((service: Pick<ServiceRow, 'id' | 'name'>) => [service.id, service.name]));
 }
 
 export async function loginAdmin(payload: AdminLoginPayload): Promise<AdminSession> {
@@ -109,12 +112,10 @@ export async function loginAdmin(payload: AdminLoginPayload): Promise<AdminSessi
 
   throwSupabaseError(error, 'Invalid admin credentials');
 
-  if (!data.user) {
-    throw new Error('Invalid admin credentials');
-  }
+
 
   try {
-    return mapAdminSession(data.user);
+    return await mapAdminSession(data.user);
   } catch (error) {
     await supabase.auth.signOut();
     throw error;
@@ -123,13 +124,16 @@ export async function loginAdmin(payload: AdminLoginPayload): Promise<AdminSessi
 
 export async function getCurrentAdmin(): Promise<AdminSession | null> {
   const { data, error } = await supabase.auth.getSession();
-  throwSupabaseError(error, 'Admin session could not be loaded');
 
-  if (!data.session?.user) {
+  if (error || !data.session?.user) {
     return null;
   }
 
-  return mapAdminSession(data.session.user);
+  try {
+    return await mapAdminSession(data.session.user);
+  } catch {
+    return null;
+  }
 }
 
 export async function logoutAdmin(): Promise<void> {
@@ -140,18 +144,17 @@ export async function logoutAdmin(): Promise<void> {
 export async function fetchAdminDashboard(): Promise<AdminDashboardSummary> {
   const { data, error } = await supabase.from('v_admin_dashboard').select('*').single();
   throwSupabaseError(error, 'Dashboard data could not be loaded');
-  if (!data) {
-    throw new Error('Dashboard data could not be loaded');
-  }
+
+  const getNum = (val: number | null | undefined): number => val ?? 0;
 
   return {
-    totalReviews: data.total_reviews,
-    pendingReviews: data.pending_reviews,
-    approvedReviews: data.approved_reviews,
-    averageRating: data.average_rating,
-    totalContacts: data.total_contacts,
-    newContacts: data.new_contacts,
-    totalSubscribers: data.active_subscribers,
+    totalReviews: getNum(data.total_reviews),
+    pendingReviews: getNum(data.pending_reviews),
+    approvedReviews: getNum(data.approved_reviews),
+    averageRating: getNum(data.average_rating),
+    totalContacts: getNum(data.total_contacts),
+    newContacts: getNum(data.new_contacts),
+    totalSubscribers: getNum(data.active_subscribers),
   };
 }
 
@@ -170,7 +173,7 @@ export async function fetchAdminReviews(): Promise<PaginatedResponse<AdminReview
 
   throwSupabaseError(error, 'Reviews could not be loaded');
 
-  const rows = data ?? [];
+  const rows = data;
   const serviceNames = await fetchServiceNameMap(rows);
   const total = count ?? rows.length;
 
@@ -237,7 +240,7 @@ export async function fetchAdminContacts(): Promise<PaginatedResponse<ContactMes
 
   throwSupabaseError(error, 'Contact inquiries could not be loaded');
 
-  const rows = data ?? [];
+  const rows = data;
   const total = count ?? rows.length;
 
   return {

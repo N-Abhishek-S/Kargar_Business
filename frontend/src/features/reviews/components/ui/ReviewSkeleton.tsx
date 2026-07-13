@@ -1,6 +1,6 @@
 export function ReviewSkeleton() {
   return (
-    <div className="kb-enterprise-card relative flex h-full min-h-[400px] flex-col overflow-hidden rounded-[var(--radius-2xl)] bg-[var(--surface-primary)] p-10 border border-gray-100 shadow-sm animate-pulse">
+    <div className="kb-enterprise-card relative flex h-full min-h-96 flex-col overflow-hidden rounded-[var(--radius-2xl)] bg-[var(--surface-primary)] p-10 border border-gray-100 shadow-sm animate-pulse">
       {/* Header Skeleton */}
       <header className="mb-6 flex items-start justify-between relative z-10">
         <div className="w-12 h-12 bg-gray-200 rounded-lg opacity-50" />

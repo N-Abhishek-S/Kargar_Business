@@ -110,25 +110,52 @@ export function ReviewDetailsModal({
         </div>
 
         <div className="p-6 sm:p-10 lg:px-16 lg:py-12">
-          {/* Header Metadata */}
-          <header className="flex flex-wrap items-center justify-between gap-4 mb-8">
-            <ReviewStars rating={safeRating} />
-            <div className="flex items-center gap-3 text-sm font-medium text-(--text-muted)">
-              {review.verified && (
-                <span className="flex items-center gap-1 text-green-600 bg-green-50 px-2 py-1 rounded-md">
-                  <BadgeCheck size={16} /> Verified Client
+          {/* Premium Header Profile & Metadata */}
+          <header className="flex flex-col gap-6 mb-10">
+            {/* Identity */}
+            <div className="flex flex-col sm:flex-row sm:items-center gap-5">
+              <Avatar
+                src={review.companyLogo ?? ''}
+                alt={`${companyName} logo`}
+                fallbackInitials={getInitials(companyName !== 'Unknown Company' ? companyName : customerName)}
+                size="xl"
+                className="border border-gray-100 shadow-sm shrink-0"
+              />
+              <div className="flex flex-col">
+                <strong className="text-xl sm:text-2xl font-bold text-(--text-primary) tracking-tight break-words">
+                  {customerName}
+                </strong>
+                <span className="text-[17px] font-semibold text-(--color-navy-500) mt-0.5 break-words">
+                  {companyName}
                 </span>
-              )}
-              {formattedDate && (
-                <span className="flex items-center gap-1 text-gray-500">
-                  <Calendar size={16} /> {formattedDate}
-                </span>
-              )}
+                {review.location && (
+                  <span className="text-sm font-medium text-(--text-muted) mt-1">
+                    {review.location}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Ratings & Badges */}
+            <div className="flex flex-wrap items-center gap-4 pt-4 border-t border-gray-50/80">
+              <ReviewStars rating={safeRating} />
+              <div className="flex items-center gap-3 text-sm font-medium text-(--text-muted)">
+                {review.verified && (
+                  <span className="flex items-center gap-1.5 text-green-700 bg-green-50/80 px-2.5 py-1 rounded-md border border-green-100/50">
+                    <BadgeCheck size={16} className="text-green-600" /> Verified Client
+                  </span>
+                )}
+                {formattedDate && (
+                  <span className="flex items-center gap-1.5 text-gray-500 bg-gray-50/50 px-2.5 py-1 rounded-md border border-gray-100/50">
+                    <Calendar size={16} /> {formattedDate}
+                  </span>
+                )}
+              </div>
             </div>
           </header>
 
           {/* Full Review Text */}
-          <div className="prose prose-lg max-w-none mb-10">
+          <div className="w-full mb-10">
             <p className="text-(--text-primary) font-medium text-[22px] leading-[1.6] tracking-tight whitespace-pre-wrap break-words">
               {reviewText}
             </p>
@@ -141,31 +168,7 @@ export function ReviewDetailsModal({
             </div>
           )}
 
-          <hr className="border-t border-gray-100 my-8" />
 
-          {/* Modal Footer Identity */}
-          <footer className="flex flex-col sm:flex-row sm:items-center gap-6">
-            <Avatar
-              src={review.companyLogo ?? ''}
-              alt={`${companyName} logo`}
-              fallbackInitials={getInitials(companyName !== 'Unknown Company' ? companyName : customerName)}
-              size="xl"
-              className="border border-gray-100 shadow-sm shrink-0"
-            />
-            <div className="flex flex-col">
-              <strong className="text-xl font-bold text-(--text-primary) break-words">
-                {customerName}
-              </strong>
-              <span className="text-md font-semibold text-(--color-navy-500) mt-0.5 break-words">
-                {companyName}
-              </span>
-              {review.location && (
-                <span className="text-sm font-medium text-(--text-muted) mt-1">
-                  {review.location}
-                </span>
-              )}
-            </div>
-          </footer>
         </div>
       </div>
     </Modal>

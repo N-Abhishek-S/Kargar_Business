@@ -6,7 +6,8 @@ import {
   Star, 
   LogOut, 
   Menu,
-  X
+  X,
+  ExternalLink
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { Button } from '@/components/ui/Button';
@@ -128,7 +129,15 @@ export function AdminLayout() {
           </ul>
         </nav>
 
-        <div className="border-t border-gray-100 p-4">
+        <div className="flex flex-col gap-2 border-t border-gray-100 p-4">
+          <Button 
+            variant="outline"
+            className="w-full justify-start text-navy-700 hover:bg-gray-50"
+            leftIcon={<ExternalLink className="h-4 w-4" />}
+            onClick={() => { window.open('/', '_blank', 'noopener,noreferrer'); }}
+          >
+            View Website
+          </Button>
           <Button 
             variant="ghost" 
             className="w-full justify-start text-red-600 hover:bg-red-50 hover:text-red-700"
@@ -163,7 +172,9 @@ export function AdminLayout() {
 
         {/* Page Content */}
         <div className="flex-1 overflow-auto p-4 sm:p-6 lg:p-8">
-          <Outlet />
+          <div className="max-w-7xl mx-auto w-full">
+            <Outlet />
+          </div>
         </div>
       </main>
     </div>

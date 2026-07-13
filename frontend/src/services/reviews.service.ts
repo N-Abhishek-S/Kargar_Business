@@ -16,6 +16,8 @@ export interface ReviewListParams {
   featured?: boolean;
   sortBy?: 'featured' | 'newest' | 'rating';
   fetchAll?: boolean;
+  rating?: number | null;
+  search?: string;
 }
 
 export interface ReviewSubmissionResponse {
@@ -40,21 +42,21 @@ function normalizeNullable(value: string | undefined): string | null {
 
 function mapActiveReview(row: ActiveReviewRow): PublicReview {
   return {
-    id: row.id,
-    customerName: row.customer_name,
+    id: row.id ?? '',
+    customerName: row.customer_name ?? '',
     companyName: row.company_name ?? 'Kargar client',
     serviceName: row.service_name ?? 'Facility Management',
-    location: row.location,
-    rating: row.rating,
-    reviewTitle: row.review_title,
-    reviewText: row.review_text,
-    recommend: row.recommend,
-    profileImage: row.profile_image_url,
-    companyLogo: row.company_logo_url,
+    location: row.location ?? '',
+    rating: row.rating ?? 5,
+    reviewTitle: row.review_title ?? '',
+    reviewText: row.review_text ?? '',
+    recommend: row.recommend ?? true,
+    profileImage: row.profile_image_url ?? '',
+    companyLogo: row.company_logo_url ?? '',
     verified: true,
-    featured: row.is_featured,
-    createdAt: row.created_at,
-    approvedAt: row.approved_at,
+    featured: row.is_featured ?? false,
+    createdAt: row.created_at ?? '',
+    approvedAt: row.approved_at ?? '',
     reply: row.admin_reply ? {
       text: row.admin_reply,
       repliedAt: row.admin_replied_at ?? '',
@@ -136,6 +138,15 @@ export async function fetchPublicReviews(params: ReviewListParams = {}): Promise
     query = query.eq('is_featured', true);
   }
 
+  if (params.rating) {
+    query = query.eq('rating', params.rating);
+  }
+
+  if (params.search && params.search.trim() !== '') {
+    const searchTerm = `%${params.search.trim()}%`;
+    query = query.or(`company_name.ilike.${searchTerm},customer_name.ilike.${searchTerm},review_text.ilike.${searchTerm}`);
+  }
+
   if (params.sortBy === 'rating') {
     query = query.order('rating', { ascending: false });
   } else if (params.sortBy === 'newest') {
@@ -168,7 +179,7 @@ export async function fetchPublicReviews(params: ReviewListParams = {}): Promise
 
   const total = count ?? 0;
   return {
-    items: (data ?? []).map(mapActiveReview),
+    items: data.map(mapActiveReview),
     total,
     page,
     limit,
@@ -193,10 +204,10 @@ export async function fetchReviewStats(): Promise<ReviewStats> {
   };
 
   return {
-    averageRating: summary.average_rating,
-    totalReviews: summary.total_reviews,
+    averageRating: summary.average_rating ?? 0,
+    totalReviews: summary.total_reviews ?? 0,
     recommendationRate:
-      summary.total_reviews > 0 ? Math.round((summary.would_recommend / summary.total_reviews) * 100) : 0,
+      (summary.total_reviews ?? 0) > 0 ? Math.round(((summary.would_recommend ?? 0) / (summary.total_reviews ?? 1)) * 100) : 0,
   };
 }
 
@@ -251,19 +262,19 @@ export async function submitPublicReview(payload: ReviewSubmissionPayload): Prom
 export async function fetchServiceOptions(): Promise<ServiceOption[]> {
   const { data, error } = await supabase
     .from('services')
-    .select('id, name, slug, description, is_active, display_order')
+    .select('*')
     .eq('is_active', true)
     .order('display_order', { ascending: true })
     .order('name', { ascending: true });
 
   throwSupabaseError(error, 'Services could not be loaded');
-  return (data ?? []).map(mapService);
+  return data.map(mapService);
 }
 
 export async function fetchClientLogos(): Promise<ClientLogo[]> {
   const { data, error } = await supabase
     .from('client_logos')
-    .select('id, company_name, logo_url, alt_text, website, industry, priority, is_featured, display_order, is_active')
+    .select('*')
     .eq('is_active', true)
     .order('is_featured', { ascending: false })
     .order('priority', { ascending: false })
@@ -271,5 +282,5 @@ export async function fetchClientLogos(): Promise<ClientLogo[]> {
     .order('company_name', { ascending: true });
 
   throwSupabaseError(error, 'Client logos could not be loaded');
-  return (data ?? []).map(mapClientLogo);
+  return data.map(mapClientLogo);
 }

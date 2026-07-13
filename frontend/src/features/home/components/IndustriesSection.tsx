@@ -18,8 +18,8 @@ export function IndustriesSection() {
   return (
     <section id="industries" ref={containerRef} className="section-padding bg-navy-900 text-white relative overflow-hidden">
       {/* Decorative background elements */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-orange-500/10 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-navy-500/20 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute top-0 right-0 w-[80vw] h-[80vw] max-w-[500px] max-h-[500px] bg-orange-500/10 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-[60vw] h-[60vw] max-w-[400px] max-h-[400px] bg-navy-500/20 rounded-full blur-[100px] pointer-events-none" />
 
       <Container className="relative z-10">
         <SectionHeading
@@ -31,7 +31,7 @@ export function IndustriesSection() {
           data-gsap-reveal="fade-up"
         />
 
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-6 mt-12">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-6 mt-12 max-w-sm mx-auto sm:max-w-none">
           {industries.map((industry, index) => {
             const Icon = industry.icon;
             return (

@@ -1,5 +1,5 @@
 import { type SyntheticEvent, useEffect, useState } from 'react';
-import { useLocation } from 'react-router';
+import { useLocation, useNavigate } from 'react-router';
 import { useInView } from 'react-intersection-observer';
 import CountUpModule from 'react-countup';
 import toast from 'react-hot-toast';
@@ -687,10 +687,13 @@ function OperationsCard() {
 }
 
 function Footer() {
+  const navigate = useNavigate();
   return (
     <footer className="kb-footer">
       <div className="kb-container kb-footer__inner">
-        <BrandLogo />
+        <div onDoubleClick={() => navigate('/admin/login')} className="cursor-pointer select-none">
+          <BrandLogo />
+        </div>
         <span>Copyright 2026 Kargar Business Services. All rights reserved.</span>
       </div>
     </footer>

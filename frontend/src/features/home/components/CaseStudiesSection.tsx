@@ -27,7 +27,7 @@ export function CaseStudiesSection() {
   return (
     <section id="case-studies" className="section-padding bg-navy-900 text-white" ref={containerRef}>
       <Container>
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6 max-w-sm mx-auto md:max-w-none md:mx-0 w-full">
           <SectionHeading
             dark
             eyebrow="Success Stories"
@@ -45,7 +45,7 @@ export function CaseStudiesSection() {
           </Button>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-8">
+        <div className="grid lg:grid-cols-2 gap-8 max-w-sm mx-auto md:max-w-none md:mx-0 w-full">
           {caseStudies.map((study, index) => (
             <div 
               key={index}

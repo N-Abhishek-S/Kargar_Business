@@ -69,7 +69,8 @@ export function ReviewCard({ review, isActive, onReadMore }: ReviewCardProps) {
   return (
     <article
       className={clsx(
-        'kb-enterprise-card relative flex h-full flex-col overflow-hidden rounded-2xl bg-(--surface-primary) p-10',
+        'kb-enterprise-card relative flex flex-col overflow-hidden rounded-2xl bg-(--surface-primary) p-8 sm:p-10 w-full',
+        'h-full min-h-96 shrink-0', // Fluid flex height
         'transition-all duration-(--duration-slow) ease-(--ease-smooth)',
         'border border-gray-100 hover:shadow-(--shadow-premium-hover) hover:-translate-y-2',
         isActive ? 'shadow-(--shadow-premium-card) border-blue-100/50 scale-[1.015]' : 'shadow-sm',
@@ -83,27 +84,27 @@ export function ReviewCard({ review, isActive, onReadMore }: ReviewCardProps) {
         <ReviewStars rating={safeRating} />
       </header>
 
-      {/* Body: Review Text (Flex grow ensures equal heights) */}
-      <div className="relative z-10 flex-grow mt-4 flex flex-col min-h-0">
-        <p
-          ref={textRef}
-          className={clsx(
-            'text-(--text-primary) font-medium leading-relaxed tracking-tight break-words',
-            // Font size roughly 20-22px depending on viewport
-            'text-[clamp(1.125rem,1.5vw,1.375rem)]',
-            'line-clamp-5 sm:line-clamp-6' // Mobile allows 6 lines
-          )}
-        >
-          {reviewText}
-        </p>
+      {/* Body: Review Text */}
+      <div className="relative z-10 flex-grow mt-4 flex flex-col min-h-0 overflow-hidden">
+        <div ref={textRef} className="overflow-hidden flex-grow relative">
+          <p
+            className={clsx(
+              'text-(--text-primary) font-medium leading-relaxed tracking-tight break-words',
+              'text-[clamp(1.125rem,1.5vw,1.375rem)]',
+              'line-clamp-4 sm:line-clamp-5'
+            )}
+          >
+            {reviewText}
+          </p>
+        </div>
         
         {isClamped && (
           <button
             type="button"
             onClick={() => { onReadMore?.(review); }}
-            className="mt-2 text-left text-[15px] font-semibold text-(--color-navy-400) hover:text-(--color-navy-600) transition-colors focus:outline-none focus:ring-2 focus:ring-(--color-navy-100) rounded-sm w-max"
+            className="mt-3 text-left text-[15px] font-semibold text-orange-500 hover:text-orange-600 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500/20 rounded-sm w-max shrink-0 inline-flex items-center gap-1"
           >
-            Read More
+            Read full review &rarr;
           </button>
         )}
 

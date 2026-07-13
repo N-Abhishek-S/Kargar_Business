@@ -63,7 +63,7 @@ export function ContactSection() {
     <section id="contact" className="section-padding bg-white relative" ref={containerRef}>
       <Container>
         <div className="grid lg:grid-cols-2 gap-16">
-          <div data-gsap-reveal="fade-right">
+          <div data-gsap-reveal="fade-right" className="max-w-sm mx-auto lg:max-w-none lg:mx-0 w-full">
             <SectionHeading
               eyebrow="Get in Touch"
               title="Ready to Optimize Your Facility?"
@@ -112,7 +112,7 @@ export function ContactSection() {
             </div>
           </div>
 
-          <div data-gsap-reveal="fade-left" className="bg-white p-8 rounded-2xl shadow-card border border-gray-100">
+          <div data-gsap-reveal="fade-left" className="bg-white p-8 rounded-2xl shadow-card border border-gray-100 max-w-sm mx-auto lg:max-w-none lg:mx-0 w-full">
             <h3 className="text-2xl font-bold text-navy-900 mb-6">Send us a message</h3>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div className="grid sm:grid-cols-2 gap-4">

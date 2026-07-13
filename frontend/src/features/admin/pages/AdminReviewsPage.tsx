@@ -159,7 +159,7 @@ export default function AdminReviewsPage() {
 
   if (isLoading) {
     return (
-      <div className="flex h-full min-h-[400px] items-center justify-center">
+      <div className="flex h-full min-h-96 items-center justify-center">
         <Spinner size="lg" />
       </div>
     );

@@ -76,7 +76,7 @@ export function ServicesSection() {
 
         <div
           ref={containerRef}
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-7"
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-7 max-w-sm mx-auto sm:max-w-none"
         >
           {services.map((service, index) => {
             const Icon = service.icon;

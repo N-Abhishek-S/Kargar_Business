@@ -28,7 +28,7 @@ export function HeroSection() {
       </div>
 
       <Container className="relative z-10 text-white pt-12 md:pt-24 pb-20">
-        <div className="max-w-4xl">
+        <div className="max-w-sm sm:max-w-4xl mx-auto md:mx-0 text-left w-full">
           <div 
             data-gsap-reveal="fade-up" 
             className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 backdrop-blur-sm"

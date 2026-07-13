@@ -12,6 +12,7 @@ import { usePublicReviews } from '@/features/reviews/hooks';
 import { ReviewSkeleton } from './ui/ReviewSkeleton';
 import { ReviewDetailsModal } from './ReviewDetailsModal';
 import { useReviewModal } from '@/features/reviews/hooks/useReviewModal';
+import type { ReviewListParams } from '@/services/reviews.service';
 
 // --- Loading & Empty States ---
 function ReviewEmptyState({ onOpenForm }: { onOpenForm: () => void }) {
@@ -37,10 +38,11 @@ function ReviewEmptyState({ onOpenForm }: { onOpenForm: () => void }) {
 interface ReviewsCarouselProps {
   inView: boolean;
   onOpenForm: () => void;
+  params?: ReviewListParams;
 }
 
-export function ReviewsCarousel({ inView, onOpenForm }: ReviewsCarouselProps) {
-  const reviewsQuery = usePublicReviews({ sortBy: 'featured', fetchAll: true }, { enabled: inView });
+export function ReviewsCarousel({ inView, onOpenForm, params }: ReviewsCarouselProps) {
+  const reviewsQuery = usePublicReviews(params ?? { sortBy: 'featured', fetchAll: true }, { enabled: inView });
   const [swiper, setSwiper] = useState<SwiperCore | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
 
@@ -67,7 +69,7 @@ export function ReviewsCarousel({ inView, onOpenForm }: ReviewsCarouselProps) {
   if (reviewsQuery.isLoading || !inView) {
     return (
       <div className="w-full max-w-[1440px] mx-auto px-[clamp(24px,4vw,80px)] py-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 h-[520px]">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 min-h-[520px]">
           <ReviewSkeleton />
           <ReviewSkeleton />
           <ReviewSkeleton />
@@ -79,7 +81,7 @@ export function ReviewsCarousel({ inView, onOpenForm }: ReviewsCarouselProps) {
   if (reviewsQuery.isError) {
     return (
       <div className="w-full max-w-[1440px] mx-auto px-6 py-8">
-        <div className="flex flex-col items-center justify-center py-20 text-center bg-white rounded-2xl border border-gray-100 shadow-sm h-[520px]">
+        <div className="flex flex-col items-center justify-center py-20 text-center bg-white rounded-2xl border border-gray-100 shadow-sm min-h-[520px]">
           <p className="text-red-500 mb-4">Failed to load reviews. Please try again.</p>
           <button
             onClick={() => { void reviewsQuery.refetch(); }}
@@ -94,7 +96,7 @@ export function ReviewsCarousel({ inView, onOpenForm }: ReviewsCarouselProps) {
 
   if (!hasReviews) {
     return (
-      <div className="w-full max-w-3xl mx-auto px-6 py-8 h-[520px]">
+      <div className="w-full max-w-3xl mx-auto px-6 py-8 min-h-[520px]">
         <ReviewEmptyState onOpenForm={onOpenForm} />
       </div>
     );

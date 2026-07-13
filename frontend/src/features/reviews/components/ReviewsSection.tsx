@@ -7,13 +7,16 @@ import { useReviewStats } from '@/features/reviews/hooks';
 import { ReviewSubmissionForm } from './ReviewSubmissionForm';
 import { ReviewsCarousel } from './ReviewsCarousel';
 import { ReviewsHeader } from './ReviewsHeader';
-import { ReviewTrustBar } from './ReviewTrustBar';
+import { ReviewStats } from './ReviewStats';
 import { Modal } from '@/components/ui/Modal';
+import { ReviewsFilter } from './ReviewsFilter';
+import type { ReviewListParams } from '@/services/reviews.service';
 
 export function ReviewsSection() {
   const { ref, inView } = useInView({ triggerOnce: true, rootMargin: '220px' });
   const statsQuery = useReviewStats({ enabled: inView });
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [filterParams, setFilterParams] = useState<ReviewListParams>({ sortBy: 'featured', fetchAll: true });
 
   const stats = statsQuery.data;
 
@@ -44,16 +47,18 @@ export function ReviewsSection() {
       )}
 
       {/* Decorative Background Blob */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[1200px] h-[500px] bg-blue-50/50 rounded-full blur-3xl opacity-50 pointer-events-none" aria-hidden="true" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-screen-xl min-h-96 md:h-[500px] bg-blue-50/50 rounded-full blur-3xl opacity-50 pointer-events-none" aria-hidden="true" />
 
       <div className="relative z-10 w-full">
         <ReviewsHeader />
         
+        <ReviewsFilter onFilterChange={setFilterParams} />
+
         {/* Full width carousel */}
-        <ReviewsCarousel inView={inView} onOpenForm={() => { setIsFormOpen(true); }} />
+        <ReviewsCarousel inView={inView} onOpenForm={() => { setIsFormOpen(true); }} params={filterParams} />
         
-        <div className="max-w-[1440px] mx-auto px-[clamp(24px,4vw,80px)] mt-8">
-          <ReviewTrustBar />
+        <div className="w-full max-w-screen-2xl mx-auto px-[clamp(24px,4vw,80px)] mt-8">
+          <ReviewStats />
           
           <div className="mt-12 flex justify-center">
             <button

@@ -2,7 +2,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Mail, MapPin, Phone } from 'lucide-react';
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import toast from 'react-hot-toast';
 import { Container } from '../ui/Container';
 import { Button } from '../ui/Button';
@@ -47,6 +47,12 @@ export function Footer() {
     resolver: zodResolver(subscribeSchema),
   });
 
+  const navigate = useNavigate();
+
+  const handleLogoClick = () => {
+    void navigate('/admin/login');
+  };
+
   const onSubscribe = async (data: SubscribeFormValues) => {
     try {
       await subscribeToNewsletter(data.email);
@@ -62,11 +68,13 @@ export function Footer() {
   return (
     <footer className="bg-navy-950 pt-20 text-gray-300">
       <Container>
-        <div className="grid grid-cols-1 gap-12 md:grid-cols-2 lg:grid-cols-4 lg:gap-8 pb-16 border-b border-navy-800">
+        <div className="grid grid-cols-1 gap-12 md:grid-cols-2 lg:grid-cols-4 lg:gap-8 pb-16 border-b border-navy-800 max-w-sm mx-auto md:max-w-none md:mx-0 w-full">
           
           {/* Column 1: Brand & About */}
           <div className="flex flex-col gap-6">
-            <BrandLogo className="w-48 overflow-hidden rounded bg-white p-2" loading="lazy" />
+            <div onDoubleClick={handleLogoClick} className="cursor-pointer inline-block w-max select-none" aria-label="Kargar Admin Portal Trigger">
+              <BrandLogo className="w-48 overflow-hidden rounded bg-white p-2" loading="lazy" />
+            </div>
             <p className="text-sm leading-relaxed">
               Pune facility management partner delivering integrated solutions 
               that optimize operations, enhance safety, and create superior workplace experiences.

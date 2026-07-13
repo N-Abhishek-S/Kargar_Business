@@ -42,6 +42,17 @@ export function Navbar() {
     return () => { window.removeEventListener('scroll', handleScroll); };
   }, []);
 
+  // Handle escape key to close mobile menu
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isMobileMenuOpen) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => { window.removeEventListener('keydown', handleKeyDown); };
+  }, [isMobileMenuOpen]);
+
   // Lock body scroll when mobile menu is open
   useEffect(() => {
     if (isMobileMenuOpen) {
@@ -83,7 +94,7 @@ export function Navbar() {
           {/* Logo */}
           <button
             onClick={() => { handleNavClick('hero'); }}
-            className="group flex w-[150px] items-center focus-ring rounded-sm sm:w-[178px]"
+            className="group flex w-36 items-center focus-ring rounded-sm sm:w-44"
             aria-label="Kargar FM Home"
           >
             <BrandLogo imageClassName="transition-transform duration-300 group-hover:scale-[1.02]" />
@@ -141,16 +152,39 @@ export function Navbar() {
         </div>
       </Container>
 
-      {/* Mobile Drawer */}
+      {/* Mobile Drawer Overlay */}
+      {isMobileMenuOpen && (
+        <div
+          className="fixed inset-0 z-[60] bg-navy-950/60 backdrop-blur-sm md:hidden transition-opacity"
+          onClick={() => { setIsMobileMenuOpen(false); }}
+          aria-hidden="true"
+        />
+      )}
+
+      {/* Mobile Drawer Content */}
       <div
         className={clsx(
-          'fixed inset-x-0 bottom-0 top-[76px] z-modal-backdrop bg-white transition-transform duration-300 ease-in-out md:hidden',
+          'fixed inset-y-0 right-0 z-[70] w-4/5 max-w-sm bg-white shadow-2xl transition-transform duration-300 ease-in-out md:hidden flex flex-col',
           isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full',
         )}
         aria-hidden={!isMobileMenuOpen}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Mobile Navigation"
       >
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+          <BrandLogo imageClassName="w-28" />
+          <button
+            className="rounded-full p-2 text-gray-500 hover:bg-gray-100 hover:text-navy-900 focus-ring"
+            onClick={() => { setIsMobileMenuOpen(false); }}
+            aria-label="Close navigation menu"
+          >
+            <X className="h-6 w-6" />
+          </button>
+        </div>
+        
         <div className="flex h-full flex-col overflow-y-auto px-6 py-8">
-          <nav aria-label="Mobile Navigation">
+          <nav aria-label="Mobile Navigation Links">
             <ul className="flex flex-col gap-2">
               {NAV_LINKS.map((link) => {
                 const isActive = activeSection === link.sectionId;

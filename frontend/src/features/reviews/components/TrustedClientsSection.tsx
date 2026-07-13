@@ -1,10 +1,9 @@
 import { useMemo, useState, type SyntheticEvent } from 'react';
 import { useInView } from 'react-intersection-observer';
 import type SwiperCore from 'swiper';
-import { A11y, Autoplay, Keyboard, Pagination } from 'swiper/modules';
+import { A11y, Autoplay, Keyboard } from 'swiper/modules';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import 'swiper/css';
-import 'swiper/css/pagination';
 import { ChevronLeft, ChevronRight, RefreshCw, UsersRound } from 'lucide-react';
 import { useClientLogos } from '@/features/reviews/hooks';
 import type { ClientLogo } from '@/types';
@@ -47,6 +46,7 @@ function ClientLogoCard({ logo, priority = false }: ClientLogoCardProps) {
       decoding="async"
       width={260}
       height={130}
+      className="grayscale hover:grayscale-0 transition-all duration-300 ease-in-out w-full h-full object-contain"
       onLoad={classifyLogoShape}
     />
   );
@@ -93,7 +93,7 @@ function ClientNavigation({ swiper }: { swiper: SwiperCore | null }) {
 function ClientCarousel({ logos, onSwiper }: { logos: ClientLogo[]; onSwiper: (swiper: SwiperCore) => void }) {
   return (
     <Swiper
-      modules={[A11y, Autoplay, Keyboard, Pagination]}
+      modules={[A11y, Autoplay, Keyboard]}
       onSwiper={onSwiper}
       slidesPerView={1.18}
       centeredSlides={false}
@@ -101,9 +101,9 @@ function ClientCarousel({ logos, onSwiper }: { logos: ClientLogo[]; onSwiper: (s
       loop={logos.length > 5}
       grabCursor
       keyboard={{ enabled: true }}
-      pagination={{ clickable: true, dynamicBullets: true, dynamicMainBullets: 5 }}
+      speed={5000}
       autoplay={{
-        delay: 2600,
+        delay: 0,
         disableOnInteraction: false,
         pauseOnMouseEnter: true,
       }}
@@ -114,7 +114,8 @@ function ClientCarousel({ logos, onSwiper }: { logos: ClientLogo[]; onSwiper: (s
         1120: { slidesPerView: 4, spaceBetween: 28 },
         1380: { slidesPerView: 5, spaceBetween: 30 },
       }}
-      className="kb-client-logo-swiper"
+      className="kb-client-logo-swiper !ease-linear"
+      style={{ '--swiper-wrapper-transition-timing-function': 'linear' } as React.CSSProperties}
       aria-label="Trusted client logos"
     >
       {logos.map((logo, index) => (

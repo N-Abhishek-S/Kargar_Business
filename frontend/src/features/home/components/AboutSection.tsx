@@ -23,7 +23,7 @@ export function AboutSection() {
         <div className="grid grid-cols-1 items-center gap-16 lg:grid-cols-2">
           
           {/* Content */}
-          <div>
+          <div className="max-w-sm mx-auto lg:max-w-none lg:mx-0 w-full">
             <SectionHeading
               data-gsap-reveal="fade-right"
               eyebrow="Who We Are"
@@ -54,7 +54,7 @@ export function AboutSection() {
           </div>
 
           {/* Image */}
-          <div data-gsap-reveal="fade-left" className="relative">
+          <div data-gsap-reveal="fade-left" className="relative max-w-sm mx-auto lg:max-w-none lg:mx-0 w-full">
             <div className="absolute -inset-4 bg-orange-100 rounded-[2rem] transform rotate-3 scale-105 z-0" />
             <OptimizedImage
               src={aboutImages.office?.src ?? ''}

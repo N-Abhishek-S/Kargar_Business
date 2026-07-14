@@ -10,9 +10,10 @@ export interface NewsletterResult {
   message?: string;
 }
 
-export const newsletterService = {
-  subscribe: async (input: NewsletterSubscription): Promise<NewsletterResult> => {
+export const subscribeToNewsletter = async (email: string): Promise<NewsletterResult> => {
+    const input: NewsletterSubscription = { email };
     if (!input.email.trim()) {
+
       return { success: false, message: 'Email is required.' };
     }
 
@@ -39,5 +40,4 @@ export const newsletterService = {
 
     console.log('[Newsletter] Subscribed successfully');
     return { success: true, message: 'Successfully subscribed to the newsletter.' };
-  }
 };

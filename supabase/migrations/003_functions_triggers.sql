@@ -71,10 +71,17 @@ CREATE OR REPLACE FUNCTION public.is_admin()
 RETURNS BOOLEAN
 LANGUAGE sql
 STABLE
+SECURITY DEFINER
+SET search_path = public
 AS $$
   SELECT COALESCE(
     auth.role() = 'service_role'
-    OR (auth.jwt() -> 'app_metadata' ->> 'role') IN ('admin', 'super_admin'),
+    OR EXISTS (
+      SELECT 1 FROM public.admin_users
+      WHERE id = auth.uid()
+      AND role IN ('admin', 'super_admin')
+      AND is_active = true
+    ),
     false
   );
 $$;
@@ -89,10 +96,17 @@ CREATE OR REPLACE FUNCTION public.is_super_admin()
 RETURNS BOOLEAN
 LANGUAGE sql
 STABLE
+SECURITY DEFINER
+SET search_path = public
 AS $$
   SELECT COALESCE(
     auth.role() = 'service_role'
-    OR (auth.jwt() -> 'app_metadata' ->> 'role') = 'super_admin',
+    OR EXISTS (
+      SELECT 1 FROM public.admin_users
+      WHERE id = auth.uid()
+      AND role = 'super_admin'
+      AND is_active = true
+    ),
     false
   );
 $$;

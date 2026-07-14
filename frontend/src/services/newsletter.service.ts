@@ -1,26 +1,43 @@
 import { supabase } from '@/supabase/client';
-import { throwSupabaseError } from '@/lib/supabaseError';
-import type { Inserts } from '@/supabase/types';
 
-interface NewsletterError {
-  code?: string;
-  message: string;
+export interface NewsletterSubscription {
+  email: string;
+  source?: string;
 }
 
-export async function subscribeToNewsletter(email: string): Promise<void> {
-  const payload: Inserts<'newsletter_subscribers'> = {
-    email: email.trim().toLowerCase(),
-    is_active: true,
-    source: 'website',
-    unsubscribed_at: null,
-  };
+export interface NewsletterResult {
+  success: boolean;
+  message?: string;
+}
 
-  const { error } = await supabase.from('newsletter_subscribers').insert(payload);
-  const newsletterError = error as NewsletterError | null;
+export const newsletterService = {
+  subscribe: async (input: NewsletterSubscription): Promise<NewsletterResult> => {
+    if (!input.email.trim()) {
+      return { success: false, message: 'Email is required.' };
+    }
 
-  if (newsletterError?.code === '23505') {
-    return;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(input.email)) {
+      return { success: false, message: 'Invalid email address.' };
+    }
+
+    const { error: dbError } = await supabase
+      .from('newsletter_subscribers')
+      .insert({
+        email: input.email.trim().toLowerCase(),
+        source: input.source?.trim() ?? 'website',
+      });
+
+    if (dbError) {
+      // 23505 is the PostgreSQL error code for unique_violation
+      if (dbError.code === '23505') {
+        return { success: true, message: 'You are already subscribed.' };
+      }
+      console.error('[Newsletter] Database insert failed:', dbError);
+      return { success: false, message: 'Unable to subscribe. Please try again.' };
+    }
+
+    console.log('[Newsletter] Subscribed successfully');
+    return { success: true, message: 'Successfully subscribed to the newsletter.' };
   }
-
-  throwSupabaseError(newsletterError, 'Newsletter subscription failed');
-}
+};

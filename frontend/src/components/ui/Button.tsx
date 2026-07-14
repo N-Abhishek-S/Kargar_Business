@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { type ButtonHTMLAttributes, forwardRef } from 'react';
 import { clsx, type ClassValue } from 'clsx';
 import { Loader2 } from 'lucide-react';
@@ -20,7 +21,7 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
  */
 export function buttonVariants({ variant = 'primary', size = 'md', fullWidth, className }: Partial<ButtonProps> = {}) {
   const baseStyles: ClassValue =
-    'inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50';
+    'inline-flex items-center justify-center whitespace-nowrap rounded-xl text-sm font-bold transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50';
 
   const variants: Record<NonNullable<ButtonProps['variant']>, ClassValue> = {
     primary:
@@ -34,10 +35,10 @@ export function buttonVariants({ variant = 'primary', size = 'md', fullWidth, cl
   };
 
   const sizes: Record<NonNullable<ButtonProps['size']>, ClassValue> = {
-    sm: 'h-8 px-3 text-xs',
-    md: 'h-10 px-4 py-2',
-    lg: 'h-12 px-8 text-base',
-    icon: 'h-10 w-10',
+    sm: 'h-9 px-4 text-xs',
+    md: 'h-11 px-5',
+    lg: 'h-12 px-6',
+    icon: 'h-11 w-11',
   };
 
   const widthClass = fullWidth ? 'w-full' : '';

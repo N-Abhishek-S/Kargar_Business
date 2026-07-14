@@ -1,10 +1,10 @@
-import { useMemo, useState, type SyntheticEvent } from 'react';
+import { useMemo, type SyntheticEvent } from 'react';
 import { useInView } from 'react-intersection-observer';
-import type SwiperCore from 'swiper';
+
 import { A11y, Autoplay, Keyboard } from 'swiper/modules';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import 'swiper/css';
-import { ChevronLeft, ChevronRight, RefreshCw, UsersRound } from 'lucide-react';
+import { RefreshCw, UsersRound } from 'lucide-react';
 import { useClientLogos } from '@/features/reviews/hooks';
 import type { ClientLogo } from '@/types';
 
@@ -77,35 +77,22 @@ function ClientLogoCard({ logo, priority = false }: ClientLogoCardProps) {
   );
 }
 
-function ClientNavigation({ swiper }: { swiper: SwiperCore | null }) {
-  return (
-    <div className="kb-client-carousel__controls" aria-label="Client logo carousel controls">
-      <button type="button" aria-label="Previous client logo" onClick={() => swiper?.slidePrev()}>
-        <ChevronLeft size={23} />
-      </button>
-      <button type="button" aria-label="Next client logo" onClick={() => swiper?.slideNext()}>
-        <ChevronRight size={23} />
-      </button>
-    </div>
-  );
-}
 
-function ClientCarousel({ logos, onSwiper }: { logos: ClientLogo[]; onSwiper: (swiper: SwiperCore) => void }) {
+
+function ClientCarousel({ logos }: { logos: ClientLogo[] }) {
   return (
     <Swiper
       modules={[A11y, Autoplay, Keyboard]}
-      onSwiper={onSwiper}
       slidesPerView={1.18}
       centeredSlides={false}
       spaceBetween={18}
-      loop={logos.length > 5}
+      loop={true}
       grabCursor
       keyboard={{ enabled: true }}
-      speed={5000}
+      speed={3000}
       autoplay={{
         delay: 0,
         disableOnInteraction: false,
-        pauseOnMouseEnter: true,
       }}
       lazyPreloadPrevNext={2}
       breakpoints={{
@@ -130,7 +117,6 @@ function ClientCarousel({ logos, onSwiper }: { logos: ClientLogo[]; onSwiper: (s
 export function TrustedClientsSection() {
   const { ref, inView } = useInView({ triggerOnce: true, rootMargin: '200px' });
   const logosQuery = useClientLogos({ enabled: inView });
-  const [swiper, setSwiper] = useState<SwiperCore | null>(null);
   const logos = useMemo(() => logosQuery.data ?? [], [logosQuery.data]);
 
   return (
@@ -163,9 +149,8 @@ export function TrustedClientsSection() {
           </div>
         ) : (
           <>
-            <ClientNavigation swiper={swiper} />
             <div className="kb-client-carousel__viewport">
-              <ClientCarousel logos={logos} onSwiper={setSwiper} />
+              <ClientCarousel logos={logos} />
             </div>
           </>
         )}

@@ -7,32 +7,30 @@ import {
   ArrowRight,
   BadgeCheck,
   Building2,
-  ChevronDown,
   Clock,
   Cpu,
-  Factory,
   Globe,
   Headphones,
-  Home,
   Leaf,
   Lock,
   Mail,
   MapPin,
   Phone,
-  Plane,
-  Send,
   ShieldCheck,
   Smile,
   Users,
   X,
   Menu,
   type LucideIcon,
+  Send,
 } from 'lucide-react';
 import { BrandLogo } from '@/components/ui/BrandLogo';
 import { submitContactMessage } from '@/services/contact.service';
 import { ReviewsSection } from '@/features/reviews/components/ReviewsSection';
 import { TrustedClientsSection } from '@/features/reviews/components/TrustedClientsSection';
 import { ServicesSection } from '@/features/home/components/ServicesSection';
+import { CompanyProfileSection } from '@/features/home/components/CompanyProfile';
+import { IndustriesSection } from '@/features/home/components/IndustriesSection';
 import { useContactNavigation } from '@/features/services/hooks/useContactNavigation';
 import { Link } from 'react-router';
 
@@ -67,18 +65,9 @@ interface FeatureItem {
 
 const navItems: NavItem[] = [
   { label: 'Home', href: '/' },
-  {
-    label: 'Services',
-    href: '/services',
-    children: ['Soft Services', 'Hard Services', 'Security Services', 'Housekeeping Services', 'Facility Support'],
-  },
-  {
-    label: 'Sectors',
-    href: '/sectors',
-    children: ['IT Parks', 'Manufacturing', 'Airport Lounge', 'Corporate Offices'],
-  },
+  { label: 'Services', href: '/services' },
+  { label: 'Sectors', href: '/sectors' },
   { label: 'Company Profile', href: '/company-profile' },
-  { label: 'Support', href: '/support' },
   { label: 'Contact Us', href: '/contact-us' },
 ];
 
@@ -213,14 +202,6 @@ function Header({ activePath }: { activePath: string }) {
                 >
                   {item.label}
                 </Link>
-                {item.children ? <ChevronDown size={15} /> : null}
-                {item.children ? (
-                  <div className="kb-dropdown">
-                    {item.children.map((child) => (
-                      <Link to={item.href} key={child}>{child}</Link>
-                    ))}
-                  </div>
-                ) : null}
               </div>
             ))}
           </nav>
@@ -252,16 +233,6 @@ function Header({ activePath }: { activePath: string }) {
         </div>
       </div>
     </header>
-  );
-}
-
-function SectionTitle({ eyebrow, title }: { eyebrow: string; title: string }) {
-  return (
-    <div className="kb-section-title">
-      <p>{eyebrow}</p>
-      <h2>{title}</h2>
-      <span aria-hidden="true" />
-    </div>
   );
 }
 
@@ -451,52 +422,9 @@ function StatsBand() {
   );
 }
 
-function CompanyProfile() {
-  return (
-    <section className="kb-company" id="company-profile">
-      <div className="kb-container kb-company__grid">
-        <div>
-          <p className="kb-eyebrow">Company Profile</p>
-          <h2>Facility teams that keep operations moving</h2>
-          <p>
-            Kargar Business Services delivers integrated facility management across soft services, hard services,
-            security, housekeeping, and support operations with trained teams and dependable processes.
-          </p>
-        </div>
-        <div className="kb-company__cards">
-          <article><ShieldCheck size={30} /><strong>Quality Assured</strong><span>Strict operating standards</span></article>
-          <article><Users size={30} /><strong>Verified Workforce</strong><span>Trained service teams</span></article>
-          <article><Cpu size={30} /><strong>Technology Driven</strong><span>Transparent operations</span></article>
-        </div>
-      </div>
-    </section>
-  );
-}
 
-function SectorsSupport() {
-  const sectors = [
-    { title: 'IT Parks', icon: Building2 },
-    { title: 'Manufacturing', icon: Factory },
-    { title: 'Airport Lounges', icon: Plane },
-    { title: 'Corporate Offices', icon: Home },
-  ];
 
-  return (
-    <section className="kb-sectors" id="sectors">
-      <div className="kb-container">
-        <SectionTitle eyebrow="Sectors" title="Built for high-performance business environments" />
-        <div className="kb-sector-grid">
-          {sectors.map(({ title, icon: Icon }) => (
-            <article key={title}>
-              <Icon size={34} />
-              <h3>{title}</h3>
-            </article>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
+
 
 function SupportBand() {
   const { navigateToContact, buildContactUrl } = useContactNavigation();
@@ -720,8 +648,8 @@ function HomePage() {
       <HomeHero />
       <ClientStrip />
       <ServicesSection />
-      <CompanyProfile />
-      <SectorsSupport />
+      <CompanyProfileSection />
+      <IndustriesSection />
       <ReviewsSection />
       <SupportBand />
     </>

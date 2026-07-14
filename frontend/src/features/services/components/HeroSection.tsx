@@ -6,6 +6,7 @@ import { Button, buttonVariants } from '@/components/ui/Button';
 import { OptimizedImage } from '@/components/ui/OptimizedImage';
 import { Breadcrumb } from './Breadcrumb';
 import { useContactNavigation } from '../hooks/useContactNavigation';
+import { useDocument } from '../../../shared/hooks/useDocument';
 import { serviceImages } from '../config/images';
 import type { ServiceBlockProps } from '../registry/BlockRenderer';
 import type { Service } from '../domain/service.types';
@@ -13,6 +14,11 @@ import type { Service } from '../domain/service.types';
 export const HeroSection = memo(function HeroSection({ entity, block }: ServiceBlockProps) {
   const image = serviceImages[entity.imageKey] ?? serviceImages.hardServices;
   const { navigateToContact, buildContactUrl } = useContactNavigation();
+  const { doc, isDownloading, handleDownload } = useDocument('brochure', {
+    page: typeof window !== 'undefined' ? window.location.pathname : '',
+    ctaPosition: 'hero',
+    service: entity.title
+  });
   
   const isService = 'categoryId' in entity;
   const breadcrumbs = [
@@ -128,13 +134,17 @@ export const HeroSection = memo(function HeroSection({ entity, block }: ServiceB
             >
               {ctaText}
             </Link>
-            <Button
-              size="lg"
-              variant="outline"
-              className="text-white border-white/20 hover:bg-white/10"
-            >
-              Download Brochure
-            </Button>
+            {doc.available && doc.downloadEnabled && (
+              <Button
+                size="lg"
+                variant="outline"
+                onClick={handleDownload}
+                disabled={isDownloading}
+                className="text-white border-white/20 hover:bg-white/10"
+              >
+                {isDownloading ? 'Downloading...' : 'Download Brochure'}
+              </Button>
+            )}
           </div>
         </div>
 

@@ -1,52 +1,111 @@
 import { Container } from '@/components/ui/Container';
-import { SectionHeading } from '@/components/ui/SectionHeading';
-import { Building2, Stethoscope, Factory, GraduationCap, ShoppingBag, Landmark } from 'lucide-react';
+import { Building2, Factory, Plane, Home, PlusSquare, ShoppingBag, Package, Bed, ArrowRight } from 'lucide-react';
 import { useScrollReveal } from '@/hooks/animations';
 
-const industries = [
-  { name: 'Corporate IT Parks', icon: Building2 },
-  { name: 'Healthcare & Pharma', icon: Stethoscope },
-  { name: 'Manufacturing', icon: Factory },
-  { name: 'Education', icon: GraduationCap },
-  { name: 'Retail & Malls', icon: ShoppingBag },
-  { name: 'Banking & Finance', icon: Landmark },
+const sectors = [
+  {
+    name: 'IT Parks',
+    icon: Building2,
+    description: 'High-performance facility services for modern IT campuses.',
+    image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80',
+  },
+  {
+    name: 'Manufacturing',
+    icon: Factory,
+    description: 'Safe, efficient & reliable support for industrial operations.',
+    image: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&q=80',
+  },
+  {
+    name: 'Airport Lounges',
+    icon: Plane,
+    description: 'Premium housekeeping and facility management for airport spaces.',
+    image: 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&q=80',
+  },
+  {
+    name: 'Corporate Offices',
+    icon: Home,
+    description: 'Smart, professional & seamless facility management for offices.',
+    image: 'https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&q=80',
+  },
+  {
+    name: 'Healthcare',
+    icon: PlusSquare,
+    description: 'Hygienic, safe & compliant facility solutions for hospitals.',
+    image: 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&q=80',
+  },
+  {
+    name: 'Retail & Malls',
+    icon: ShoppingBag,
+    description: 'Clean, customer-friendly environments that elevate experience.',
+    image: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&q=80&w=800',
+  },
+  {
+    name: 'Warehouses',
+    icon: Package,
+    description: 'Efficient operations with organized and safe facility support.',
+    image: 'https://images.unsplash.com/photo-1553413077-190dd305871c?auto=format&fit=crop&q=80&w=800',
+  },
+  {
+    name: 'Hotels & Hospitality',
+    icon: Bed,
+    description: 'Exceptional housekeeping and guest experience support.',
+    image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&q=80',
+  },
 ];
 
 export function IndustriesSection() {
   const containerRef = useScrollReveal();
 
   return (
-    <section id="industries" ref={containerRef} className="section-padding bg-navy-900 text-white relative overflow-hidden">
-      {/* Decorative background elements */}
-      <div className="absolute top-0 right-0 w-[80vw] h-[80vw] max-w-[500px] max-h-[500px] bg-orange-500/10 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-[60vw] h-[60vw] max-w-[400px] max-h-[400px] bg-navy-500/20 rounded-full blur-[100px] pointer-events-none" />
-
+    <section id="sectors" ref={containerRef} className="py-24 bg-[#FFFFFF] relative overflow-hidden">
       <Container className="relative z-10">
-        <SectionHeading
-          dark
-          align="center"
-          eyebrow="Industries We Serve"
-          title="Tailored Solutions Across Sectors"
-          subtitle="We understand that every industry has unique compliance and operational requirements."
-          data-gsap-reveal="fade-up"
-        />
+        <div className="text-center mb-16" data-gsap-reveal="fade-up">
+          <h2 className="text-[#06183a] text-4xl md:text-5xl font-[800] tracking-tight">
+            Diverse sectors. Tailored solutions.
+          </h2>
+        </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-6 mt-12 max-w-sm mx-auto sm:max-w-none">
-          {industries.map((industry, index) => {
-            const Icon = industry.icon;
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mx-auto">
+          {sectors.map((sector, index) => {
+            const Icon = sector.icon;
             return (
               <div 
                 key={index}
                 data-gsap-reveal="zoom-in"
                 data-gsap-delay={index * 0.1}
-                className="group flex flex-col items-center justify-center text-center p-8 rounded-2xl border border-navy-700 bg-navy-800/50 backdrop-blur-sm transition-all duration-300 hover:bg-navy-700 hover:border-orange-500"
+                className="group relative flex flex-col justify-end h-[320px] rounded-[16px] overflow-hidden cursor-pointer transition-transform duration-300 hover:-translate-y-1 hover:shadow-xl"
               >
-                <div className="h-16 w-16 rounded-full bg-navy-900 flex items-center justify-center mb-4 transition-transform duration-300 group-hover:-translate-y-2 group-hover:shadow-lg group-hover:shadow-orange-500/20">
-                  <Icon className="h-8 w-8 text-orange-400 group-hover:text-orange-500 transition-colors" />
+                {/* Background Image */}
+                <div 
+                  className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
+                  style={{ backgroundImage: `url(${sector.image})` }}
+                />
+                
+                {/* Gradient Overlay to ensure text readability */}
+                <div className="absolute inset-0 bg-gradient-to-t from-[#06183a] via-[#06183a]/80 to-transparent opacity-90 transition-opacity duration-300 group-hover:opacity-100" />
+                
+                {/* Content */}
+                <div className="relative z-10 p-6 flex flex-col h-full justify-end">
+                  <div className="flex flex-col flex-1 justify-end">
+                    {/* Icon Box */}
+                    <div className="bg-white w-12 h-12 rounded-[8px] flex items-center justify-center mb-5 shadow-sm transition-transform duration-300 group-hover:scale-105">
+                      <Icon className="w-6 h-6 text-[#ff5a0a]" strokeWidth={2.5} />
+                    </div>
+                    
+                    {/* Title & Description */}
+                    <h3 className="font-[700] text-xl text-white mb-2 tracking-tight">
+                      {sector.name}
+                    </h3>
+                    <p className="text-sm text-gray-300 font-[500] leading-relaxed mb-6 line-clamp-3">
+                      {sector.description}
+                    </p>
+                  </div>
+
+                  {/* Bottom Action Row (Arrow only, active clients removed) */}
+                  <div className="flex items-center justify-end mt-auto pt-4 border-t border-white/10">
+                    <ArrowRight className="w-5 h-5 text-white transition-transform duration-300 group-hover:translate-x-1" />
+                  </div>
                 </div>
-                <h3 className="font-semibold text-lg text-gray-200 group-hover:text-white transition-colors">
-                  {industry.name}
-                </h3>
               </div>
             );
           })}

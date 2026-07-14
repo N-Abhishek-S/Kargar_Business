@@ -247,32 +247,32 @@
   --k-container-max: 1320px;
   
   /* Spacing */
-  --space-1: 24px;
-  --space-2: 32px;
-  --space-3: 40px;
-  --space-section-y: 64px;
+  --space-1: 20px;
+  --space-2: 28px;
+  --space-3: 32px;
+  --space-section-y: 52px;
   
   /* Typography Scale */
-  --text-hero: 54px;
-  --text-section: 40px;
-  --text-card: 24px;
+  --text-hero: 64px;
+  --text-section: 44px;
+  --text-card: 28px;
   --text-body: 16px;
-  --text-small: 14px;
+  --text-small: 13px;
   
   /* Line Heights */
   --lh-heading: 1.15;
   --lh-body: 1.6;
   
   /* Components */
-  --nav-height: 80px;
-  --hero-height: 680px;
+  --nav-height: 72px;
+  --hero-height: 540px;
   --btn-height: 48px;
   --btn-radius: 12px;
   --card-radius: 20px;
-  --card-padding: 20px;
-  --icon-size: 44px;
+  --card-padding: 16px;
+  --icon-size: 32px;
   --icon-small: 24px;
-  --input-height: 52px;
+  --input-height: 48px;
   
   /* Shadows */
   --shadow-main: 0 12px 40px rgba(15,23,42,.08);
@@ -2327,7 +2327,7 @@
 }
 
 .kb-nav__inner {
-  min-height: 88px;
+  min-height: 72px;
   justify-content: space-between;
   gap: 26px;
 }
@@ -2358,7 +2358,9 @@
   text-decoration: none;
   white-space: nowrap;
   font-size: 16px;
-  font-weight: 800;
+  font-weight: 600;
+  letter-spacing: 0;
+  transition: color 0.25s ease;
 }
 
 .kb-menu__item > a::after {
@@ -2374,46 +2376,18 @@
   transition: transform 0.22s ease;
 }
 
+.kb-menu__item:hover > a,
+.kb-menu__item > a.is-active {
+  color: var(--kb-orange);
+}
+
 .kb-menu__item:hover > a::after,
 .kb-menu__item > a.is-active::after {
   transform: scaleX(1);
 }
 
-.kb-dropdown {
-  position: absolute;
-  left: -18px;
-  top: 56px;
-  min-width: 220px;
-  padding: 10px;
-  border: 1px solid var(--kb-line);
-  border-radius: 8px;
-  background: #fff;
-  box-shadow: 0 20px 44px rgb(6 24 58 / 0.16);
-  opacity: 0;
-  visibility: hidden;
-  transform: translateY(8px);
-  transition: 0.2s ease;
-}
-
-.kb-menu__item:hover .kb-dropdown {
-  opacity: 1;
-  visibility: visible;
-  transform: translateY(0);
-}
-
-.kb-dropdown a {
-  display: block;
-  padding: 10px 12px;
-  border-radius: 7px;
-  color: var(--kb-text);
-  text-decoration: none;
-  font-size: 14px;
-  font-weight: 800;
-}
-
-.kb-dropdown a:hover {
-  color: var(--kb-orange);
-  background: #fff0e8;
+.kb-menu__item > a.is-active {
+  font-weight: 700;
 }
 
 .kb-nav__actions {

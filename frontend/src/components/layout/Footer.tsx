@@ -138,7 +138,7 @@ export function Footer() {
                 type="email"
                 {...register('email')}
                 error={errors.email?.message}
-                className="bg-navy-900 border-navy-700 text-white placeholder:text-gray-500 focus-visible:border-orange-500"
+                className="bg-navy-800 border-navy-700 text-white placeholder:text-gray-500 focus-visible:border-orange-500"
               />
               <Button type="submit" fullWidth isLoading={isSubmitting}>
                 Subscribe

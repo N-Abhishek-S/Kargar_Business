@@ -24,6 +24,8 @@ export interface ContactSubmission {
   company?: string;
   subject?: string;
   service?: string;
+  source?: string;
+  campaign?: string;
   message: string;
 }
 
@@ -63,7 +65,7 @@ export async function submitContactMessage(input: ContactSubmission): Promise<Co
       message: input.message.trim(),
       status: 'new',
       priority: 'medium',
-      source: 'website',
+      source: input.source?.trim() ?? 'website',
     }); // Removed .select('id').single() because anon key cannot read rows for security
 
   if (dbError) {

@@ -1,4 +1,5 @@
 import { useForm } from 'react-hook-form';
+import { useSearchParams } from 'react-router';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import toast from 'react-hot-toast';
@@ -28,11 +29,20 @@ const serviceOptions = [
   { label: 'Security Management', value: 'security' },
   { label: 'Electro-Mechanical (MEP)', value: 'mep' },
   { label: 'Green Landscaping', value: 'landscaping' },
+  { label: 'Hard Services', value: 'hard' },
+  { label: 'Soft Services', value: 'soft' },
+  { label: 'Electrical Maintenance', value: 'electrical' },
+  { label: 'HVAC Maintenance', value: 'hvac' },
   { label: 'Other', value: 'other' },
 ];
 
 export function ContactSection() {
   const containerRef = useScrollReveal();
+  const [searchParams] = useSearchParams();
+  const categoryParam = searchParams.get('category');
+  const serviceParam = searchParams.get('service');
+  
+  const defaultService = serviceParam ?? categoryParam ?? '';
   
   const {
     register,
@@ -41,6 +51,9 @@ export function ContactSection() {
     formState: { errors, isSubmitting },
   } = useForm<ContactFormValues>({
     resolver: zodResolver(contactSchema),
+    defaultValues: {
+      service: defaultService,
+    }
   });
 
   const onSubmit = async (data: ContactFormValues) => {

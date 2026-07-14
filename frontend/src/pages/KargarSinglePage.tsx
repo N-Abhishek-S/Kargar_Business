@@ -1,5 +1,5 @@
 import { type SyntheticEvent, useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router';
+import { useLocation, useNavigate, useSearchParams } from 'react-router';
 import { useInView } from 'react-intersection-observer';
 import CountUpModule from 'react-countup';
 import toast from 'react-hot-toast';
@@ -18,23 +18,23 @@ import {
   Lock,
   Mail,
   MapPin,
-  Menu,
   Phone,
   Plane,
   Send,
   ShieldCheck,
   Smile,
-  Sparkles,
-  SprayCan,
   Users,
-  Wrench,
   X,
+  Menu,
   type LucideIcon,
 } from 'lucide-react';
 import { BrandLogo } from '@/components/ui/BrandLogo';
 import { submitContactMessage } from '@/services/contact.service';
 import { ReviewsSection } from '@/features/reviews/components/ReviewsSection';
 import { TrustedClientsSection } from '@/features/reviews/components/TrustedClientsSection';
+import { ServicesSection } from '@/features/home/components/ServicesSection';
+import { useContactNavigation } from '@/features/services/hooks/useContactNavigation';
+import { Link } from 'react-router';
 
 const CountUp =
   typeof CountUpModule === 'function'
@@ -47,12 +47,7 @@ interface NavItem {
   children?: string[];
 }
 
-interface ServiceItem {
-  title: string;
-  description: string;
-  image: string;
-  icon: LucideIcon;
-}
+
 
 interface StatItem {
   value: string;
@@ -85,39 +80,6 @@ const navItems: NavItem[] = [
   { label: 'Company Profile', href: '/company-profile' },
   { label: 'Support', href: '/support' },
   { label: 'Contact Us', href: '/contact-us' },
-];
-
-const services: ServiceItem[] = [
-  {
-    title: 'Soft Services',
-    description: 'Housekeeping, pantry, security, waste management and more to keep your environment clean and hygienic.',
-    image: '/images/page/card-soft-services.webp',
-    icon: Sparkles,
-  },
-  {
-    title: 'Hard Services',
-    description: 'Electrical, HVAC, plumbing, firefighting, civil & building maintenance for smooth & reliable operations.',
-    image: '/images/page/card-hard-services.webp',
-    icon: Wrench,
-  },
-  {
-    title: 'Security Services',
-    description: 'Professional security personnel and advanced surveillance solutions to ensure safety 24/7.',
-    image: '/images/page/card-security-services.webp',
-    icon: ShieldCheck,
-  },
-  {
-    title: 'Housekeeping Services',
-    description: 'High-quality cleaning solutions for workplaces, ensuring hygiene, health, and a great first impression.',
-    image: '/images/page/card-housekeeping-services.webp',
-    icon: SprayCan,
-  },
-  {
-    title: 'Facility Support',
-    description: 'Manpower, helpdesk, admin support and customized facility management solutions.',
-    image: '/images/page/card-facility-support.webp',
-    icon: Headphones,
-  },
 ];
 
 const heroStats: StatItem[] = [
@@ -175,11 +137,20 @@ function KargarButton({
 }) {
   const className = `kb-btn kb-btn--${variant}`;
   if (href) {
+    // Check if it's an external link or anchor (e.g., tel: or mailto: or #)
+    if (href.startsWith('http') || href.startsWith('tel:') || href.startsWith('mailto:')) {
+      return (
+        <a className={className} href={href}>
+          {children}
+          <ArrowRight size={18} />
+        </a>
+      );
+    }
     return (
-      <a className={className} href={href}>
+      <Link className={className} to={href}>
         {children}
         <ArrowRight size={18} />
-      </a>
+      </Link>
     );
   }
 
@@ -194,6 +165,7 @@ function KargarButton({
 function Header({ activePath }: { activePath: string }) {
   const [isOpen, setIsOpen] = useState(false);
   const contactPage = activePath === '/contact' || activePath === '/contact-us';
+  const { navigateToContact, buildContactUrl } = useContactNavigation();
 
   return (
     <header className="kb-header">
@@ -229,17 +201,24 @@ function Header({ activePath }: { activePath: string }) {
           <nav className={`kb-menu ${isOpen ? 'is-open' : ''}`} aria-label="Main navigation">
             {navItems.map((item) => (
               <div className="kb-menu__item" key={item.label}>
-                <a
+                <Link
                   className={isActiveRoute(activePath, item.href) ? 'is-active' : undefined}
-                  href={item.href}
-                  onClick={() => { setIsOpen(false); }}
+                  to={item.href === '/contact-us' ? buildContactUrl({ source: 'header_nav' }) : item.href}
+                  onClick={(e) => {
+                    setIsOpen(false);
+                    if (item.href === '/contact-us') {
+                      navigateToContact({ source: 'header_nav' }, e);
+                    }
+                  }}
                 >
                   {item.label}
-                </a>
+                </Link>
                 {item.children ? <ChevronDown size={15} /> : null}
                 {item.children ? (
                   <div className="kb-dropdown">
-                    {item.children.map((child) => <a href={item.href} key={child}>{child}</a>)}
+                    {item.children.map((child) => (
+                      <Link to={item.href} key={child}>{child}</Link>
+                    ))}
                   </div>
                 ) : null}
               </div>
@@ -252,7 +231,14 @@ function Header({ activePath }: { activePath: string }) {
               <small>Call for More Information</small>
               <strong>+91-8788726752</strong>
             </a>
-            <KargarButton href="/contact-us">Request Proposal</KargarButton>
+            <Link 
+              className="kb-btn kb-btn--primary"
+              to={buildContactUrl({ source: 'header', ctaPosition: 'navbar' })}
+              onClick={(e) => { setIsOpen(false); navigateToContact({ source: 'header', ctaPosition: 'navbar' }, e); }}
+            >
+              Request Proposal
+              <ArrowRight size={18} />
+            </Link>
             <button
               className="kb-mobile"
               type="button"
@@ -280,6 +266,7 @@ function SectionTitle({ eyebrow, title }: { eyebrow: string; title: string }) {
 }
 
 function HomeHero() {
+  const { navigateToContact, buildContactUrl } = useContactNavigation();
   return (
     <section className="kb-home-hero" id="home">
       <img className="kb-home-hero__image" src="/images/page/hero-building.webp" alt="" aria-hidden="true" />
@@ -297,7 +284,14 @@ function HomeHero() {
           <p>We deliver integrated facility management services that ensure clean, safe, efficient, and productive environments.</p>
           <div className="kb-actions">
             <KargarButton href="/services" variant="dark">Explore Services</KargarButton>
-            <KargarButton href="/contact-us">Request Proposal</KargarButton>
+            <Link 
+              className="kb-btn kb-btn--primary"
+              to={buildContactUrl({ source: 'homepage', ctaPosition: 'hero' })}
+              onClick={(e) => { navigateToContact({ source: 'homepage', ctaPosition: 'hero' }, e); }}
+            >
+              Request Proposal
+              <ArrowRight size={18} />
+            </Link>
           </div>
         </div>
       </div>
@@ -400,31 +394,7 @@ function ClientStrip() {
   return <TrustedClientsSection />;
 }
 
-function ServicesGrid({ compact = false }: { compact?: boolean }) {
-  return (
-    <section className={`kb-services-section ${compact ? 'kb-services-section--compact' : ''}`} id="services">
-      <div className="kb-container">
-        <SectionTitle
-          eyebrow={compact ? 'What We Do' : 'What We Offer'}
-          title="Our Integrated Facility Management Services"
-        />
-        <div className="kb-services-grid">
-          {services.map(({ title, description, image, icon: Icon }) => (
-            <article className="kb-service-card" key={title}>
-              <img src={image} alt={title} loading="lazy" />
-              <span className="kb-service-card__icon"><Icon size={31} /></span>
-              <div className="kb-service-card__body">
-                <h3>{title}</h3>
-                <p>{description}</p>
-                <a href="/contact-us">Learn More <ArrowRight size={16} /></a>
-              </div>
-            </article>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
+
 
 function ServicesHero() {
   return (
@@ -529,6 +499,7 @@ function SectorsSupport() {
 }
 
 function SupportBand() {
+  const { navigateToContact, buildContactUrl } = useContactNavigation();
   return (
     <section className="kb-support" id="support">
       <div className="kb-container kb-support__inner">
@@ -536,7 +507,14 @@ function SupportBand() {
           <p className="kb-eyebrow">Support</p>
           <h2>Fast response. Expert coordination. Reliable follow-through.</h2>
         </div>
-        <KargarButton href="/contact-us">Talk to Our Team</KargarButton>
+        <Link 
+          className="kb-btn kb-btn--primary"
+          to={buildContactUrl({ source: 'support_band', ctaPosition: 'footer-cta' })}
+          onClick={(e) => { navigateToContact({ source: 'support_band', ctaPosition: 'footer-cta' }, e); }}
+        >
+          Talk to Our Team
+          <ArrowRight size={18} />
+        </Link>
       </div>
     </section>
   );
@@ -604,6 +582,33 @@ function getFormString(formData: FormData, key: string): string {
 
 function ContactForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [searchParams] = useSearchParams();
+  
+  const categoryParam = searchParams.get('category') ?? '';
+  const serviceParam = searchParams.get('service') ?? '';
+  const sourceParam = searchParams.get('source') ?? '';
+  const campaignParam = searchParams.get('campaign') ?? '';
+  const ctaPosition = searchParams.get('cta_position') ?? '';
+
+  const defaultSubject = serviceParam 
+    ? `Requesting Proposal for ${serviceParam.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}` 
+    : '';
+
+  useEffect(() => {
+    // If there are search params or a hash, try to scroll and focus
+    if (window.location.hash === '#contact-form' || serviceParam) {
+      setTimeout(() => {
+        const form = document.getElementById('contact-form');
+        if (form) {
+          form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          const firstInput = form.querySelector('input');
+          if (firstInput) {
+            firstInput.focus();
+          }
+        }
+      }, 100);
+    }
+  }, [serviceParam]);
 
   const onSubmit = async (event: SyntheticEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -619,6 +624,9 @@ function ContactForm() {
         phone: getFormString(formData, 'phone'),
         company: getFormString(formData, 'company'),
         subject: getFormString(formData, 'subject'),
+        service: getFormString(formData, 'service'),
+        source: getFormString(formData, 'source'),
+        campaign: getFormString(formData, 'campaign'),
         message: getFormString(formData, 'message'),
       });
 
@@ -639,6 +647,12 @@ function ContactForm() {
 
   return (
     <form className="kb-contact-form" id="contact-form" onSubmit={onSubmit}>
+      <input type="hidden" name="category" value={categoryParam} />
+      <input type="hidden" name="service" value={serviceParam} />
+      <input type="hidden" name="source" value={sourceParam} />
+      <input type="hidden" name="campaign" value={campaignParam} />
+      <input type="hidden" name="cta_position" value={ctaPosition} />
+      
       <h2>Send Us a Message</h2>
       <p>Fill out the form below and we&apos;ll get back to you shortly.</p>
       <div className="kb-form-grid">
@@ -647,7 +661,7 @@ function ContactForm() {
         <label>Phone Number <b>*</b><input name="phone" placeholder="Enter your phone number" required /></label>
         <label>Company Name <b>*</b><input name="company" placeholder="Enter your company name" required /></label>
       </div>
-      <label>Subject <b>*</b><input name="subject" placeholder="How can we help you?" required /></label>
+      <label>Subject <b>*</b><input name="subject" placeholder="How can we help you?" defaultValue={defaultSubject} required /></label>
       <label>Message <b>*</b><textarea name="message" placeholder="Type your message here..." rows={5} required /></label>
       <button className="kb-btn kb-btn--primary" type="submit" disabled={isSubmitting}>
         {isSubmitting ? 'Sending...' : 'Send Message'} <Send size={18} />
@@ -705,7 +719,7 @@ function HomePage() {
     <>
       <HomeHero />
       <ClientStrip />
-      <ServicesGrid compact />
+      <ServicesSection />
       <CompanyProfile />
       <SectorsSupport />
       <ReviewsSection />
@@ -718,7 +732,7 @@ function ServicesPage() {
   return (
     <>
       <ServicesHero />
-      <ServicesGrid />
+      <ServicesSection />
       <StatsBand />
     </>
   );

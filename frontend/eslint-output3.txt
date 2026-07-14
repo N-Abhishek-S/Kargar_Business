@@ -1,0 +1,90 @@
+
+C:\Users\nagar\OneDrive\Desktop\KargarWeb\frontend\src\components\ui\Button.tsx
+  21:17  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\nagar\OneDrive\Desktop\KargarWeb\frontend\src\features\services\components\CollectionSection.tsx
+  1:1  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-explicit-any')
+  1:1  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-unsafe-member-access')
+  1:1  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-unsafe-assignment')
+  1:1  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-unsafe-call')
+  1:1  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-unsafe-return')
+  1:1  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-unsafe-argument')
+  1:1  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-unnecessary-condition')
+
+C:\Users\nagar\OneDrive\Desktop\KargarWeb\frontend\src\features\services\components\FeatureGridSection.tsx
+  1:1  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-explicit-any')
+  1:1  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-unsafe-member-access')
+  1:1  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-unsafe-assignment')
+  1:1  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-unsafe-call')
+  1:1  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-unsafe-return')
+  1:1  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-unsafe-argument')
+
+C:\Users\nagar\OneDrive\Desktop\KargarWeb\frontend\src\features\services\components\GallerySection.tsx
+  1:1  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-unsafe-member-access')
+  1:1  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-unsafe-assignment')
+  1:1  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-unsafe-call')
+  1:1  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-unsafe-return')
+  1:1  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-unsafe-argument')
+  1:1  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-unnecessary-condition')
+  1:1  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/prefer-nullish-coalescing')
+
+C:\Users\nagar\OneDrive\Desktop\KargarWeb\frontend\src\features\services\components\HeroSection.tsx
+  1:1  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-unnecessary-type-arguments')
+  1:1  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-unnecessary-type-assertion')
+  1:1  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/prefer-optional-chain')
+  1:1  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-unnecessary-condition')
+
+C:\Users\nagar\OneDrive\Desktop\KargarWeb\frontend\src\features\services\components\OverviewSection.tsx
+  1:1  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-unsafe-call')
+  1:1  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-unsafe-return')
+  1:1  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-unsafe-argument')
+  1:1  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-unnecessary-condition')
+  1:1  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/prefer-nullish-coalescing')
+
+C:\Users\nagar\OneDrive\Desktop\KargarWeb\frontend\src\features\services\components\StatisticsSection.tsx
+  1:1  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-unnecessary-type-arguments')
+  1:1  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-unnecessary-type-assertion')
+  1:1  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/prefer-optional-chain')
+  1:1  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-unnecessary-condition')
+
+C:\Users\nagar\OneDrive\Desktop\KargarWeb\frontend\src\features\services\components\TestimonialSection.tsx
+  1:1  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-unsafe-assignment')
+  1:1  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-unsafe-call')
+  1:1  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-unsafe-return')
+  1:1  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-unsafe-argument')
+  1:1  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-unnecessary-condition')
+  1:1  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/prefer-nullish-coalescing')
+
+C:\Users\nagar\OneDrive\Desktop\KargarWeb\frontend\src\features\services\components\TrustedClientsSection.tsx
+  1:1  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-unsafe-member-access')
+  1:1  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-unsafe-assignment')
+  1:1  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-unsafe-call')
+  1:1  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-unsafe-return')
+  1:1  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-unsafe-argument')
+  1:1  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-unnecessary-condition')
+  1:1  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/prefer-nullish-coalescing')
+
+C:\Users\nagar\OneDrive\Desktop\KargarWeb\frontend\src\features\services\config\layoutPresets.ts
+  1:1  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-explicit-any', '@typescript-eslint/no-unsafe-member-access', '@typescript-eslint/no-unsafe-assignment', '@typescript-eslint/no-unsafe-call', '@typescript-eslint/no-unsafe-return', '@typescript-eslint/no-unsafe-argument', '@typescript-eslint/no-unnecessary-condition', or '@typescript-eslint/prefer-nullish-coalescing')
+
+C:\Users\nagar\OneDrive\Desktop\KargarWeb\frontend\src\features\services\domain\service.types.ts
+  1:1  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-unsafe-member-access')
+  1:1  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-unsafe-assignment')
+  1:1  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-unsafe-call')
+  1:1  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-unsafe-return')
+  1:1  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-unsafe-argument')
+  1:1  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-unnecessary-condition')
+  1:1  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/prefer-nullish-coalescing')
+
+C:\Users\nagar\OneDrive\Desktop\KargarWeb\frontend\src\features\services\registry\BlockRenderer.tsx
+  1:1  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-unnecessary-type-arguments', '@typescript-eslint/no-unnecessary-type-assertion', '@typescript-eslint/prefer-optional-chain', '@typescript-eslint/no-unnecessary-condition', or '@typescript-eslint/prefer-nullish-coalescing')
+
+C:\Users\nagar\OneDrive\Desktop\KargarWeb\frontend\src\features\services\registry\LayoutEngine.tsx
+  1:1  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-unnecessary-type-arguments')
+  1:1  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-unnecessary-type-assertion')
+  1:1  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/prefer-optional-chain')
+  1:1  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/prefer-nullish-coalescing')
+
+✖ 60 problems (0 errors, 60 warnings)
+  0 errors and 59 warnings potentially fixable with the `--fix` option.
+

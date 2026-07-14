@@ -10,6 +10,7 @@ import { Input } from '../ui/Input';
 import { config } from '@/config';
 import { BrandLogo } from '../ui/BrandLogo';
 import { subscribeToNewsletter } from '@/services/newsletter.service';
+import { useContactNavigation } from '@/features/services/hooks/useContactNavigation';
 
 // Inline SVGs for social icons to avoid lucide-react brand icon issues
 const FacebookIcon = ({ className }: { className?: string }) => (
@@ -48,6 +49,7 @@ export function Footer() {
   });
 
   const navigate = useNavigate();
+  const { navigateToContact, buildContactUrl } = useContactNavigation();
 
   const handleLogoClick = () => {
     void navigate('/admin/login');
@@ -100,10 +102,18 @@ export function Footer() {
             <h3 className="mb-6 text-lg font-semibold text-white">Quick Links</h3>
             <ul className="flex flex-col gap-3 text-sm">
               <li><a href="#about" className="hover:text-orange-500 transition-colors">About Us</a></li>
-              <li><a href="#services" className="hover:text-orange-500 transition-colors">Our Services</a></li>
+              <li><a href="/services" className="hover:text-orange-500 transition-colors">Our Services</a></li>
               <li><a href="#industries" className="hover:text-orange-500 transition-colors">Industries</a></li>
               <li><a href="#case-studies" className="hover:text-orange-500 transition-colors">Case Studies</a></li>
-              <li><a href="#contact" className="hover:text-orange-500 transition-colors">Contact Us</a></li>
+              <li>
+                <Link 
+                  to={buildContactUrl({ source: 'footer_quick_links', ctaPosition: 'footer' })}
+                  onClick={(e) => { navigateToContact({ source: 'footer_quick_links', ctaPosition: 'footer' }, e); }}
+                  className="hover:text-orange-500 transition-colors"
+                >
+                  Contact Us
+                </Link>
+              </li>
             </ul>
           </div>
 

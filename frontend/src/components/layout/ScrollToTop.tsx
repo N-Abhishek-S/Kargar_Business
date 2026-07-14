@@ -1,48 +1,27 @@
-import { useEffect, useState } from 'react';
-import { ArrowUp } from 'lucide-react';
-import { clsx } from 'clsx';
-import { Button } from '../ui/Button';
+import { useEffect } from 'react';
+import { useLocation } from 'react-router';
 
 /**
- * Scroll to Top Floating Action Button
- * - Appears after scrolling down 500px
- * - Smooth scrolls back to top
+ * Global scroll restoration component.
+ * Ensures that on every route change, the window scrolls to the very top.
+ * This should be placed inside the Router context, usually in App.tsx or a global layout.
  */
 export function ScrollToTop() {
-  const [isVisible, setIsVisible] = useState(false);
+  const { pathname } = useLocation();
 
   useEffect(() => {
-    const handleScroll = () => {
-      setIsVisible(window.scrollY > 500);
-    };
+    // Attempt to restore scroll on pathname change.
+    // We use setTimeout to ensure React has flushed changes to the DOM.
+    const timer = setTimeout(() => {
+      window.scrollTo({
+        top: 0,
+        left: 0,
+        behavior: 'instant'
+      });
+    }, 0);
+    
+    return () => { clearTimeout(timer); };
+  }, [pathname]);
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => { window.removeEventListener('scroll', handleScroll); };
-  }, []);
-
-  const scrollToTop = () => {
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth',
-    });
-  };
-
-  return (
-    <div
-      className={clsx(
-        'fixed bottom-6 right-6 z-fixed transition-all duration-300',
-        isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0 pointer-events-none',
-      )}
-    >
-      <Button
-        variant="primary"
-        size="icon"
-        className="rounded-full shadow-lg"
-        onClick={scrollToTop}
-        aria-label="Scroll to top"
-      >
-        <ArrowUp className="h-5 w-5" />
-      </Button>
-    </div>
-  );
+  return null;
 }

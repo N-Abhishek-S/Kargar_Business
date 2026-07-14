@@ -1,6 +1,9 @@
 import { Routes, Route } from 'react-router';
 import { lazy, Suspense } from 'react';
 import { KargarSinglePage } from '@/pages/KargarSinglePage';
+import { ServicesProvider } from '@/features/services/context/ServicesProvider';
+import { CategoryPage } from '@/features/services/pages/CategoryPage';
+import { ServicePage } from '@/features/services/pages/ServicePage';
 
 /** Lazy-loaded admin routes for code splitting */
 const AdminLoginPage = lazy(() => import('@/features/admin/pages/AdminLoginPage'));
@@ -13,6 +16,8 @@ import { AdminLayout } from '@/features/admin/components/AdminLayout';
 
 import { AuthProvider } from '@/contexts/AuthProvider';
 
+import { ScrollToTop } from '@/components/layout/ScrollToTop';
+
 /**
  * Root application component.
  * - HomePage is eagerly loaded (main content)
@@ -21,10 +26,14 @@ import { AuthProvider } from '@/contexts/AuthProvider';
 export default function App() {
   return (
     <AuthProvider>
-      <Suspense>
-        <Routes>
+      <ServicesProvider>
+        <ScrollToTop />
+        <Suspense>
+          <Routes>
           <Route path="/" element={<KargarSinglePage />} />
           <Route path="/services" element={<KargarSinglePage />} />
+          <Route path="/services/:categoryId" element={<CategoryPage />} />
+          <Route path="/services/:categoryId/:serviceId" element={<ServicePage />} />
           <Route path="/sectors" element={<KargarSinglePage />} />
           <Route path="/company-profile" element={<KargarSinglePage />} />
           <Route path="/support" element={<KargarSinglePage />} />
@@ -41,6 +50,7 @@ export default function App() {
           </Route>
         </Routes>
       </Suspense>
+      </ServicesProvider>
     </AuthProvider>
   );
 }

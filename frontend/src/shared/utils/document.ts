@@ -21,7 +21,7 @@ export const trackDocumentInteraction = (
   console.log('[Analytics Event]', eventPayload);
 };
 
-export const downloadDocument = (docKey: DocumentKey, context?: DocumentAnalyticsContext) => {
+export const downloadDocument = async (docKey: DocumentKey, context?: DocumentAnalyticsContext) => {
   const doc = documentRegistry[docKey];
   if (!doc.available || !doc.downloadEnabled) {
     console.warn(`Download failed: Document ${docKey} is not available or downloads are disabled.`);
@@ -32,12 +32,38 @@ export const downloadDocument = (docKey: DocumentKey, context?: DocumentAnalytic
     trackDocumentInteraction(docKey, 'download', context);
   }
 
-  const link = document.createElement('a');
-  link.href = doc.file;
-  link.download = doc.downloadName;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
+  const absoluteUrl = new URL(doc.file, window.location.origin).toString();
+
+  try {
+    // Fetch blob to force download behavior on mobile (especially iOS Safari)
+    const response = await fetch(absoluteUrl);
+    if (!response.ok) throw new Error('Fetch failed');
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    
+    const link = document.createElement('a');
+    link.style.display = 'none';
+    link.href = url;
+    link.download = doc.downloadName;
+    document.body.appendChild(link);
+    link.click();
+    
+    setTimeout(() => {
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    }, 1000);
+  } catch (err) {
+    console.warn('Blob download failed, using fallback:', err);
+    // Fallback if fetch fails
+    const link = document.createElement('a');
+    link.style.display = 'none';
+    link.href = absoluteUrl;
+    link.download = doc.downloadName;
+    link.target = '_blank';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
 };
 
 export const previewDocument = (docKey: DocumentKey, context?: DocumentAnalyticsContext) => {
@@ -51,7 +77,19 @@ export const previewDocument = (docKey: DocumentKey, context?: DocumentAnalytics
     trackDocumentInteraction(docKey, 'preview', context);
   }
 
-  window.open(doc.file, '_blank', 'noopener,noreferrer');
+  const absoluteUrl = new URL(doc.file, window.location.origin).toString();
+  
+  // Use a hidden anchor tag instead of window.open for better mobile popup blocker bypass
+  const link = document.createElement('a');
+  link.style.display = 'none';
+  link.href = absoluteUrl;
+  link.target = '_blank';
+  link.rel = 'noopener noreferrer';
+  document.body.appendChild(link);
+  link.click();
+  setTimeout(() => {
+    document.body.removeChild(link);
+  }, 100);
 };
 
 export const copyDocumentLink = async (docKey: DocumentKey, context?: DocumentAnalyticsContext): Promise<boolean> => {

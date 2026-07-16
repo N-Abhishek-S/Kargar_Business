@@ -18,6 +18,8 @@ import { AuthProvider } from '@/contexts/AuthProvider';
 
 import { ScrollToTop } from '@/components/layout/ScrollToTop';
 
+import { Analytics } from '@/components/Analytics';
+
 /**
  * Root application component.
  * - HomePage is eagerly loaded (main content)
@@ -27,6 +29,7 @@ export default function App() {
   return (
     <AuthProvider>
       <ServicesProvider>
+        <Analytics />
         <ScrollToTop />
         <Suspense>
           <Routes>

@@ -33,6 +33,7 @@ import { CompanyProfileSection } from '@/features/home/components/CompanyProfile
 import { IndustriesSection } from '@/features/home/components/IndustriesSection';
 import { useContactNavigation } from '@/features/services/hooks/useContactNavigation';
 import { Link } from 'react-router';
+import { SEO } from '@/components/seo/SEO';
 
 const CountUp =
   typeof CountUpModule === 'function'
@@ -686,6 +687,7 @@ export function KargarSinglePage() {
 
   return (
     <div className="kargar-site kb-site">
+      <SEO />
       <Header activePath={pathname} />
       <main>
         {isContact ? <ContactPage /> : isServices ? <ServicesPage /> : <HomePage />}

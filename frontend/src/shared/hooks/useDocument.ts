@@ -36,11 +36,11 @@ export function useDocument(docKey: DocumentKey, context?: DocumentAnalyticsCont
     }, duration);
   }, []);
 
-  const handleDownload = useCallback(async () => {
+  const handleDownload = useCallback(() => {
     if (!doc.available || !doc.downloadEnabled) return;
     setIsDownloading(true);
     showToast(`${doc.title} download started...`);
-    await downloadDocument(docKey, context);
+    downloadDocument(docKey, context);
     setIsDownloading(false);
   }, [doc, docKey, context, showToast]);
 

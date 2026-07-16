@@ -40,6 +40,8 @@ export const config = {
     clarityId: getEnvVar('VITE_CLARITY_ID', ''),
     hotjarId: getEnvVar('VITE_HOTJAR_ID', ''),
     sentryDsn: getEnvVar('VITE_SENTRY_DSN', ''),
+    forceAnalytics: getEnvVar('VITE_FORCE_ANALYTICS') === 'true',
+    debugMode: getEnvVar('VITE_GA_DEBUG_MODE') === 'true',
   },
 
   /** Whether we're in production */

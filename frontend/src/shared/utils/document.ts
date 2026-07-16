@@ -1,5 +1,6 @@
 import type { DocumentKey, DocumentAnalyticsContext } from '../../config/documents';
 import { documentRegistry } from '../../config/documents';
+import { trackEvent } from '@/types/analytics';
 
 export const trackDocumentInteraction = (
   docKey: DocumentKey,
@@ -9,16 +10,23 @@ export const trackDocumentInteraction = (
   const doc = documentRegistry[docKey];
 
   const eventPayload = {
-    event: 'Document Interaction',
-    documentId: doc.id,
-    documentTitle: doc.title,
+    document_id: doc.id,
+    document_title: doc.title,
     action,
-    timestamp: new Date().toISOString(),
     ...context,
   };
 
+  // Determine correct event name based on docKey and action
+  let eventName = 'document_interaction';
+  if (docKey === 'companyProfile') {
+    eventName = action === 'preview' ? 'company_profile_preview' : 'company_profile_download';
+  } else if (action === 'download') {
+    eventName = 'download';
+  }
+
   // Log analytics event
-  console.log('[Analytics Event]', eventPayload);
+  console.log(`[Analytics] ${eventName}`, eventPayload);
+  trackEvent(eventName, eventPayload);
 };
 
 export const downloadDocument = (docKey: DocumentKey, context?: DocumentAnalyticsContext) => {

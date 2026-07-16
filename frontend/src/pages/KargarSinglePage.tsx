@@ -34,6 +34,7 @@ import { IndustriesSection } from '@/features/home/components/IndustriesSection'
 import { useContactNavigation } from '@/features/services/hooks/useContactNavigation';
 import { Link } from 'react-router';
 import { SEO } from '@/components/seo/SEO';
+import { trackEvent } from '@/types/analytics';
 
 const CountUp =
   typeof CountUpModule === 'function'
@@ -564,6 +565,13 @@ function ContactForm() {
       } else {
         toast.success('Proposal received successfully! Our team has your request.\nEmail notification is temporarily unavailable.', { duration: 5000 });
       }
+
+      // Track successful submission
+      trackEvent('contact_form_submit', {
+        service: getFormString(formData, 'service'),
+        source: getFormString(formData, 'source'),
+        campaign: getFormString(formData, 'campaign'),
+      });
 
       form.reset();
     } catch (error) {

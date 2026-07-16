@@ -272,15 +272,25 @@ export async function fetchServiceOptions(): Promise<ServiceOption[]> {
 }
 
 export async function fetchClientLogos(): Promise<ClientLogo[]> {
-  const { data, error } = await supabase
-    .from('client_logos')
-    .select('*')
-    .eq('is_active', true)
-    .order('is_featured', { ascending: false })
-    .order('priority', { ascending: false })
-    .order('display_order', { ascending: true })
-    .order('company_name', { ascending: true });
-
-  throwSupabaseError(error, 'Client logos could not be loaded');
-  return data.map(mapClientLogo);
+  try {
+    const res = await fetch('/logos/logo-manifest.json');
+    if (!res.ok) throw new Error('Failed to fetch logo manifest');
+    const manifest = await res.json();
+    
+    return manifest.map((item: any, index: number) => ({
+      id: `logo-${index}`,
+      companyName: item.name,
+      logoUrl: item.file,
+      industry: item.type,
+      isActive: true,
+      displayOrder: index,
+      isFeatured: false,
+      priority: 0,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    }));
+  } catch (error) {
+    console.error('Error fetching client logos:', error);
+    return [];
+  }
 }

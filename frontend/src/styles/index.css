@@ -3547,7 +3547,8 @@
   min-height: clamp(152px, 12vw, 184px);
 }
 
-.kb-client-marquee {
+.kb-client-marquee,
+.kb-client-carousel {
   --kb-client-card-width: clamp(260px, 18vw, 300px);
   --kb-client-card-height: clamp(150px, 10.6vw, 170px);
   --kb-client-gap: clamp(18px, 1.45vw, 26px);
@@ -4516,7 +4517,8 @@
     display: none;
   }
 
-  .kb-client-marquee {
+  .kb-client-marquee,
+  .kb-client-carousel {
     --kb-client-card-width: clamp(210px, 68vw, 238px);
     --kb-client-card-height: clamp(124px, 38vw, 140px);
     --kb-client-gap: 14px;

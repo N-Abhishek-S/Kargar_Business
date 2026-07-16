@@ -1,0 +1,76 @@
+/* ============================================
+   Logo Marquee Animations
+   ============================================ */
+
+/*
+  Mathematical constraint for seamless looping:
+  1. Track width is essentially flexible but the content inside is duplicated.
+  2. The flex container must fit both copies.
+  3. The animation translates exactly 50% of the entire track's scroll width, 
+     or -100% of the original content width.
+  4. By using Flexbox and translating exactly -100% of its OWN width (when applied to the inner wrapper),
+     the loop is mathematically seamless.
+*/
+
+.logo-marquee-container {
+  display: flex;
+  overflow: hidden;
+  user-select: none;
+  /* Define CSS variables for duration to allow React inline overriding */
+  --marquee-duration: 30s;
+  /* Gap mapped to Tailwind or custom */
+  --marquee-gap: 1.5rem; /* 24px */
+}
+
+/* 
+  Each track wrapper (original and duplicated) animates from 0 to -100%.
+  Because they are side-by-side, as the first moves to -100%, the second moves to 0%.
+  Then it instantly resets to 0. 
+*/
+.logo-marquee-track {
+  display: flex;
+  flex: 0 0 auto;
+  min-width: 100%;
+  gap: var(--marquee-gap);
+  padding-right: var(--marquee-gap); /* Prevent jumping when gap exists */
+  animation: logo-marquee var(--marquee-duration) linear infinite;
+  /* Force GPU acceleration */
+  will-change: transform;
+}
+
+.logo-marquee-track-reverse {
+  display: flex;
+  flex: 0 0 auto;
+  min-width: 100%;
+  gap: var(--marquee-gap);
+  padding-right: var(--marquee-gap);
+  animation: logo-marquee-reverse var(--marquee-duration) linear infinite;
+  will-change: transform;
+}
+
+/* Desktop Hover Pause */
+@media (hover: hover) and (pointer: fine) {
+  .logo-marquee-container:hover .logo-marquee-track,
+  .logo-marquee-container:hover .logo-marquee-track-reverse {
+    animation-play-state: paused;
+  }
+}
+
+/* Keyframes */
+@keyframes logo-marquee {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-100%, 0, 0);
+  }
+}
+
+@keyframes logo-marquee-reverse {
+  0% {
+    transform: translate3d(-100%, 0, 0);
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+}

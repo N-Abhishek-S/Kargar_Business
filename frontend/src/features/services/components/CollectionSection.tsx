@@ -85,7 +85,6 @@ export const CollectionSection = memo(function CollectionSection({ entity, block
           const relatedIds = serviceEntity.relationships?.relatedServices || [];
           services = relatedIds.map((id: string) => getService(id)).filter((s): s is Service => Boolean(s));
         } else {
-          // 'service' variant means list children services for a category
           title = 'Included Services';
           eyebrow = 'What We Offer';
           services = getServicesByCategory(entity.id);

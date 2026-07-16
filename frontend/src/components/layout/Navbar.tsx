@@ -11,7 +11,7 @@ const NAV_LINKS = [
   { label: 'Home', sectionId: 'hero' },
   { label: 'About', sectionId: 'about' },
   { label: 'Services', sectionId: 'services' },
-  { label: 'Industries', sectionId: 'industries' },
+  { label: 'Sectors', sectionId: 'sectors' },
   { label: 'Process', sectionId: 'process' },
   { label: 'Contact', sectionId: 'contact' },
 ];

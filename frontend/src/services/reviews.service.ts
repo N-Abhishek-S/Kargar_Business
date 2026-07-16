@@ -28,7 +28,6 @@ export interface ReviewSubmissionResponse {
 
 type ReviewSummaryRow = Views<'v_review_summary'>;
 type ActiveReviewRow = Views<'v_active_reviews'>;
-type ClientLogoRow = Tables<'client_logos'>;
 type ServiceRow = Tables<'services'>;
 type ReviewImageUploadPayload = NonNullable<ReviewSubmissionPayload['profileImage']>;
 
@@ -73,18 +72,6 @@ function mapService(row: ServiceRow): ServiceOption {
   };
 }
 
-function mapClientLogo(row: ClientLogoRow): ClientLogo {
-  return {
-    id: row.id,
-    companyName: row.company_name,
-    logoUrl: row.logo_url,
-    altText: row.alt_text,
-    website: row.website,
-    industry: row.industry,
-    priority: row.priority,
-    featured: row.is_featured,
-  };
-}
 
 function extensionForContentType(contentType: ReviewImageUploadPayload['contentType']): string {
   if (contentType === 'image/png') return 'png';
@@ -271,23 +258,28 @@ export async function fetchServiceOptions(): Promise<ServiceOption[]> {
   return data.map(mapService);
 }
 
+interface LogoManifestItem {
+  name: string;
+  file: string;
+  type: string;
+  source: string;
+}
+
 export async function fetchClientLogos(): Promise<ClientLogo[]> {
   try {
     const res = await fetch('/logos/logo-manifest.json');
     if (!res.ok) throw new Error('Failed to fetch logo manifest');
-    const manifest = await res.json();
+    const manifest = (await res.json()) as LogoManifestItem[];
     
-    return manifest.map((item: any, index: number) => ({
+    return manifest.map((item: LogoManifestItem, index: number) => ({
       id: `logo-${index}`,
       companyName: item.name,
       logoUrl: item.file,
       industry: item.type,
-      isActive: true,
-      displayOrder: index,
-      isFeatured: false,
+      altText: `${item.name} logo`,
+      website: null,
+      featured: false,
       priority: 0,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
     }));
   } catch (error) {
     console.error('Error fetching client logos:', error);

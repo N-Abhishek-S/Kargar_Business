@@ -161,6 +161,18 @@ export function ReviewDetailsModal({
             </p>
           </div>
 
+          {/* Optional Video Player */}
+          {review.videoUrl && (
+            <div className="mb-10 rounded-xl overflow-hidden bg-black max-w-4xl mx-auto shadow-md">
+              <video
+                src={review.videoUrl}
+                controls
+                preload="metadata"
+                className="w-full max-h-[60vh] object-contain"
+              />
+            </div>
+          )}
+
           {/* Optional Image Gallery */}
           {images.length > 0 && (
             <div className="mb-10">

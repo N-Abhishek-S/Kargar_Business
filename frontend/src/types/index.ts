@@ -54,6 +54,8 @@ export interface Review {
   is_featured: boolean;
   is_hidden: boolean;
   admin_reply: string | null;
+  video_url: string | null;
+  video_path: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -72,6 +74,10 @@ export interface PublicReview {
   profileImage: string | null;
   images?: string[];
   companyLogo: string | null;
+  videoUrl: string | null;
+  videoPath: string | null;
+  videoSize: number | null;
+  videoContentType: string | null;
   verified: boolean;
   featured: boolean;
   createdAt: string;
@@ -112,6 +118,7 @@ export interface ReviewSubmissionPayload {
   permissionToDisplay: boolean;
   profileImage?: ReviewImageUpload;
   companyLogo?: ReviewImageUpload;
+  videoFile?: File;
   websiteTrap?: string;
 }
 

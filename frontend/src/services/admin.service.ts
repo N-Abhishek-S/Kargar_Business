@@ -20,6 +20,14 @@ export interface AdminReviewUpdatePayload {
   featured?: boolean;
   displayOrder?: number;
   adminReply?: string;
+  customerName?: string;
+  companyName?: string;
+  rating?: number;
+  reviewText?: string;
+  videoUrl?: string | null;
+  videoPath?: string | null;
+  videoSize?: number | null;
+  videoContentType?: string | null;
 }
 
 type ReviewRow = Tables<'reviews'>;
@@ -61,6 +69,10 @@ function mapAdminReview(row: ReviewRow, serviceNames: Map<string, string>): Admi
     recommend: row.recommend,
     profileImage: row.profile_image_url,
     companyLogo: row.company_logo_url,
+    videoUrl: row.video_url,
+    videoPath: row.video_path,
+    videoSize: row.video_size,
+    videoContentType: row.video_content_type,
     verified: row.status === 'approved',
     featured: row.is_featured,
     createdAt: row.created_at,
@@ -189,15 +201,19 @@ export async function fetchAdminReviews(): Promise<PaginatedResponse<AdminReview
 export async function updateAdminReview(id: string, payload: AdminReviewUpdatePayload): Promise<void> {
   const updates: Updates<'reviews'> = {};
 
-  if (payload.status) {
-    updates.status = payload.status;
-  }
-  if (payload.featured !== undefined) {
-    updates.is_featured = payload.featured;
-  }
-  if (payload.displayOrder !== undefined) {
-    updates.display_order = payload.displayOrder;
-  }
+  if (payload.status) updates.status = payload.status;
+  if (payload.featured !== undefined) updates.is_featured = payload.featured;
+  if (payload.displayOrder !== undefined) updates.display_order = payload.displayOrder;
+  if (payload.customerName !== undefined) updates.customer_name = payload.customerName;
+  if (payload.companyName !== undefined) updates.company_name = payload.companyName;
+  if (payload.rating !== undefined) updates.rating = payload.rating;
+  if (payload.reviewText !== undefined) updates.review_text = payload.reviewText;
+  
+  // Video updates
+  if (payload.videoUrl !== undefined) updates.video_url = payload.videoUrl;
+  if (payload.videoPath !== undefined) updates.video_path = payload.videoPath;
+  if (payload.videoSize !== undefined) updates.video_size = payload.videoSize;
+  if (payload.videoContentType !== undefined) updates.video_content_type = payload.videoContentType;
 
   if (Object.keys(updates).length > 0) {
     const { error } = await supabase.from('reviews').update(updates).eq('id', id);
@@ -216,10 +232,21 @@ export async function updateAdminReview(id: string, payload: AdminReviewUpdatePa
 }
 
 export async function deleteAdminReview(id: string): Promise<void> {
+  // First fetch the review to check if it has a video
+  const { data: review } = await supabase.from('reviews').select('video_path').eq('id', id).single();
+  
+  if (review?.video_path) {
+    await supabase.storage.from('review-videos').remove([review.video_path]).catch(() => {});
+  }
+
   const updates: Updates<'reviews'> = {
     status: 'archived',
     is_featured: false,
     deleted_at: new Date().toISOString(),
+    video_url: null,
+    video_path: null,
+    video_size: null,
+    video_content_type: null,
   };
 
   const { error } = await supabase.from('reviews').update(updates).eq('id', id);

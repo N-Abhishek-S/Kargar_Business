@@ -1026,6 +1026,10 @@ export type Database = {
           service_id: string | null
           status: Database["public"]["Enums"]["review_status"]
           updated_at: string
+          video_content_type: string | null
+          video_path: string | null
+          video_size: number | null
+          video_url: string | null
           would_recommend: boolean
         }
         Insert: {
@@ -1065,6 +1069,10 @@ export type Database = {
           service_id?: string | null
           status?: Database["public"]["Enums"]["review_status"]
           updated_at?: string
+          video_content_type?: string | null
+          video_path?: string | null
+          video_size?: number | null
+          video_url?: string | null
           would_recommend?: boolean
         }
         Update: {
@@ -1104,6 +1112,10 @@ export type Database = {
           service_id?: string | null
           status?: Database["public"]["Enums"]["review_status"]
           updated_at?: string
+          video_content_type?: string | null
+          video_path?: string | null
+          video_size?: number | null
+          video_url?: string | null
           would_recommend?: boolean
         }
         Relationships: [
@@ -1422,6 +1434,10 @@ export type Database = {
           review_title: string | null
           service_name: string | null
           service_slug: string | null
+          video_content_type: string | null
+          video_path: string | null
+          video_size: number | null
+          video_url: string | null
         }
         Relationships: []
       }

@@ -9,8 +9,11 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { Modal } from '@/components/ui/Modal';
 import { Spinner } from '@/components/ui/Spinner';
 import { StarRating } from '@/components/ui/StarRating';
-import { deleteAdminReview, fetchAdminReviews, updateAdminReview } from '@/services/admin.service';
+import { deleteAdminReview, fetchAdminReviews, updateAdminReview, type AdminReviewUpdatePayload } from '@/services/admin.service';
+import { uploadReviewVideo } from '@/services/reviews.service';
 import type { AdminReview } from '@/types';
+import { AdminReviewEditForm } from '../components/AdminReviewEditForm';
+import { supabase } from '@/supabase/client';
 
 type ReviewStatus = AdminReview['status'];
 
@@ -102,6 +105,7 @@ function ReviewSummary({ reviews }: { reviews: AdminReview[] }) {
 export default function AdminReviewsPage() {
   const queryClient = useQueryClient();
   const [selectedReview, setSelectedReview] = useState<AdminReview | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
 
   const {
     data,
@@ -114,10 +118,57 @@ export default function AdminReviewsPage() {
   });
 
   const updateReviewMutation = useMutation({
-    mutationFn: ({ id, status, featured }: { id: string; status?: ReviewStatus; featured?: boolean }) =>
-      updateAdminReview(id, { status, featured }),
+    mutationFn: async (payload: { 
+      id: string; 
+      status?: ReviewStatus; 
+      featured?: boolean;
+      customerName?: string;
+      companyName?: string;
+      rating?: number;
+      reviewText?: string;
+      newVideoFile?: File | null;
+      removeVideo?: boolean;
+    }) => {
+      const { id, newVideoFile, removeVideo, ...updates } = payload;
+      const finalUpdates: AdminReviewUpdatePayload = { ...updates };
+
+      if (removeVideo) {
+        // We do this cleanup inside the mutation
+        const { data: review } = await supabase.from('reviews').select('video_path').eq('id', id).single();
+        if (review?.video_path) {
+          await supabase.storage.from('review-videos').remove([review.video_path]).catch(() => undefined);
+        }
+        finalUpdates.videoUrl = null;
+        finalUpdates.videoPath = null;
+        finalUpdates.videoSize = null;
+        finalUpdates.videoContentType = null;
+      } else if (newVideoFile) {
+        // Upload new video and optionally remove old
+        const { data: review } = await supabase.from('reviews').select('video_path').eq('id', id).single();
+        if (review?.video_path) {
+          await supabase.storage.from('review-videos').remove([review.video_path]).catch(() => undefined);
+        }
+        const videoData = await uploadReviewVideo(newVideoFile);
+        finalUpdates.videoUrl = videoData.url;
+        finalUpdates.videoPath = videoData.path;
+        finalUpdates.videoSize = videoData.size;
+        finalUpdates.videoContentType = videoData.contentType;
+      }
+
+      try {
+        await updateAdminReview(id, finalUpdates);
+      } catch (err) {
+        if (newVideoFile && finalUpdates.videoPath) {
+          // Cleanup newly uploaded video if DB update fails
+          await supabase.storage.from('review-videos').remove([finalUpdates.videoPath]).catch(() => undefined);
+        }
+        throw err;
+      }
+    },
     onSuccess: () => {
       toast.success('Review updated.');
+      setIsEditing(false);
+      setSelectedReview(null);
       void queryClient.invalidateQueries({ queryKey: ['admin-reviews'] });
       void queryClient.invalidateQueries({ queryKey: ['admin-dashboard'] });
     },
@@ -256,7 +307,10 @@ export default function AdminReviewsPage() {
                             variant="ghost"
                             size="sm"
                             leftIcon={<Eye className="h-4 w-4" />}
-                            onClick={() => { setSelectedReview(review); }}
+                            onClick={() => { 
+                              setSelectedReview(review); 
+                              setIsEditing(false);
+                            }}
                           >
                             View
                           </Button>
@@ -283,11 +337,23 @@ export default function AdminReviewsPage() {
 
       <Modal
         isOpen={selectedReview !== null}
-        onClose={() => { setSelectedReview(null); }}
-        title="Review Details"
+        onClose={() => { 
+          setSelectedReview(null); 
+          setIsEditing(false);
+        }}
+        title={isEditing ? 'Edit Review' : 'Review Details'}
         maxWidth="2xl"
       >
-        {selectedReview ? (
+        {selectedReview && isEditing ? (
+          <AdminReviewEditForm 
+            review={selectedReview} 
+            isSaving={updateReviewMutation.isPending}
+            onCancel={() => { setIsEditing(false); }}
+            onSave={async (id, updates) => {
+              await updateReviewMutation.mutateAsync({ id, ...updates });
+            }}
+          />
+        ) : selectedReview ? (
           <div className="space-y-6">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div>
@@ -324,6 +390,9 @@ export default function AdminReviewsPage() {
                   {selectedReview.featured ? 'Featured on public pages' : 'Not featured'}
                 </p>
               </div>
+            </div>
+            <div className="flex justify-end pt-4 border-t border-gray-200">
+              <Button onClick={() => { setIsEditing(true); }}>Edit Review</Button>
             </div>
           </div>
         ) : null}

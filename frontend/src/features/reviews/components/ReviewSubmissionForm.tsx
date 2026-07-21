@@ -9,6 +9,7 @@ import { StarRating } from '@/components/ui/StarRating';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { ImageUploadCard } from '@/components/ui/ImageUploadCard';
+import { VideoUploadCard } from './VideoUploadCard';
 import { useServiceOptions, useSubmitReview } from '@/features/reviews/hooks';
 import type { ReviewSubmissionPayload } from '@/types';
 
@@ -20,6 +21,13 @@ const imageFileSchema = z.object({
   size: z.number().max(5 * 1024 * 1024, 'Image must be less than 5MB'),
   data: z.string(),
 });
+
+const MAX_VIDEO_SIZE = 100 * 1024 * 1024;
+const ACCEPTED_VIDEO_TYPES = ['video/mp4', 'video/quicktime', 'video/webm'];
+
+const videoFileSchema = z.custom<File>((val) => val instanceof File, 'Please upload a valid file')
+  .refine((file) => file.size <= MAX_VIDEO_SIZE, 'Video must be less than 100MB')
+  .refine((file) => ACCEPTED_VIDEO_TYPES.includes(file.type), 'Video must be MP4, MOV, or WebM');
 
 const reviewFormSchema = z.object({
   customerName: z.string().trim().min(2, 'Enter your full name').max(120),
@@ -41,6 +49,7 @@ const reviewFormSchema = z.object({
   websiteTrap: z.string().max(0).optional(),
   profileImage: imageFileSchema.optional().nullable(),
   companyLogo: imageFileSchema.optional().nullable(),
+  videoFile: videoFileSchema.optional().nullable(), // File object
 });
 
 type ReviewFormValues = z.infer<typeof reviewFormSchema>;
@@ -85,6 +94,7 @@ export function ReviewSubmissionForm() {
       websiteTrap: '',
       profileImage: null,
       companyLogo: null,
+      videoFile: null,
     },
   });
 
@@ -92,6 +102,7 @@ export function ReviewSubmissionForm() {
   const reviewText = useWatch({ control, name: 'reviewText' });
   const profileImage = useWatch({ control, name: 'profileImage' });
   const companyLogo = useWatch({ control, name: 'companyLogo' });
+  const videoFile = useWatch({ control, name: 'videoFile' });
 
   const handleImageChange = (file: File | null, fieldName: 'profileImage' | 'companyLogo') => {
     if (!file) {
@@ -125,6 +136,10 @@ export function ReviewSubmissionForm() {
     reader.readAsDataURL(file);
   };
 
+  const handleVideoChange = (file: File | null) => {
+    setValue('videoFile', file, { shouldValidate: true });
+  };
+
   const onSubmit = async (values: ReviewFormValues) => {
     if (currentTimestamp() - getDuplicateTimestamp() < duplicateWindowMs) {
       toast.error('A review was already submitted recently.');
@@ -148,6 +163,7 @@ export function ReviewSubmissionForm() {
         websiteTrap: values.websiteTrap,
         profileImage: values.profileImage ?? undefined,
         companyLogo: values.companyLogo ?? undefined,
+        videoFile: values.videoFile ?? undefined,
       };
 
       await submitReview.mutateAsync(payload);
@@ -296,6 +312,16 @@ export function ReviewSubmissionForm() {
         />
       </div>
 
+      <div className="mb-8 bg-gray-50/50 p-6 rounded-xl border border-gray-100">
+        <VideoUploadCard 
+          label="Video Testimonial"
+          error={errors.videoFile?.message}
+          value={videoFile}
+          onChange={handleVideoChange}
+          maxSizeMB={100}
+        />
+      </div>
+
       {fileError && (
         <div className="mb-6 p-4 rounded-md bg-red-50 border border-red-100 text-red-600 text-sm font-medium" role="alert">
           {fileError}
@@ -315,7 +341,7 @@ export function ReviewSubmissionForm() {
           disabled={isSubmitting || submitReview.isPending}
         >
           {isSubmitting || submitReview.isPending ? (
-            <><Loader2 className="w-5 h-5 animate-spin" /> Submitting...</>
+            <><Loader2 className="w-5 h-5 animate-spin" /> {videoFile ? 'Uploading video...' : 'Submitting...'}</>
           ) : (
             <><Send className="w-5 h-5" /> Submit Review</>
           )}

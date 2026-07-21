@@ -32,6 +32,7 @@ type ServiceRow = Tables<'services'>;
 type ReviewImageUploadPayload = NonNullable<ReviewSubmissionPayload['profileImage']>;
 
 const reviewImageBucket = 'review-images';
+const reviewVideoBucket = 'review-videos';
 
 function normalizeNullable(value: string | undefined): string | null {
   const trimmed = value?.trim();
@@ -52,6 +53,10 @@ function mapActiveReview(row: ActiveReviewRow): PublicReview {
     recommend: row.recommend ?? true,
     profileImage: row.profile_image_url ?? '',
     companyLogo: row.company_logo_url ?? '',
+    videoUrl: row.video_url ?? null,
+    videoPath: (row as any).video_path ?? null,
+    videoSize: (row as any).video_size ?? null,
+    videoContentType: (row as any).video_content_type ?? null,
     verified: true,
     featured: row.is_featured ?? false,
     createdAt: row.created_at ?? '',
@@ -116,6 +121,35 @@ async function uploadReviewImage(
 
   const { data } = supabase.storage.from(reviewImageBucket).getPublicUrl(path);
   return data.publicUrl;
+}
+
+export async function uploadReviewVideo(file: File): Promise<{ url: string; path: string; size: number; contentType: string }> {
+  const extension = file.name.split('.').pop() ?? 'mp4';
+  const dateFolder = new Date().toISOString().slice(0, 10);
+  const path = `${dateFolder}/${crypto.randomUUID()}.${extension}`;
+
+  const { error } = await supabase.storage.from(reviewVideoBucket).upload(path, file, {
+    contentType: file.type || 'video/mp4',
+    cacheControl: '31536000',
+    upsert: false,
+  });
+
+  if (error) {
+    const errorObj = error as unknown as { message?: string, statusCode?: string | number };
+    const errorMsg = errorObj.message ?? '';
+    if (errorMsg.toLowerCase().includes('bucket not found') || errorMsg.toLowerCase().includes('not found') || errorObj.statusCode === '404' || errorObj.statusCode === 404 || errorObj.statusCode === 400) {
+      throw new Error('Video uploads are not configured. Please contact the administrator.');
+    }
+    throwSupabaseError(error, 'Video upload failed');
+  }
+
+  const { data } = supabase.storage.from(reviewVideoBucket).getPublicUrl(path);
+  return { 
+    url: data.publicUrl, 
+    path, 
+    size: file.size, 
+    contentType: file.type || 'video/mp4' 
+  };
 }
 
 export async function fetchPublicReviews(params: ReviewListParams = {}): Promise<PaginatedResponse<PublicReview>> {
@@ -213,6 +247,11 @@ export async function submitPublicReview(payload: ReviewSubmissionPayload): Prom
   const companyLogoUrl = payload.companyLogo
     ? await uploadReviewImage(payload.companyLogo, 'company-logos')
     : null;
+    
+  let videoData = null;
+  if (payload.videoFile) {
+    videoData = await uploadReviewVideo(payload.videoFile);
+  }
 
   const record: Inserts<'reviews'> = {
     customer_name: payload.customerName.trim(),
@@ -227,6 +266,10 @@ export async function submitPublicReview(payload: ReviewSubmissionPayload): Prom
     recommend: payload.recommend,
     profile_image_url: profileImageUrl,
     company_logo_url: companyLogoUrl,
+    video_url: videoData?.url ?? null,
+    video_path: videoData?.path ?? null,
+    video_size: videoData?.size ?? null,
+    video_content_type: videoData?.contentType ?? null,
     status: 'pending',
     is_featured: false,
     display_order: 0,
@@ -238,7 +281,16 @@ export async function submitPublicReview(payload: ReviewSubmissionPayload): Prom
   };
 
   const { error } = await supabase.from('reviews').insert(record);
-  throwSupabaseError(error, 'Review submission failed');
+  
+  if (error) {
+    if (videoData?.path) {
+      // Best effort cleanup of orphaned video if DB insert fails
+      await supabase.storage.from(reviewVideoBucket).remove([videoData.path]).catch((e: unknown) => {
+        console.error('Failed to cleanup orphaned video', e);
+      });
+    }
+    throwSupabaseError(error, 'Review submission failed');
+  }
 
   return {
     id: 'submitted',

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { clsx } from 'clsx';
-import { Camera } from 'lucide-react';
+import { Camera, Video } from 'lucide-react';
 import type { PublicReview } from '@/types';
 import { Avatar } from '@/components/ui/Avatar';
 import { ReviewStars } from './ui/ReviewStars';
@@ -68,11 +68,13 @@ export function ReviewCard({ review, isActive, onReadMore }: ReviewCardProps) {
 
   return (
     <article
+      onDoubleClick={() => { onReadMore?.(review); }}
       className={clsx(
         'kb-enterprise-card relative flex flex-col overflow-hidden rounded-2xl bg-(--surface-primary) p-8 sm:p-10 w-full',
         'h-full min-h-96 shrink-0', // Fluid flex height
         'transition-all duration-(--duration-slow) ease-(--ease-smooth)',
         'border border-gray-100 hover:shadow-(--shadow-premium-hover) hover:-translate-y-2',
+        onReadMore && 'cursor-pointer',
         isActive ? 'shadow-(--shadow-premium-card) border-blue-100/50 scale-[1.015]' : 'shadow-sm',
       )}
     >
@@ -108,11 +110,25 @@ export function ReviewCard({ review, isActive, onReadMore }: ReviewCardProps) {
           </button>
         )}
 
-        {/* Photos Indicator */}
-        {images.length > 0 && (
-          <div className="mt-4 flex items-center gap-2 text-(--text-muted) text-sm font-medium">
-            <Camera size={16} />
-            <span>{images.length} Photo{images.length !== 1 ? 's' : ''}</span>
+        {/* Media Indicators */}
+        {(images.length > 0 || review.videoUrl) && (
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            {review.videoUrl && (
+              <button
+                type="button"
+                onClick={() => { onReadMore?.(review); }}
+                className="flex items-center gap-1.5 text-orange-600 bg-orange-50 px-2.5 py-1 rounded-full text-sm font-semibold hover:bg-orange-100 transition-colors"
+              >
+                <Video size={16} />
+                <span>Play Video</span>
+              </button>
+            )}
+            {images.length > 0 && (
+              <div className="flex items-center gap-1.5 text-(--text-muted) text-sm font-medium px-2.5 py-1 bg-gray-50 rounded-full border border-gray-100">
+                <Camera size={16} />
+                <span>{images.length} Photo{images.length !== 1 ? 's' : ''}</span>
+              </div>
+            )}
           </div>
         )}
       </div>

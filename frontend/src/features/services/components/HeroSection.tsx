@@ -8,8 +8,9 @@ import { Breadcrumb } from './Breadcrumb';
 import { useContactNavigation } from '../hooks/useContactNavigation';
 import { useDocument } from '../../../shared/hooks/useDocument';
 import { serviceImages } from '../config/images';
+import { buildServiceBreadcrumbs } from '@/lib/seo/breadcrumbs';
 import type { ServiceBlockProps } from '../registry/BlockRenderer';
-import type { Service } from '../domain/service.types';
+import type { Category, Service } from '../domain/service.types';
 
 export const HeroSection = memo(function HeroSection({ entity, block }: ServiceBlockProps) {
   const image = serviceImages[entity.imageKey] ?? serviceImages.hardServices;
@@ -21,21 +22,7 @@ export const HeroSection = memo(function HeroSection({ entity, block }: ServiceB
   });
   
   const isService = 'categoryId' in entity;
-  const breadcrumbs = [
-    { label: 'Home', href: '/' },
-    { label: 'Services', href: '/services' },
-  ];
-
-  if (isService) {
-    const service = entity as Service;
-    breadcrumbs.push({ 
-      label: service.categoryId === 'hard' ? 'Hard Services' : 'Soft Services', 
-      href: `/services/${service.categoryId}-services` 
-    });
-    breadcrumbs.push({ label: service.title, href: '#' });
-  } else {
-    breadcrumbs.push({ label: entity.title, href: '#' });
-  }
+  const breadcrumbs = buildServiceBreadcrumbs(entity as Category | Service);
 
   const title = entity.marketing?.headline ?? entity.title;
   const subtitle = entity.marketing?.summary ?? ('shortDescription' in entity ? (entity as unknown as { shortDescription: string }).shortDescription : '');

@@ -8,7 +8,9 @@
   },
   "scripts": {
     "dev": "vite",
+    "prebuild": "tsx --tsconfig scripts/tsconfig.seo.json scripts/seo/index.ts",
     "build": "tsc -b && vite build",
+    "seo": "tsx --tsconfig scripts/tsconfig.seo.json scripts/seo/index.ts",
     "lint": "eslint src/",
     "type-check": "tsc -b",
     "format": "prettier --write src/",

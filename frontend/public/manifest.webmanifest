@@ -1,0 +1,17 @@
+{
+  "name": "Kargar Facility Management",
+  "short_name": "Kargar FM",
+  "description": "Integrated facility management services — housekeeping, security, electrical, and HVAC maintenance for corporate offices across India.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "theme_color": "#0A1628",
+  "background_color": "#0A1628",
+  "icons": [
+    {
+      "src": "/images/brand/kargar-logo.png",
+      "sizes": "any",
+      "type": "image/png"
+    }
+  ]
+}

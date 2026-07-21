@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/Button';
 import { BrandLogo } from '@/components/ui/BrandLogo';
 import { Spinner } from '@/components/ui/Spinner';
 import { getCurrentAdmin, logoutAdmin, type AdminSession } from '@/services/admin.service';
+import { SEO } from '@/components/seo/SEO';
 
 const ADMIN_NAV = [
   { label: 'Dashboard', href: '/admin', icon: LayoutDashboard },
@@ -71,6 +72,7 @@ export function AdminLayout() {
 
   return (
     <div className="flex min-h-screen bg-gray-50">
+      <SEO title="Admin" robots={{ index: false, follow: false }} />
       {/* Mobile sidebar overlay */}
       {isSidebarOpen && (
         <div 

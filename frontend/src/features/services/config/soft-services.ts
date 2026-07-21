@@ -12,9 +12,9 @@ export const softServices: Record<string, Service> = {
     iconKey: 'sparkles',
     imageKey: 'housekeeping',
     seo: {
-      title: 'Professional Housekeeping & Cleaning Services | Kargar',
-      description: 'Top-tier corporate housekeeping and deep cleaning services to maintain a pristine, healthy workspace.',
-      keywords: ['Corporate Housekeeping', 'Deep Cleaning', 'Facility Hygiene']
+      title: 'Corporate Housekeeping Services',
+      description: 'Top-tier corporate housekeeping and deep cleaning services to maintain a pristine, hygienic workspace, backed by trained and police-verified staff.',
+      keywords: ['Corporate Housekeeping', 'Housekeeping Services', 'Deep Cleaning', 'Facility Hygiene']
     },
     serviceType: 'cleaning',
     layoutPreset: 'enterpriseCleaning',
@@ -47,7 +47,7 @@ export const softServices: Record<string, Service> = {
       { question: 'Are your housekeeping staff background-checked?', answer: 'Absolutely. All our personnel undergo thorough police verification and background checks.' }
     ],
     relationships: {
-      relatedServices: ['security', 'pest-control', 'waste-management']
+      relatedServices: ['security']
     },
     order: 1,
   },
@@ -61,8 +61,9 @@ export const softServices: Record<string, Service> = {
     iconKey: 'shield',
     imageKey: 'security',
     seo: {
-      title: 'Corporate Security Services & Manned Guarding | Kargar',
-      description: 'Reliable security personnel, access control, and surveillance monitoring for complete facility protection.',
+      title: 'Corporate Security Services',
+      description: 'Reliable trained security guards, access control, and CCTV surveillance monitoring for complete corporate and industrial facility protection.',
+      keywords: ['Corporate Security Services', 'Security Guard Services', 'Trained Security Guards', 'Security Solutions'],
     },
     serviceType: 'security',
     layoutPreset: 'enterpriseTechnical',
@@ -95,7 +96,7 @@ export const softServices: Record<string, Service> = {
       { question: 'What is your response protocol for emergencies?', answer: 'Immediate containment, coordination with local authorities, and rapid incident reporting.' }
     ],
     relationships: {
-      relatedServices: ['housekeeping', 'facility-support']
+      relatedServices: ['housekeeping']
     },
     order: 2,
   }

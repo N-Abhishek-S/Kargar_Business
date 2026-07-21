@@ -12,9 +12,9 @@ export const hardServices: Record<string, Service> = {
     iconKey: 'zap',
     imageKey: 'electrical',
     seo: {
-      title: 'Electrical Maintenance Services | Kargar Facility Management',
-      description: 'Reliable electrical maintenance, troubleshooting, and preventive care for enterprise facilities.',
-      keywords: ['Electrical Maintenance', 'LT Panels', 'HT Panels', 'Facility Management'],
+      title: 'Electrical Maintenance',
+      description: 'Reliable electrical maintenance, troubleshooting, and preventive care for LT/HT panels, transformers, and backup generators across enterprise facilities.',
+      keywords: ['Electrical Maintenance', 'LT Panels', 'HT Panels', 'Preventive Maintenance', 'Facility Management'],
     },
     serviceType: 'technical',
     layoutPreset: 'enterpriseTechnical',
@@ -50,7 +50,7 @@ export const hardServices: Record<string, Service> = {
       { question: 'Do you handle backup generator maintenance?', answer: 'Yes, generator maintenance is a key part of our electrical services to ensure reliable backup power.' }
     ],
     relationships: {
-      relatedServices: ['hvac', 'plumbing', 'fire-fighting'],
+      relatedServices: ['hvac'],
       crossSellServices: ['hvac']
     },
     order: 1,
@@ -65,8 +65,9 @@ export const hardServices: Record<string, Service> = {
     iconKey: 'wind',
     imageKey: 'hvac',
     seo: {
-      title: 'Commercial HVAC Maintenance Services | Kargar',
-      description: 'Professional HVAC servicing, repair, and preventive maintenance for commercial and industrial facilities.',
+      title: 'Commercial HVAC Maintenance',
+      description: 'Professional HVAC servicing, repair, and preventive maintenance for chillers, AHUs, and cooling towers across commercial and industrial facilities.',
+      keywords: ['HVAC Maintenance', 'Mechanical Maintenance', 'Commercial Maintenance', 'Preventive Maintenance'],
     },
     serviceType: 'technical',
     layoutPreset: 'enterpriseTechnical',
@@ -102,7 +103,7 @@ export const hardServices: Record<string, Service> = {
       { question: 'Do you service commercial chiller systems?', answer: 'Yes, our technicians are highly experienced in servicing large-scale commercial chillers.' }
     ],
     relationships: {
-      relatedServices: ['electrical', 'plumbing', 'civil']
+      relatedServices: ['electrical']
     },
     order: 2,
   }

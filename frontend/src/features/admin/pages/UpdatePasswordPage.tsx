@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { Shield, KeyRound } from 'lucide-react';
 import { supabase } from '@/supabase/client';
+import { SEO } from '@/components/seo/SEO';
 
 const updatePasswordSchema = z.object({
   password: z.string().min(8, 'Password must be at least 8 characters'),
@@ -63,6 +64,7 @@ export default function UpdatePasswordPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4 relative overflow-hidden">
+      <SEO title="Update Password" robots={{ index: false, follow: false }} />
       <div className="w-full max-w-md relative z-10">
         <div className="mb-8 flex flex-col items-start md:items-center text-left md:text-center">
           <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-navy-900 text-white shadow-xl shadow-navy-900/20">

@@ -25,6 +25,7 @@ import {
   Send,
 } from 'lucide-react';
 import { BrandLogo } from '@/components/ui/BrandLogo';
+import { OptimizedImage } from '@/components/ui/OptimizedImage';
 import { submitContactMessage } from '@/services/contact.service';
 import { ReviewsSection } from '@/features/reviews/components/ReviewsSection';
 import { TrustedClientsSection } from '@/features/reviews/components/TrustedClientsSection';
@@ -34,6 +35,8 @@ import { IndustriesSection } from '@/features/home/components/IndustriesSection'
 import { useContactNavigation } from '@/features/services/hooks/useContactNavigation';
 import { Link } from 'react-router';
 import { SEO } from '@/components/seo/SEO';
+import { buildCanonicalUrl } from '@/lib/seo/canonical';
+import { getSeoEntry } from '@/features/seo/registry';
 import { trackEvent } from '@/types/analytics';
 
 const CountUp =
@@ -471,7 +474,11 @@ function ContactPage() {
             <div className="kb-info-card__copy">
               <h2>Get in Touch</h2>
               <p>Reach out to us using any of the following channels.</p>
-              <img src="/images/page/contact-building.webp" alt="Modern Kargar office building" />
+              <OptimizedImage
+                src="/images/page/contact-building.webp"
+                alt="Modern Kargar office building"
+                showBlur={false}
+              />
             </div>
             <div className="kb-info-list">
               <ContactInfo icon={MapPin} title="Our Office" text="301, 3rd Floor, Unity Commercial, Baner, Pune, Maharashtra 411045, India" />
@@ -679,10 +686,6 @@ export function KargarSinglePage() {
   const { pathname } = useLocation();
 
   useEffect(() => {
-    document.title = 'Kargar Business Services';
-  }, []);
-
-  useEffect(() => {
     const target = routeSectionMap[pathname];
     if (!target) return;
     window.requestAnimationFrame(() => {
@@ -693,9 +696,21 @@ export function KargarSinglePage() {
   const isServices = pathname === '/services';
   const isContact = pathname === '/contact-us' || pathname === '/contact';
 
+  // /contact is a legacy alias for /contact-us (redirected at the edge in production);
+  // canonicalize both to the same registry entry and URL so the SPA never emits duplicate metadata.
+  const canonicalPath = pathname === '/contact' ? '/contact-us' : pathname;
+  const seoEntry = getSeoEntry(canonicalPath);
+  const breadcrumbLabel = isContact ? 'Contact Us' : isServices ? 'Services' : seoRouteLabel(pathname);
+
   return (
     <div className="kargar-site kb-site">
-      <SEO />
+      <SEO
+        title={seoEntry.title}
+        description={seoEntry.description}
+        canonicalUrl={buildCanonicalUrl(canonicalPath)}
+        robots={seoEntry.robots}
+        breadcrumbItems={breadcrumbLabel ? [{ label: breadcrumbLabel, href: '#' }] : []}
+      />
       <Header activePath={pathname} />
       <main>
         {isContact ? <ContactPage /> : isServices ? <ServicesPage /> : <HomePage />}
@@ -703,4 +718,17 @@ export function KargarSinglePage() {
       <Footer />
     </div>
   );
+}
+
+function seoRouteLabel(pathname: string): string | undefined {
+  switch (pathname) {
+    case '/sectors':
+      return 'Sectors';
+    case '/company-profile':
+      return 'Company Profile';
+    case '/support':
+      return 'Support';
+    default:
+      return undefined;
+  }
 }

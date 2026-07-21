@@ -28,7 +28,7 @@ export const config = {
   },
 
   /** Public site URL */
-  siteUrl: getEnvVar('VITE_SITE_URL', 'https://www.kargar.co.in'),
+  siteUrl: getEnvVar('VITE_SITE_URL', 'https://www.kargarbusinessservices.com'),
 
   /** Site name */
   siteName: getEnvVar('VITE_SITE_NAME', 'Kargar Facility Management'),

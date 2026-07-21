@@ -11,8 +11,9 @@ export const serviceCategories: Record<string, Category> = {
     iconKey: 'wrench',
     imageKey: 'hardServices',
     seo: {
-      title: 'Hard Facility Management Services | Kargar',
-      description: 'Expert engineering, HVAC, electrical, and plumbing maintenance services for enterprise facilities.',
+      title: 'Hard Facility Management',
+      description: 'Expert hard services covering HVAC, electrical, and plumbing maintenance that keep enterprise facilities running safely with minimal downtime.',
+      keywords: ['Hard Services', 'Building Maintenance', 'MEP Maintenance', 'Preventive Maintenance'],
     },
     showInNavigation: true,
     priority: 1,
@@ -32,8 +33,9 @@ export const serviceCategories: Record<string, Category> = {
     iconKey: 'brush',
     imageKey: 'softServices',
     seo: {
-      title: 'Soft Facility Management Services | Kargar',
-      description: 'Professional housekeeping, security, pest control, and facility support services for a safe workspace.',
+      title: 'Soft Facility Management',
+      description: 'Professional soft services covering housekeeping, security, pest control, and facility support that keep your workplace clean, safe, and welcoming.',
+      keywords: ['Soft Services', 'Housekeeping Services', 'Security Solutions', 'Facility Support Services'],
     },
     showInNavigation: true,
     priority: 2,

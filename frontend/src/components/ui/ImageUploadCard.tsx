@@ -1,16 +1,17 @@
 import { useState, useRef, type ChangeEvent } from 'react';
 import { clsx } from 'clsx';
-import { ImagePlus, X, UploadCloud } from 'lucide-react';
+import { ImagePlus, X, UploadCloud, Camera } from 'lucide-react';
 
 export interface ImageUploadCardProps {
   label: string;
   error?: string;
   value?: { data: string; fileName: string; size: number } | null;
   onChange: (file: File | null) => void;
+  onTakePhoto?: () => void;
   maxSizeMB?: number;
 }
 
-export function ImageUploadCard({ label, error, value, onChange, maxSizeMB = 5 }: ImageUploadCardProps) {
+export function ImageUploadCard({ label, error, value, onChange, onTakePhoto, maxSizeMB = 5 }: ImageUploadCardProps) {
   const [isDragActive, setIsDragActive] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -100,14 +101,34 @@ export function ImageUploadCard({ label, error, value, onChange, maxSizeMB = 5 }
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center p-4 text-center">
-            <div className={clsx(
-              "w-10 h-10 rounded-full flex items-center justify-center mb-2 transition-colors",
-              isDragActive ? "bg-orange-100 text-orange-600" : "bg-white shadow-sm border border-gray-100 text-gray-500"
-            )}>
-              {isDragActive ? <UploadCloud size={20} /> : <ImagePlus size={20} />}
+            <div className="flex gap-4 mb-4">
+              <div className={clsx(
+                "w-10 h-10 rounded-full flex items-center justify-center transition-colors",
+                isDragActive ? "bg-orange-100 text-orange-600" : "bg-white shadow-sm border border-gray-100 text-gray-500"
+              )}>
+                {isDragActive ? <UploadCloud size={20} /> : <ImagePlus size={20} />}
+              </div>
+              {onTakePhoto && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onTakePhoto();
+                  }}
+                  className="w-10 h-10 rounded-full bg-white shadow-sm border border-gray-100 text-gray-500 flex items-center justify-center hover:bg-gray-50 hover:text-orange-500 transition-colors"
+                  aria-label="Take photo"
+                >
+                  <Camera size={20} />
+                </button>
+              )}
             </div>
             <p className="text-sm font-medium text-gray-700">
-              {isDragActive ? "Drop image here" : <><span className="text-orange-500 hover:text-orange-600 font-semibold">Click to upload</span> or drag and drop</>}
+              {isDragActive ? "Drop image here" : (
+                <>
+                  <span className="text-orange-500 hover:text-orange-600 font-semibold">Click to upload</span>
+                  {onTakePhoto ? ' or take a photo' : ' or drag and drop'}
+                </>
+              )}
             </p>
             <p className="text-xs text-gray-500 mt-1">
               SVG, PNG, JPG or GIF (max. {maxSizeMB}MB)

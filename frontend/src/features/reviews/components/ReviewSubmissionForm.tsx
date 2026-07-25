@@ -8,7 +8,7 @@ import { clsx } from 'clsx';
 import { StarRating } from '@/components/ui/StarRating';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
-import { ImageUploadCard } from '@/components/ui/ImageUploadCard';
+import { ReviewImageField } from './ReviewImageField';
 import { VideoUploadCard } from './VideoUploadCard';
 import { useServiceOptions, useSubmitReview } from '@/features/reviews/hooks';
 import type { ReviewSubmissionPayload } from '@/types';
@@ -298,13 +298,13 @@ export function ReviewSubmissionForm() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 bg-gray-50/50 p-6 rounded-xl border border-gray-100">
-        <ImageUploadCard 
+        <ReviewImageField 
           label="Company Logo"
           error={errors.companyLogo?.message}
           value={companyLogo}
           onChange={(file) => { handleImageChange(file, 'companyLogo'); }}
         />
-        <ImageUploadCard 
+        <ReviewImageField 
           label="Project / Office Image"
           error={errors.profileImage?.message}
           value={profileImage}

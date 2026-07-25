@@ -20,7 +20,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Video, Clock, Settings2 } from 'lucide-react';
+import { X, Video, Clock, Settings2, RefreshCw } from 'lucide-react';
 import { clsx } from 'clsx';
 
 import type { VideoRecorderModalProps, VideoMetadata, VideoQuality } from '../../types/video-recorder.types';
@@ -393,6 +393,38 @@ export function VideoRecorderModal({ isOpen, onClose, onUseVideo }: VideoRecorde
                   </button>
                 )}
 
+                {/* Flip Camera button */}
+                {isCameraLive && devices.cameras.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const currentIndex = devices.cameras.findIndex(c => c.deviceId === devices.selectedCamera);
+                      const nextIndex = devices.cameras.length > 1 ? (currentIndex + 1) % devices.cameras.length : 0;
+                      const nextCamera = devices.cameras[nextIndex];
+                      
+                      if (nextCamera) {
+                        devices.selectCamera(nextCamera.deviceId);
+                        recorder._setSelectedCamera(nextCamera.deviceId);
+                        trackRecorderEvent('camera_selected', { source: 'flip_button' });
+                        if (state === 'ready') {
+                          void requestPermission();
+                        }
+                      }
+                    }}
+                    disabled={state === 'recording' || state === 'countdown'}
+                    className={clsx(
+                      'flex items-center justify-center w-8 h-8 rounded-full',
+                      'text-gray-400 hover:text-white hover:bg-white/10',
+                      'transition-colors duration-200 recorder-focus-ring',
+                      'disabled:opacity-30 disabled:cursor-not-allowed'
+                    )}
+                    aria-label="Flip Camera"
+                    title="Flip Camera"
+                  >
+                    <RefreshCw size={16} />
+                  </button>
+                )}
+
                 {/* Close button */}
                 <button
                   type="button"
@@ -434,11 +466,19 @@ export function VideoRecorderModal({ isOpen, onClose, onUseVideo }: VideoRecorde
                         selectedMic={devices.selectedMic}
                         onCameraChange={(id) => {
                           devices.selectCamera(id);
+                          recorder._setSelectedCamera(id);
                           trackRecorderEvent('camera_selected');
+                          if (state === 'ready') {
+                            void requestPermission();
+                          }
                         }}
                         onMicChange={(id) => {
                           devices.selectMic(id);
+                          recorder._setSelectedMic(id);
                           trackRecorderEvent('microphone_selected');
+                          if (state === 'ready') {
+                            void requestPermission();
+                          }
                         }}
                         disabled={state === 'recording'}
                       />

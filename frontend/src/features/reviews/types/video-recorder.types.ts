@@ -218,6 +218,11 @@ export interface UseVideoRecorderReturn {
   readonly retake: () => void;
   readonly getRecordedFile: () => File | null;
   readonly cleanup: () => void;
+
+  /* Companion Hook Sync */
+  readonly _setSelectedCamera: (id: string | null) => void;
+  readonly _setSelectedMic: (id: string | null) => void;
+  readonly _setSelectedQuality: (q: VideoQuality) => void;
 }
 
 export interface UseMediaDevicesReturn {

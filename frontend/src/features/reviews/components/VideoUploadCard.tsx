@@ -1,6 +1,23 @@
-import { useState, useRef, useEffect, type ChangeEvent } from 'react';
+/**
+ * Video Upload Card — Two-option UI
+ *
+ * Option 1: Upload Existing Video (original drag-and-drop — fully preserved)
+ * Option 2: Record Video (opens VideoRecorderModal — lazy loaded)
+ *
+ * The recorded video is converted to a standard File and passed through
+ * the existing onChange(file) callback — zero changes to parent form.
+ */
+
+import { useState, useRef, useEffect, lazy, Suspense, type ChangeEvent } from 'react';
 import { clsx } from 'clsx';
-import { X, UploadCloud } from 'lucide-react';
+import { X, UploadCloud, Video, Loader2 } from 'lucide-react';
+import { recorderStrings } from '../i18n/recorder.i18n';
+import { RecorderFlags } from '../config/recorder.config';
+
+/* ---- Lazy-load the recorder modal (Phase 1 perf requirement) ---- */
+const VideoRecorderModal = lazy(() =>
+  import('./recorder/VideoRecorderModal').then((m) => ({ default: m.VideoRecorderModal })),
+);
 
 export interface VideoUploadCardProps {
   label: string;
@@ -13,8 +30,10 @@ export interface VideoUploadCardProps {
 export function VideoUploadCard({ label, error, value, onChange, maxSizeMB = 100 }: VideoUploadCardProps) {
   const [isDragActive, setIsDragActive] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isRecorderOpen, setIsRecorderOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  /* ---- Preview URL lifecycle ---- */
   useEffect(() => {
     if (value) {
       const url = URL.createObjectURL(value);
@@ -26,6 +45,7 @@ export function VideoUploadCard({ label, error, value, onChange, maxSizeMB = 100
     }
   }, [value]);
 
+  /* ---- Upload handlers (preserved from original) ---- */
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragActive(true);
@@ -60,41 +80,34 @@ export function VideoUploadCard({ label, error, value, onChange, maxSizeMB = 100
     onChange(null);
   };
 
-  return (
-    <div className="flex flex-col gap-1.5 w-full">
-      <label className="text-sm font-medium leading-none text-navy-900">
-        {label} <span className="text-gray-400 font-normal ml-1">(Optional)</span>
-      </label>
-      
-      <div
-        onClick={() => {
-          if (!value) inputRef.current?.click();
-        }}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-        className={clsx(
-          'relative flex flex-col items-center w-full rounded-lg border-2 border-dashed transition-all duration-200 overflow-hidden',
-          value ? 'border-gray-200' : 'min-h-32 justify-center cursor-pointer bg-gray-50/50 hover:bg-gray-50 focus-within:ring-2 focus-within:ring-orange-500/50 focus-within:ring-offset-1',
-          isDragActive ? 'border-orange-500 bg-orange-50/30' : error ? 'border-red-400' : 'hover:border-gray-300'
-        )}
-      >
-        <input 
-          ref={inputRef}
-          type="file" 
-          accept="video/mp4, video/quicktime, video/webm" 
-          className="sr-only" 
-          onChange={handleChange}
-          aria-invalid={!!error}
-          aria-label={`Upload ${label}`}
-        />
+  /* ---- Recorder handlers ---- */
+  const handleOpenRecorder = () => {
+    setIsRecorderOpen(true);
+  };
 
-        {value && previewUrl ? (
-          <div className="relative w-full h-full p-2 bg-white">
+  const handleCloseRecorder = () => {
+    setIsRecorderOpen(false);
+  };
+
+  const handleUseRecordedVideo = (file: File) => {
+    onChange(file);
+    setIsRecorderOpen(false);
+  };
+
+  /* ---- If a video is already selected, show the preview (same as original) ---- */
+  if (value && previewUrl) {
+    return (
+      <div className="flex flex-col gap-1.5 w-full">
+        <label className="text-sm font-medium leading-none text-navy-900">
+          {label} <span className="text-gray-400 font-normal ml-1">{recorderStrings.videoSectionOptional}</span>
+        </label>
+
+        <div className="relative flex flex-col items-center w-full rounded-lg border-2 border-gray-200 overflow-hidden">
+          <div className="relative w-full p-2 bg-white">
             <div className="relative w-full rounded-md overflow-hidden bg-black flex flex-col">
-              <video 
-                src={previewUrl} 
-                controls 
+              <video
+                src={previewUrl}
+                controls
                 className="w-full max-h-64 object-contain"
                 preload="metadata"
               />
@@ -124,23 +137,130 @@ export function VideoUploadCard({ label, error, value, onChange, maxSizeMB = 100
               <span className="text-xs text-gray-500 whitespace-nowrap">{(value.size / (1024 * 1024)).toFixed(2)} MB</span>
             </div>
           </div>
-        ) : (
-          <div className="flex flex-col items-center justify-center p-6 text-center">
-            <div className="w-10 h-10 mb-3 rounded-full bg-orange-50 flex items-center justify-center text-orange-500">
-              <UploadCloud size={20} />
-            </div>
-            <p className="text-sm font-medium text-navy-900 mb-1">
-              Click to upload <span className="font-normal text-gray-500">or drag and drop</span>
-            </p>
-            <p className="text-xs text-gray-500">
-              MP4, MOV, WebM (Max {maxSizeMB}MB)
-            </p>
-          </div>
+
+          {/* Hidden file input for Replace functionality */}
+          <input
+            ref={inputRef}
+            type="file"
+            accept="video/mp4, video/quicktime, video/webm"
+            className="sr-only"
+            onChange={handleChange}
+            aria-label={`Upload ${label}`}
+          />
+        </div>
+
+        {error && (
+          <p className="text-sm text-red-500 font-medium" role="alert">{error}</p>
         )}
       </div>
-      
+    );
+  }
+
+  /* ---- No video selected — show two-option card ---- */
+  return (
+    <div className="flex flex-col gap-1.5 w-full">
+      <label className="text-sm font-medium leading-none text-navy-900">
+        {label} <span className="text-gray-400 font-normal ml-1">{recorderStrings.videoSectionOptional}</span>
+      </label>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {/* ---- Option 1: Upload Existing Video ---- */}
+        <div
+          onClick={() => inputRef.current?.click()}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              inputRef.current?.click();
+            }
+          }}
+          className={clsx(
+            'relative flex flex-col items-center justify-center p-5 rounded-xl border-2 border-dashed',
+            'cursor-pointer transition-all duration-200',
+            'hover:bg-gray-50 focus-visible:ring-2 focus-visible:ring-orange-500/50 focus-visible:ring-offset-1',
+            isDragActive
+              ? 'border-orange-500 bg-orange-50/30'
+              : error
+                ? 'border-red-400 bg-red-50/20'
+                : 'border-gray-200 hover:border-gray-300 bg-gray-50/30',
+          )}
+          aria-label={recorderStrings.uploadExistingVideo}
+        >
+          <input
+            ref={inputRef}
+            type="file"
+            accept="video/mp4, video/quicktime, video/webm"
+            className="sr-only"
+            onChange={handleChange}
+            aria-invalid={!!error}
+            aria-label={`Upload ${label}`}
+          />
+
+          <div className="w-10 h-10 mb-2.5 rounded-full bg-blue-50 flex items-center justify-center text-blue-500">
+            <UploadCloud size={20} />
+          </div>
+          <p className="text-sm font-semibold text-navy-900 mb-0.5">
+            {recorderStrings.uploadExistingVideo}
+          </p>
+          <p className="text-xs text-gray-400">
+            {recorderStrings.uploadExistingDesc}
+          </p>
+        </div>
+
+        {/* ---- Option 2: Record Video ---- */}
+        {RecorderFlags.ENABLE_VIDEO_RECORDING && (
+          <button
+            type="button"
+            onClick={handleOpenRecorder}
+            className={clsx(
+              'relative flex flex-col items-center justify-center p-5 rounded-xl border-2 border-dashed',
+              'cursor-pointer transition-all duration-200',
+              'border-gray-200 hover:border-orange-300 bg-gray-50/30 hover:bg-orange-50/20',
+              'focus-visible:ring-2 focus-visible:ring-orange-500/50 focus-visible:ring-offset-1',
+            )}
+            aria-label={recorderStrings.recordVideo}
+          >
+            <div className="w-10 h-10 mb-2.5 rounded-full bg-orange-50 flex items-center justify-center text-orange-500">
+              <Video size={20} />
+            </div>
+            <p className="text-sm font-semibold text-navy-900 mb-0.5">
+              {recorderStrings.recordVideo}
+            </p>
+            <p className="text-xs text-gray-400">
+              {recorderStrings.recordVideoDesc}
+            </p>
+          </button>
+        )}
+      </div>
+
+      {/* Format & size info */}
+      <p className="text-xs text-gray-400 mt-1">
+        {recorderStrings.supportedFormats} · Max {maxSizeMB} MB
+      </p>
+
       {error && (
         <p className="text-sm text-red-500 font-medium" role="alert">{error}</p>
+      )}
+
+      {/* Lazy-loaded Recorder Modal */}
+      {isRecorderOpen && (
+        <Suspense
+          fallback={
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+              <Loader2 className="w-8 h-8 text-orange-500 animate-spin" />
+            </div>
+          }
+        >
+          <VideoRecorderModal
+            isOpen={isRecorderOpen}
+            onClose={handleCloseRecorder}
+            onUseVideo={handleUseRecordedVideo}
+          />
+        </Suspense>
       )}
     </div>
   );

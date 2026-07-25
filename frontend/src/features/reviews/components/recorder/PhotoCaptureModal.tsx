@@ -182,28 +182,31 @@ export const PhotoCaptureModal: React.FC<PhotoCaptureModalProps> = ({
   };
 
   const handleFlipCamera = async () => {
-    if (isSwitching || cameras.length <= 1) return;
+    if (isSwitching) return;
     
-    const currentIndex = cameras.findIndex(c => c.deviceId === activeDeviceId);
-    const nextIndex = (currentIndex + 1) % cameras.length;
-    const nextCamera = cameras[nextIndex];
-    
-    if (nextCamera) {
-      // Attempt switch with recovery
-      const previousDeviceId = activeDeviceId;
-      const success = await startCamera(nextCamera.deviceId);
+    if (cameras.length > 1) {
+      const currentIndex = cameras.findIndex(c => c.deviceId === activeDeviceId);
+      const nextIndex = (currentIndex + 1) % cameras.length;
+      const nextCamera = cameras[nextIndex];
       
-      if (!success && previousDeviceId) {
-        setError('Selected camera unavailable. Reverting...');
-        await startCamera(previousDeviceId);
+      if (nextCamera) {
+        // Attempt switch with recovery
+        const previousDeviceId = activeDeviceId;
+        const success = await startCamera(nextCamera.deviceId);
+        
+        if (!success && previousDeviceId) {
+          setError('Selected camera unavailable. Reverting...');
+          await startCamera(previousDeviceId);
+        }
+        return;
       }
-    } else {
-      // Fallback if device enumeration fails (e.g. Safari strict mode)
-      const prefs = getStoredPrefs();
-      const nextMode = prefs.preferredFacingMode === 'user' ? 'environment' : 'user';
-      savePrefs({ preferredFacingMode: nextMode });
-      await startCamera(undefined, nextMode);
     }
+    
+    // Fallback if device enumeration fails (e.g. Safari strict mode) or only 1 camera reported
+    const prefs = getStoredPrefs();
+    const nextMode = prefs.preferredFacingMode === 'user' ? 'environment' : 'user';
+    savePrefs({ preferredFacingMode: nextMode });
+    await startCamera(undefined, nextMode);
   };
 
   const toggleFlash = async () => {
@@ -244,8 +247,9 @@ export const PhotoCaptureModal: React.FC<PhotoCaptureModalProps> = ({
             
             <button 
               onClick={() => void handleFlipCamera()} 
-              disabled={cameras.length <= 1 || isSwitching}
-              className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors disabled:opacity-0"
+              disabled={isSwitching}
+              className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Switch Camera"
             >
               <RefreshCw className={`w-5 h-5 ${isSwitching ? 'animate-spin' : ''}`} />
             </button>

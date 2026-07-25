@@ -55,6 +55,16 @@ export class CapabilityService {
   public get current(): Partial<CameraCapabilities> {
     return this.capabilities;
   }
+
+  public async getAvailableCameras(): Promise<MediaDeviceInfo[]> {
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      return devices.filter(device => device.kind === 'videoinput');
+    } catch (err) {
+      console.warn('Failed to enumerate cameras:', err);
+      return [];
+    }
+  }
 }
 
 export const capabilityService = new CapabilityService();

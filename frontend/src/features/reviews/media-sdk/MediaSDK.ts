@@ -38,7 +38,7 @@ export class MediaSDK {
 
   // --- Photo API ---
 
-  public async openCamera(facingMode: 'user' | 'environment' = 'user'): Promise<MediaStream> {
+  public async openCamera(facingMode: 'user' | 'environment' = 'environment'): Promise<MediaStream> {
     this.stateMachine.transitionTo(MediaState.PERMISSION);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({

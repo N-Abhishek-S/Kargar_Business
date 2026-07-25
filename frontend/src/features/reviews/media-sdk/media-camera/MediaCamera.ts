@@ -8,6 +8,7 @@ export type CaptureMode = 'single' | 'burst' | 'document' | 'square' | 'landscap
 
 export interface CameraOptions {
   facingMode?: 'user' | 'environment';
+  deviceId?: string;
   width?: { ideal: number; max?: number };
   height?: { ideal: number; max?: number };
 }
@@ -27,11 +28,9 @@ export class MediaCamera {
     this.stop(); // Ensure any existing stream is cleaned up first
     
     const constraints: MediaStreamConstraints = {
-      video: {
-        facingMode: options.facingMode ?? 'user',
-        width: options.width,
-        height: options.height,
-      },
+      video: options.deviceId 
+        ? { deviceId: { exact: options.deviceId }, width: options.width, height: options.height }
+        : { facingMode: options.facingMode ?? 'environment', width: options.width, height: options.height },
       audio: false
     };
 
@@ -93,6 +92,25 @@ export class MediaCamera {
   
   public getVideoElement(): HTMLVideoElement {
     return this.videoElement;
+  }
+
+  public getActiveTrackSettings(): MediaTrackSettings | undefined {
+    if (!this.stream) return undefined;
+    const track = this.stream.getVideoTracks()[0];
+    return track?.getSettings();
+  }
+
+  public getActiveTrackCapabilities(): MediaTrackCapabilities | undefined {
+    if (!this.stream) return undefined;
+    const track = this.stream.getVideoTracks()[0] as MediaStreamTrack & { getCapabilities?: () => MediaTrackCapabilities };
+    if (typeof track.getCapabilities === 'function') {
+      try {
+        return track.getCapabilities();
+      } catch (err) {
+        console.warn('Failed to read capabilities:', err);
+      }
+    }
+    return undefined;
   }
 }
 

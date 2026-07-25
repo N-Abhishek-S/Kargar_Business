@@ -42,7 +42,8 @@ export class MediaSDK {
     this.stateMachine.transitionTo(MediaState.PERMISSION);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode, ...mediaConfig.config.resolution }
+        video: { facingMode, ...mediaConfig.config.resolution },
+        audio: false
       });
       this.stateMachine.transitionTo(MediaState.CAMERA_READY);
       mediaEventBus.publish('camera:opened', { facingMode });

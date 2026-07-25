@@ -4,7 +4,6 @@
 
 import { Clock, Monitor, HardDrive } from 'lucide-react';
 import type { VideoMetadataDisplayProps } from '../../types/video-recorder.types';
-import { recorderStrings } from '../../i18n/recorder.i18n';
 import { formatRecordingTime, formatFileSize } from '../../utils/video-recorder.utils';
 
 export function VideoMetadataDisplay({ metadata }: VideoMetadataDisplayProps) {

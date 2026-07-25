@@ -19,7 +19,7 @@ export function useAudioLevel(stream: MediaStream | null): UseAudioLevelReturn {
   const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
   const animFrameRef = useRef<number>(0);
   const silenceStartRef = useRef<number>(0);
-  const dataArrayRef = useRef<Uint8Array | null>(null);
+  const dataArrayRef = useRef<Uint8Array<ArrayBuffer> | null>(null);
 
   const cleanup = useCallback(() => {
     if (animFrameRef.current) {
@@ -40,15 +40,19 @@ export function useAudioLevel(stream: MediaStream | null): UseAudioLevelReturn {
   useEffect(() => {
     if (!stream) {
       cleanup();
-      setLevel(0);
-      setIsSilent(false);
-      setSilenceDurationMs(0);
+      requestAnimationFrame(() => {
+        setLevel(0);
+        setIsSilent(false);
+        setSilenceDurationMs(0);
+      });
       return;
     }
 
     const audioTracks = stream.getAudioTracks();
     if (audioTracks.length === 0) {
-      setIsSilent(true);
+      requestAnimationFrame(() => {
+        setIsSilent(true);
+      });
       return;
     }
 
@@ -78,8 +82,8 @@ export function useAudioLevel(stream: MediaStream | null): UseAudioLevelReturn {
 
         // Calculate RMS level
         let sum = 0;
-        for (let i = 0; i < dataArrayRef.current.length; i++) {
-          sum += dataArrayRef.current[i]! * dataArrayRef.current[i]!;
+        for (const value of dataArrayRef.current) {
+          sum += value * value;
         }
         const rms = Math.sqrt(sum / dataArrayRef.current.length);
         const normalized = Math.min(rms / 128, 1); // 0–1
@@ -109,7 +113,9 @@ export function useAudioLevel(stream: MediaStream | null): UseAudioLevelReturn {
       animFrameRef.current = requestAnimationFrame(tick);
     } catch {
       // AudioContext not available
-      setIsSilent(false);
+      requestAnimationFrame(() => {
+        setIsSilent(false);
+      });
     }
 
     return cleanup;

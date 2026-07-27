@@ -40,9 +40,9 @@ import { useVideoMetadata } from '../../hooks/useVideoMetadata';
 import { useBrightnessCheck } from '../../hooks/useBrightnessCheck';
 import { useFaceDetection } from '../../hooks/useFaceDetection';
 import { useDraftRecovery } from '../../hooks/useDraftRecovery';
+import { useMediaCapture } from '../../../media-sdk/capture-react/useMediaCapture';
 
 /* ---- Services ---- */
-import { isRecordingSupported } from '../../services/media.service';
 import { trackRecorderEvent } from '../../services/analytics.service';
 
 /* ---- Components ---- */
@@ -68,6 +68,7 @@ import '../../styles/video-recorder.css';
 export function VideoRecorderModal({ isOpen, onClose, onUseVideo }: VideoRecorderModalProps) {
   /* ---- Core hooks ---- */
   const capabilities = useBrowserCapabilities();
+  const mediaCapture = useMediaCapture();
   const recorder = useVideoRecorder();
   const devices = useMediaDevices();
   const network = useNetworkStatus();
@@ -96,6 +97,7 @@ export function VideoRecorderModal({ isOpen, onClose, onUseVideo }: VideoRecorde
   const [brightnessWarningDismissed, setBrightnessWarningDismissed] = useState(false);
   const [faceHintDismissed, setFaceHintDismissed] = useState(false);
   const [showDraftDialog, setShowDraftDialog] = useState(false);
+  const [activeFacingMode, setActiveFacingMode] = useState<'user' | 'environment'>('user');
 
   /* ---- Refs ---- */
   const cameraVideoRef = useRef<HTMLVideoElement>(null);
@@ -134,7 +136,7 @@ export function VideoRecorderModal({ isOpen, onClose, onUseVideo }: VideoRecorde
   /* ---- Auto-request permission when modal opens ---- */
   useEffect(() => {
     if (isOpen && state === 'idle') {
-      if (!isRecordingSupported()) return;
+      if (!isSupported) return;
 
       // If there's a draft, show the dialog instead
       if (shouldShowDraftDialog) {
@@ -394,22 +396,12 @@ export function VideoRecorderModal({ isOpen, onClose, onUseVideo }: VideoRecorde
                 )}
 
                 {/* Flip Camera button */}
-                {isCameraLive && devices.cameras.length > 0 && (
+                {isCameraLive && (
                   <button
                     type="button"
                     onClick={() => {
-                      const currentIndex = devices.cameras.findIndex(c => c.deviceId === devices.selectedCamera);
-                      const nextIndex = devices.cameras.length > 1 ? (currentIndex + 1) % devices.cameras.length : 0;
-                      const nextCamera = devices.cameras[nextIndex];
-                      
-                      if (nextCamera) {
-                        devices.selectCamera(nextCamera.deviceId);
-                        recorder._setSelectedCamera(nextCamera.deviceId);
-                        trackRecorderEvent('camera_selected', { source: 'flip_button' });
-                        if (state === 'ready') {
-                          void requestPermission();
-                        }
-                      }
+                      trackRecorderEvent('camera_selected', { source: 'flip_button' });
+                      void mediaCapture.switchCamera({ audio: true });
                     }}
                     disabled={state === 'recording' || state === 'countdown'}
                     className={clsx(

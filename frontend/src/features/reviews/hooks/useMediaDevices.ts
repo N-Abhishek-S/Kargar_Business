@@ -5,13 +5,10 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import {
-  enumerateDevices,
-  onDeviceChange,
-} from '../services/media.service';
 import { MediaLogger } from '../services/logger.service';
 import { StorageKeys } from '../config/recorder.config';
 import type { RecorderDeviceInfo, UseMediaDevicesReturn } from '../types/video-recorder.types';
+import { useMediaCapture } from '../../../media-sdk/capture-react/useMediaCapture';
 
 function loadStoredId(key: string): string | null {
   try {
@@ -31,9 +28,8 @@ function saveStoredId(key: string, id: string | null): void {
 }
 
 export function useMediaDevices(): UseMediaDevicesReturn {
-  const [cameras, setCameras] = useState<RecorderDeviceInfo[]>([]);
-  const [microphones, setMicrophones] = useState<RecorderDeviceInfo[]>([]);
-  const [speakers, setSpeakers] = useState<RecorderDeviceInfo[]>([]);
+  const mediaCapture = useMediaCapture();
+  
   const [selectedCamera, setSelectedCamera] = useState<string | null>(null);
   const [selectedMic, setSelectedMic] = useState<string | null>(null);
   const [isDeviceDisconnected, setIsDeviceDisconnected] = useState(false);
@@ -42,19 +38,19 @@ export function useMediaDevices(): UseMediaDevicesReturn {
   const prevCamerasRef = useRef<RecorderDeviceInfo[]>([]);
   const prevMicsRef = useRef<RecorderDeviceInfo[]>([]);
 
-  const refreshDevices = useCallback(async () => {
-    const devices = await enumerateDevices();
-    setCameras(devices.cameras);
-    setMicrophones(devices.microphones);
-    setSpeakers(devices.speakers);
+  // The devices are already managed by the SDK, so we just use them
+  const cameras = mediaCapture.devices.cameras;
+  const microphones = mediaCapture.devices.microphones;
+  const speakers = mediaCapture.devices.speakers;
 
+  const detectChanges = useCallback(() => {
     // Detect disconnections
     const prevCams = prevCamerasRef.current;
     const prevMics = prevMicsRef.current;
 
-    if (prevCams.length > 0 && devices.cameras.length < prevCams.length) {
+    if (prevCams.length > 0 && cameras.length < prevCams.length) {
       const removed = prevCams.find(
-        (c) => !devices.cameras.some((d) => d.deviceId === c.deviceId),
+        (c) => !cameras.some((d) => d.deviceId === c.deviceId),
       );
       if (removed) {
         MediaLogger.warn('Camera disconnected', { label: removed.label });
@@ -63,9 +59,9 @@ export function useMediaDevices(): UseMediaDevicesReturn {
       }
     }
 
-    if (prevMics.length > 0 && devices.microphones.length < prevMics.length) {
+    if (prevMics.length > 0 && microphones.length < prevMics.length) {
       const removed = prevMics.find(
-        (m) => !devices.microphones.some((d) => d.deviceId === m.deviceId),
+        (m) => !microphones.some((d) => d.deviceId === m.deviceId),
       );
       if (removed) {
         MediaLogger.warn('Microphone disconnected', { label: removed.label });
@@ -75,43 +71,35 @@ export function useMediaDevices(): UseMediaDevicesReturn {
     }
 
     // Auto-detect reconnection
-    if (isDeviceDisconnected && devices.cameras.length > 0) {
+    if (isDeviceDisconnected && cameras.length > 0) {
       setIsDeviceDisconnected(false);
       setDisconnectedDeviceLabel(null);
       MediaLogger.info('Device reconnected');
     }
 
-    prevCamerasRef.current = devices.cameras;
-    prevMicsRef.current = devices.microphones;
+    prevCamerasRef.current = cameras;
+    prevMicsRef.current = microphones;
 
     // Auto-select if nothing selected
-    if (!selectedCamera && devices.cameras.length > 0) {
+    if (!selectedCamera && cameras.length > 0) {
       const stored = loadStoredId(StorageKeys.LAST_CAMERA);
-      const match = stored ? devices.cameras.find((c) => c.deviceId === stored) : null;
-      const first = match ?? devices.cameras[0];
+      const match = stored ? cameras.find((c) => c.deviceId === stored) : null;
+      const first = match ?? cameras[0];
       if (first) setSelectedCamera(first.deviceId);
     }
 
-    if (!selectedMic && devices.microphones.length > 0) {
+    if (!selectedMic && microphones.length > 0) {
       const stored = loadStoredId(StorageKeys.LAST_MIC);
-      const match = stored ? devices.microphones.find((m) => m.deviceId === stored) : null;
-      const first = match ?? devices.microphones[0];
+      const match = stored ? microphones.find((m) => m.deviceId === stored) : null;
+      const first = match ?? microphones[0];
       if (first) setSelectedMic(first.deviceId);
     }
-  }, [selectedCamera, selectedMic, isDeviceDisconnected]);
+  }, [cameras, microphones, selectedCamera, selectedMic, isDeviceDisconnected]);
 
-  // Initial enumeration
+  // Run change detection when SDK devices change
   useEffect(() => {
-    void refreshDevices();
-  }, [refreshDevices]);
-
-  // Listen for device changes (hot-swap)
-  useEffect(() => {
-    const unsubscribe = onDeviceChange(() => {
-      void refreshDevices();
-    });
-    return unsubscribe;
-  }, [refreshDevices]);
+    detectChanges();
+  }, [cameras, microphones, detectChanges]);
 
   const selectCamera = useCallback((id: string) => {
     setSelectedCamera(id);
@@ -123,6 +111,13 @@ export function useMediaDevices(): UseMediaDevicesReturn {
     setSelectedMic(id);
     saveStoredId(StorageKeys.LAST_MIC, id);
     MediaLogger.info('Microphone selected', { deviceId: id });
+  }, []);
+
+  const refreshDevices = useCallback(async () => {
+    // We could ask SDK to refresh, but the SDK auto-listens
+    // If we really need manual refresh, we could add a refresh method to the SDK.
+    // For now, this is a no-op because SDK listens to devicechange.
+    return Promise.resolve();
   }, []);
 
   return {

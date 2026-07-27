@@ -223,6 +223,7 @@ export interface UseVideoRecorderReturn {
   readonly _setSelectedCamera: (id: string | null) => void;
   readonly _setSelectedMic: (id: string | null) => void;
   readonly _setSelectedQuality: (q: VideoQuality) => void;
+  readonly _setSelectedFacingMode: (mode: 'user' | 'environment') => void;
 }
 
 export interface UseMediaDevicesReturn {

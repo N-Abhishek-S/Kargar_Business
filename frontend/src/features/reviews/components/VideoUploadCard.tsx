@@ -13,6 +13,7 @@ import { clsx } from 'clsx';
 import { X, UploadCloud, Video, Loader2 } from 'lucide-react';
 import { recorderStrings } from '../i18n/recorder.i18n';
 import { RecorderFlags } from '../config/recorder.config';
+import { CameraProvider } from '../../../media-sdk/capture-react/useMediaCapture';
 
 /* ---- Lazy-load the recorder modal (Phase 1 perf requirement) ---- */
 const VideoRecorderModal = lazy(() =>
@@ -255,11 +256,13 @@ export function VideoUploadCard({ label, error, value, onChange, maxSizeMB = 100
             </div>
           }
         >
-          <VideoRecorderModal
-            isOpen={isRecorderOpen}
-            onClose={handleCloseRecorder}
-            onUseVideo={handleUseRecordedVideo}
-          />
+          <CameraProvider>
+            <VideoRecorderModal
+              isOpen={isRecorderOpen}
+              onClose={handleCloseRecorder}
+              onUseVideo={handleUseRecordedVideo}
+            />
+          </CameraProvider>
         </Suspense>
       )}
     </div>

@@ -6,9 +6,12 @@
  */
 
 import { useMemo } from 'react';
-import { getCapabilities } from '../services/media.service';
+import { CameraCapabilityService } from '../../../media-sdk/capture-core/services/CameraCapabilityService';
 import type { BrowserCapabilities } from '../types/video-recorder.types';
 
 export function useBrowserCapabilities(): BrowserCapabilities {
-  return useMemo(() => getCapabilities(), []);
+  return useMemo(() => {
+    const service = new CameraCapabilityService();
+    return service.getBrowserCapabilities();
+  }, []);
 }

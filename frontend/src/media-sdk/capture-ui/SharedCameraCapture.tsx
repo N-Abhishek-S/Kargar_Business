@@ -58,7 +58,7 @@ export const SharedCameraCapture: React.FC<SharedCameraCaptureProps> = ({
   };
 
   // Allow switching if we have more than 1 device. Mobile might hide it if capability service thinks there's only 1.
-  const canSwitch = devices.length > 1;
+  const canSwitch = devices.cameras.length > 1;
 
   return (
     <div className={`relative w-full h-full ${className}`}>

@@ -18,7 +18,6 @@ export class ConstraintBuilder {
    */
   build(options: BuildConstraintsOptions): MediaStreamConstraints {
     const isMobile = this.capabilityService.isMobileDevice();
-    const supportsFacingMode = this.capabilityService.supportsFacingMode();
 
     const videoConstraints: MediaTrackConstraints = {
       width: { ideal: options.config.maxWidth },

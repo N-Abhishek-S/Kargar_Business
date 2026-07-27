@@ -1,28 +1,33 @@
 import { SDKError } from "../types";
-import { CameraConfig } from "../config/camera.config";
-import type { Emitter } from "../utils/EventEmitter";
-import type { SDKEventMap } from "../types";
 
-export type RecordingState = "inactive" | "recording" | "paused";
+import type { Emitter } from "../utils/EventEmitter";
+import type { SDKEventMap, RecordingState } from "../types";
 
 export class VideoRecorderController {
   private recorder: MediaRecorder | null = null;
   private chunks: Blob[] = [];
   private destroyed = false;
   private stopResolve: ((blob: Blob) => void) | null = null;
+  private recordingStartTime = 0;
   
   constructor(
-    private emitter: Emitter<SDKEventMap>,
-    private config: CameraConfig
+    private emitter: Emitter<SDKEventMap>
   ) {}
 
   getState(): RecordingState | "destroyed" {
     if (this.destroyed) return "destroyed";
-    return (this.recorder?.state as RecordingState) ?? "inactive";
+    if (!this.recorder) return "STOPPED";
+    
+    switch (this.recorder.state) {
+      case "recording": return "RECORDING";
+      case "paused": return "PAUSED";
+      case "inactive": return "STOPPED";
+      default: return "STOPPED";
+    }
   }
 
   isRecording(): boolean {
-    return this.getState() === "recording";
+    return this.getState() === "RECORDING";
   }
 
   start(stream: MediaStream, mimeType?: string): void {
@@ -57,10 +62,13 @@ export class VideoRecorderController {
     };
 
     this.recorder.onstop = () => {
-      const finalMime = this.recorder?.mimeType || targetMimeType || "video/webm";
+      const finalMime = this.recorder?.mimeType ?? targetMimeType ?? "video/webm";
       const blob = new Blob(this.chunks, { type: finalMime });
       
-      this.emitter.emit("recording.stopped", { blob });
+      const duration = Date.now() - this.recordingStartTime;
+      const file = new File([blob], `recording_${Date.now()}.webm`, { type: finalMime });
+
+      this.emitter.emit("recording.finished", { file, duration });
       
       if (this.stopResolve) {
         this.stopResolve(blob);
@@ -68,37 +76,38 @@ export class VideoRecorderController {
       }
     };
 
-    this.recorder.onerror = (event: Event) => {
-      const err = new SDKError("RecordingError", "MediaRecorder encountered an error");
+    this.recorder.onerror = () => {
+      const err = new SDKError("MediaRecorder encountered an error", "RecordingError");
       this.emitter.emit("error", err);
     };
 
     this.recorder.onpause = () => {
-      this.emitter.emit("recording.paused", undefined as any);
+      this.emitter.emit("recording.paused", undefined);
     };
 
     this.recorder.onresume = () => {
-      this.emitter.emit("recording.resumed", undefined as any);
+      this.emitter.emit("recording.resumed", undefined);
     };
 
     this.recorder.start(1000); // progressive chunking
-    this.emitter.emit("recording.started", undefined as any);
+    this.recordingStartTime = Date.now();
+    this.emitter.emit("recording.started", undefined);
   }
 
   pause(): void {
-    if (this.destroyed || !this.recorder || this.recorder.state !== "recording") return;
+    if (this.destroyed || this.recorder?.state !== "recording") return;
     this.recorder.pause();
   }
 
   resume(): void {
-    if (this.destroyed || !this.recorder || this.recorder.state !== "paused") return;
+    if (this.destroyed || this.recorder?.state !== "paused") return;
     this.recorder.resume();
   }
 
   stop(): Promise<Blob> {
     return new Promise<Blob>((resolve, reject) => {
       if (this.destroyed || !this.recorder) {
-        reject(new SDKError("InvalidStateError", "Recorder is not initialized or is destroyed"));
+        reject(new SDKError("Recorder is not initialized or is destroyed", "InvalidStateError"));
         return;
       }
 
@@ -120,8 +129,8 @@ export class VideoRecorderController {
     if (this.recorder && this.recorder.state !== "inactive") {
       try {
         this.recorder.stop();
-      } catch (e) {
-        // ignore
+      } catch {
+        // Ignored
       }
     }
 

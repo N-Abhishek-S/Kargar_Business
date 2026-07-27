@@ -49,9 +49,9 @@ export interface SDKEventMap {
 
 // Explicit Errors
 export class SDKError extends Error {
-  constructor(message: string) {
+  constructor(message: string, name?: string) {
     super(message);
-    this.name = "SDKError";
+    this.name = name || "SDKError";
   }
 }
 

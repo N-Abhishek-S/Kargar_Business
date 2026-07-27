@@ -40,7 +40,7 @@ import { useVideoMetadata } from '../../hooks/useVideoMetadata';
 import { useBrightnessCheck } from '../../hooks/useBrightnessCheck';
 import { useFaceDetection } from '../../hooks/useFaceDetection';
 import { useDraftRecovery } from '../../hooks/useDraftRecovery';
-import { useMediaCapture } from '../../../media-sdk/capture-react/useMediaCapture';
+import { useMediaCapture } from '../../../../media-sdk/capture-react/useMediaCapture';
 
 /* ---- Services ---- */
 import { trackRecorderEvent } from '../../services/analytics.service';
@@ -97,7 +97,6 @@ export function VideoRecorderModal({ isOpen, onClose, onUseVideo }: VideoRecorde
   const [brightnessWarningDismissed, setBrightnessWarningDismissed] = useState(false);
   const [faceHintDismissed, setFaceHintDismissed] = useState(false);
   const [showDraftDialog, setShowDraftDialog] = useState(false);
-  const [activeFacingMode, setActiveFacingMode] = useState<'user' | 'environment'>('user');
 
   /* ---- Refs ---- */
   const cameraVideoRef = useRef<HTMLVideoElement>(null);

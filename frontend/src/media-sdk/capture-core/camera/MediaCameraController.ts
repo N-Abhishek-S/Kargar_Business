@@ -73,7 +73,7 @@ export class MediaCameraController {
       if (signal.aborted) throw new SDKError("Aborted");
 
       // 2. Fetch devices
-      const devices = await this.deviceService.getCameraDevices();
+      const { cameras: devices } = await this.deviceService.getDevices();
       
       if (devices.length === 0) {
         throw new SDKError("CameraNotFoundError");
@@ -144,7 +144,8 @@ export class MediaCameraController {
         this.stopCurrentStream();
         
         try {
-          const granted = await this.permissionService.hasCameraPermission();
+          const permissionState = await this.permissionService.checkCameraPermission();
+          const granted = permissionState === "granted";
           if (granted) {
             console.log("MediaCameraController: Permission still granted, attempting reconnect...");
             this.state = "IDLE";
@@ -169,7 +170,8 @@ export class MediaCameraController {
       return;
     }
 
-    const permissionGranted = await this.permissionService.hasCameraPermission();
+    const permissionState = await this.permissionService.checkCameraPermission();
+    const permissionGranted = permissionState === "granted";
     if (!permissionGranted) {
       console.warn(`MediaCameraController: switchCamera not allowed without permission.`);
       return;
@@ -194,7 +196,7 @@ export class MediaCameraController {
         this.currentDeviceId = null;
       } else {
         // Desktop device cycling
-        const devices = await this.deviceService.getCameraDevices();
+        const { cameras: devices } = await this.deviceService.getDevices();
         if (devices.length > 1) {
           const currentIndex = devices.findIndex((d) => d.deviceId === this.currentDeviceId);
           const nextIndex = (currentIndex + 1) % devices.length;

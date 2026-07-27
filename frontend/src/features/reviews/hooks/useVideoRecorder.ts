@@ -29,9 +29,11 @@ export function useVideoRecorder(): UseVideoRecorderReturn & {
   // Deriving state
   let derivedState = internalState;
   if (internalState !== 'countdown' && internalState !== 'preview') {
+      const isRecording = mediaCapture.recordingState === 'RECORDING';
+      const isPaused = mediaCapture.recordingState === 'PAUSED';
       if (mediaCapture.error) derivedState = 'error';
-      else if (mediaCapture.recordingState === 'recording') derivedState = 'recording';
-      else if (mediaCapture.recordingState === 'paused') derivedState = 'paused';
+      else if (isRecording) derivedState = 'recording';
+      else if (isPaused) derivedState = 'paused';
       else if (mediaCapture.state === 'READY') derivedState = 'ready';
       else if (mediaCapture.state === 'OPENING') derivedState = 'requesting_permission';
       else derivedState = 'idle';

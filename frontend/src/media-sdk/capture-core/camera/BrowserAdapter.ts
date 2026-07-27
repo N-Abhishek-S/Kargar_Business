@@ -9,26 +9,29 @@ export class BrowserAdapter {
    * 4. Attempt 4: Any camera fallback
    */
   async getStream(constraints: MediaStreamConstraints): Promise<MediaStream> {
-    if (typeof window === "undefined" || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      throw new SDKError("NotSupportedError", "Camera access is not supported in this environment.");
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    if (typeof window === "undefined" || !navigator.mediaDevices.getUserMedia) {
+      throw new SDKError("Camera access is not supported in this environment.", "NotSupportedError");
     }
 
     try {
       // Attempt 1
       return await navigator.mediaDevices.getUserMedia(constraints);
-    } catch (err: any) {
-      if (err.name === "OverconstrainedError" || err.name === "ConstraintNotSatisfiedError") {
-        return this.handleOverconstrainedFallback(constraints, err);
-      }
-      
-      if (err.name === "NotAllowedError" && this.isSafari()) {
-        console.warn("BrowserAdapter: Safari NotAllowedError detected. Attempting generic constraints fallback.");
-        return this.handleSafariFallback(constraints);
-      }
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        if (err.name === "OverconstrainedError" || err.name === "ConstraintNotSatisfiedError") {
+          return this.handleOverconstrainedFallback(constraints, err);
+        }
+        
+        if (err.name === "NotAllowedError" && this.isSafari()) {
+          console.warn("BrowserAdapter: Safari NotAllowedError detected. Attempting generic constraints fallback.");
+          return this.handleSafariFallback(constraints);
+        }
 
-      // If it's another error that indicates device missing or unsupported, try enumeration
-      if (err.name === "NotFoundError" || err.name === "NotReadableError") {
-        return this.handleDeviceEnumerationFallback(constraints);
+        // If it's another error that indicates device missing or unsupported, try enumeration
+        if (err.name === "NotFoundError" || err.name === "NotReadableError") {
+          return this.handleDeviceEnumerationFallback(constraints);
+        }
       }
 
       throw err;
@@ -37,28 +40,39 @@ export class BrowserAdapter {
 
   private async handleOverconstrainedFallback(
     originalConstraints: MediaStreamConstraints, 
-    originalError: any
+    originalError: unknown
   ): Promise<MediaStream> {
     console.warn("BrowserAdapter: OverconstrainedError encountered. Falling back to relaxed constraints.", originalError);
     
-    const relaxedConstraints: MediaStreamConstraints = JSON.parse(JSON.stringify(originalConstraints));
+    const relaxedConstraints = JSON.parse(JSON.stringify(originalConstraints)) as MediaStreamConstraints;
     
     // Attempt 2: Relax facingMode and resolution constraints
     if (relaxedConstraints.video && typeof relaxedConstraints.video === "object") {
-      const videoOpts = relaxedConstraints.video as any;
-      if (videoOpts.width?.exact) videoOpts.width = { ideal: videoOpts.width.exact };
-      if (videoOpts.height?.exact) videoOpts.height = { ideal: videoOpts.height.exact };
+      const videoOpts = relaxedConstraints.video;
       
-      if (videoOpts.facingMode?.exact) {
-        videoOpts.facingMode = videoOpts.facingMode.exact;
-      } else if (videoOpts.facingMode?.ideal) {
-        videoOpts.facingMode = videoOpts.facingMode.ideal;
+      const width = videoOpts.width as ConstrainULongRange | undefined;
+      if (width && typeof width === "object" && "exact" in width) {
+        videoOpts.width = { ideal: width.exact };
+      }
+      
+      const height = videoOpts.height as ConstrainULongRange | undefined;
+      if (height && typeof height === "object" && "exact" in height) {
+        videoOpts.height = { ideal: height.exact };
+      }
+      
+      const facingMode = videoOpts.facingMode as ConstrainDOMStringParameters | undefined;
+      if (facingMode && typeof facingMode === "object") {
+        if ("exact" in facingMode) {
+          videoOpts.facingMode = facingMode.exact;
+        } else if ("ideal" in facingMode) {
+          videoOpts.facingMode = facingMode.ideal;
+        }
       }
     }
 
     try {
       return await navigator.mediaDevices.getUserMedia(relaxedConstraints);
-    } catch (fallbackErr) {
+    } catch {
       // If Attempt 2 fails, move to Attempt 3
       return this.handleDeviceEnumerationFallback(originalConstraints);
     }
@@ -71,7 +85,7 @@ export class BrowserAdapter {
       const videoDevices = devices.filter(d => d.kind === "videoinput");
       
       if (videoDevices.length === 0) {
-        throw new SDKError("NotFoundError", "No video devices found on the system.");
+        throw new SDKError("No video devices found on the system.", "NotFoundError");
       }
 
       // Attempt 3: Choose rear camera by label
@@ -81,7 +95,8 @@ export class BrowserAdapter {
         d.label.toLowerCase().includes("environment")
       );
 
-      const deviceId = rearCamera ? rearCamera.deviceId : videoDevices[0].deviceId;
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      const deviceId = rearCamera ? rearCamera.deviceId : videoDevices[0]!.deviceId;
       
       // Attempt 3/4: Request specific device ID
       const fallbackConstraints: MediaStreamConstraints = {
@@ -90,7 +105,7 @@ export class BrowserAdapter {
       };
 
       return await navigator.mediaDevices.getUserMedia(fallbackConstraints);
-    } catch (err) {
+    } catch {
       // If all else fails, attempt 4 with completely generic constraints
       return this.handleSafariFallback(originalConstraints);
     }
@@ -103,8 +118,8 @@ export class BrowserAdapter {
     };
     try {
       return await navigator.mediaDevices.getUserMedia(genericConstraints);
-    } catch (err) {
-      throw new SDKError("NotAllowedError", "Browser denied camera access or the camera is unavailable.");
+    } catch {
+      throw new SDKError("Browser denied camera access or the camera is unavailable.", "NotAllowedError");
     }
   }
 

@@ -11,7 +11,7 @@ import {
   BrowserAdapter,
   VideoRecorderController
 } from "../capture-core";
-import type { CameraState, FacingMode, SDKEventMap } from "../capture-core";
+import type { CameraState, FacingMode, SDKEventMap, RecordingState } from "../capture-core";
 
 // Represents the SDK Instance shape exposed to React UI
 export interface MediaCaptureSDK {
@@ -20,7 +20,7 @@ export interface MediaCaptureSDK {
   error: Error | null;
   devices: { cameras: MediaDeviceInfo[]; microphones: MediaDeviceInfo[]; speakers: MediaDeviceInfo[] };
   facingMode: FacingMode | null;
-  recordingState: "inactive" | "recording" | "paused" | "destroyed";
+  recordingState: RecordingState | "destroyed";
   
   // Actions
   open: (options?: { facingMode?: FacingMode; deviceId?: string; audio?: boolean }) => Promise<void>;
@@ -43,7 +43,7 @@ export const CameraProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [error, setError] = useState<Error | null>(null);
   const [devices, setDevices] = useState<{ cameras: MediaDeviceInfo[]; microphones: MediaDeviceInfo[]; speakers: MediaDeviceInfo[] }>({ cameras: [], microphones: [], speakers: [] });
   const [facingMode, setFacingMode] = useState<FacingMode | null>(null);
-  const [recordingState, setRecordingState] = useState<"inactive" | "recording" | "paused" | "destroyed">("inactive");
+  const [recordingState, setRecordingState] = useState<RecordingState | "destroyed">("STOPPED");
 
   // Initialize Core SDK singletons once
   const core = useMemo(() => {
@@ -65,7 +65,7 @@ export const CameraProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     );
 
     const imageProcessor = new ImageProcessor(defaultConfig);
-    const videoRecorderController = new VideoRecorderController(emitter, defaultConfig);
+    const videoRecorderController = new VideoRecorderController(emitter);
 
     return { emitter, cameraController, imageProcessor, deviceService, videoRecorderController };
   }, []);
@@ -94,7 +94,7 @@ export const CameraProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     core.emitter.on("recording.started", syncState);
     core.emitter.on("recording.paused", syncState);
     core.emitter.on("recording.resumed", syncState);
-    core.emitter.on("recording.stopped", syncState);
+    core.emitter.on("recording.finished", syncState);
     core.emitter.on("error", (err) => {
       setError(err);
       syncState();

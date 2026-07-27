@@ -4,10 +4,10 @@
  * If a required variable is missing, the app fails fast with a clear error.
  */
 
-function getEnvVar(key: string, fallback?: string): string {
+function getEnvVar(key: string, fallback?: string, required: boolean = false): string {
   const value = import.meta.env[key] as string | undefined;
-  if (!value && fallback === undefined) {
-    console.warn(`[Config] Missing environment variable: ${key}`);
+  if (!value && fallback === undefined && required) {
+    console.warn(`[Config] Missing required environment variable: ${key}`);
     return '';
   }
   return value ?? fallback ?? '';
@@ -16,15 +16,15 @@ function getEnvVar(key: string, fallback?: string): string {
 export const config = {
   /** Supabase browser client configuration */
   supabase: {
-    url: getEnvVar('VITE_SUPABASE_URL'),
-    anonKey: getEnvVar('VITE_SUPABASE_ANON_KEY'),
+    url: getEnvVar('VITE_SUPABASE_URL', undefined, true),
+    anonKey: getEnvVar('VITE_SUPABASE_ANON_KEY', undefined, true),
   },
 
   /** EmailJS email delivery configuration */
   emailjs: {
-    publicKey: getEnvVar('VITE_EMAILJS_PUBLIC_KEY'),
-    serviceId: getEnvVar('VITE_EMAILJS_SERVICE_ID'),
-    templateId: getEnvVar('VITE_EMAILJS_TEMPLATE_ID'),
+    publicKey: getEnvVar('VITE_EMAILJS_PUBLIC_KEY', ''),
+    serviceId: getEnvVar('VITE_EMAILJS_SERVICE_ID', ''),
+    templateId: getEnvVar('VITE_EMAILJS_TEMPLATE_ID', ''),
   },
 
   /** Public site URL */
@@ -40,8 +40,8 @@ export const config = {
     clarityId: getEnvVar('VITE_CLARITY_ID', ''),
     hotjarId: getEnvVar('VITE_HOTJAR_ID', ''),
     sentryDsn: getEnvVar('VITE_SENTRY_DSN', ''),
-    forceAnalytics: getEnvVar('VITE_FORCE_ANALYTICS') === 'true',
-    debugMode: getEnvVar('VITE_GA_DEBUG_MODE') === 'true',
+    forceAnalytics: getEnvVar('VITE_FORCE_ANALYTICS', 'false') === 'true',
+    debugMode: getEnvVar('VITE_GA_DEBUG_MODE', 'false') === 'true',
   },
 
   /** Whether we're in production */

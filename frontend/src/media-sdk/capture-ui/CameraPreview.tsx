@@ -10,12 +10,15 @@ export const CameraPreview = React.forwardRef<HTMLVideoElement, CameraPreviewPro
   const { stream, state, facingMode } = useMediaCapture();
   const internalRef = useRef<HTMLVideoElement>(null);
   
-  const videoRef = (forwardedRef as any) || internalRef;
+  const videoRef = (forwardedRef as React.RefObject<HTMLVideoElement | null> | null) ?? internalRef;
 
   useEffect(() => {
     if (videoRef.current) {
       if (stream && state === "READY") {
         videoRef.current.srcObject = stream;
+        videoRef.current.play().catch((err: unknown) => {
+          console.warn("[MediaSDK] Failed to auto-play video stream:", err);
+        });
       } else {
         videoRef.current.srcObject = null;
       }
@@ -26,7 +29,7 @@ export const CameraPreview = React.forwardRef<HTMLVideoElement, CameraPreviewPro
   const isMirrored = facingMode === "user";
 
   return (
-    <div className={`relative overflow-hidden bg-black flex items-center justify-center ${className || ""}`}>
+    <div className={`relative overflow-hidden bg-black flex items-center justify-center ${className ?? ""}`}>
       {state === "OPENING" || state === "SWITCHING" ? (
         <div className="absolute inset-0 flex items-center justify-center text-white/50 text-sm animate-pulse">
           Loading camera...

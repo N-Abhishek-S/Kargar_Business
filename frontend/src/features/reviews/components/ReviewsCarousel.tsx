@@ -131,7 +131,7 @@ export function ReviewsCarousel({ inView, onOpenForm, params }: ReviewsCarouselP
           slidesPerView={1}
           spaceBetween={32}
           centeredSlides={true}
-          loop={reviews.length >= 3}
+          loop={reviews.length >= 6}
           grabCursor
           keyboard={{ enabled: true }}
           navigation={{

@@ -80,7 +80,7 @@ export const CameraProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       const activeStream = core.cameraController.getStream();
       if (activeStream) {
         const track = activeStream.getVideoTracks()[0];
-        if (track && track.getSettings().facingMode) {
+        if (track?.getSettings().facingMode) {
           setFacingMode(track.getSettings().facingMode as FacingMode);
         }
       } else {
@@ -100,51 +100,46 @@ export const CameraProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       syncState();
     });
 
-    const unsubscribeDevices = core.deviceService.listenForDeviceChanges({
-      on: () => {},
-      off: () => {},
-      emit: (e: string, data: any) => {
-        if (e === "devicesChanged") {
-          const allDevices = data as MediaDeviceInfo[];
-          setDevices({
-            cameras: allDevices.filter((d) => d.kind === "videoinput"),
-            microphones: allDevices.filter((d) => d.kind === "audioinput"),
-            speakers: allDevices.filter((d) => d.kind === "audiooutput"),
-          });
-        }
-      },
-      clear: () => {}
-    } as any);
+    const unsubscribeDevices = core.deviceService.listenForDeviceChanges((allDevices) => {
+      setDevices({
+        cameras: allDevices.filter((d) => d.kind === "videoinput"),
+        microphones: allDevices.filter((d) => d.kind === "audioinput"),
+        speakers: allDevices.filter((d) => d.kind === "audiooutput"),
+      });
+    });
 
-    core.deviceService.getDevices().then(setDevices);
+    void core.deviceService.getDevices().then(setDevices);
 
     return () => {
       core.emitter.clear();
       unsubscribeDevices();
       core.videoRecorderController.destroy();
-      core.cameraController.close(); // Cleanup on unmount
+      void core.cameraController.close(); // Cleanup on unmount
     };
   }, [core]);
 
-  const sdk: MediaCaptureSDK = useMemo(() => ({
-    state,
-    stream,
-    error,
-    devices,
-    facingMode,
-    recordingState,
-    open: async (options) => {
-      setError(null);
+  // Stabilize actions to prevent React dependency loops
+  const actions = useMemo(() => ({
+    open: async (options?: { facingMode?: FacingMode; deviceId?: string; audio?: boolean }) => {
+      // Intentionally not setting error here directly to keep dependencies simple
+      // Errors will be captured and emitted by the core controller anyway
       await core.cameraController.open(options);
     },
     close: async () => {
       await core.cameraController.close();
     },
-    switchCamera: async (options) => {
+    switchCamera: async (options?: { audio?: boolean }) => {
       await core.cameraController.switchCamera(options);
     },
     capturePhoto: async (videoElement: HTMLVideoElement) => {
-      const mode = facingMode || defaultConfig.mobileDefaultFacingMode;
+      const currentStream = core.cameraController.getStream();
+      let mode = defaultConfig.mobileDefaultFacingMode;
+      if (currentStream) {
+        const track = currentStream.getVideoTracks()[0];
+        if (track?.getSettings().facingMode) {
+          mode = track.getSettings().facingMode as FacingMode;
+        }
+      }
       return core.imageProcessor.capture(videoElement, mode);
     },
     startRecording: (mimeType?: string) => {
@@ -161,7 +156,17 @@ export const CameraProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     stopRecording: async () => {
       return core.videoRecorderController.stop();
     }
-  }), [state, stream, error, devices, facingMode, recordingState, core]);
+  }), [core]);
+
+  const sdk: MediaCaptureSDK = useMemo(() => ({
+    state,
+    stream,
+    error,
+    devices,
+    facingMode,
+    recordingState,
+    ...actions
+  }), [state, stream, error, devices, facingMode, recordingState, actions]);
 
   return (
     <CameraContext.Provider value={sdk}>
@@ -170,6 +175,7 @@ export const CameraProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useMediaCapture = (): MediaCaptureSDK => {
   const context = useContext(CameraContext);
   if (!context) {

@@ -1,9 +1,3 @@
-import type { Emitter, EventMap } from "../utils/EventEmitter";
-
-export interface DeviceChangeEventMap extends EventMap {
-  devicesChanged: MediaDeviceInfo[];
-}
-
 export class MediaDeviceService {
   /**
    * Retrieves all available media devices
@@ -25,10 +19,10 @@ export class MediaDeviceService {
   /**
    * Listens for device changes (plugging in a webcam/mic)
    */
-  listenForDeviceChanges(emitter: Emitter<DeviceChangeEventMap>) {
+  listenForDeviceChanges(onDevicesChanged: (devices: MediaDeviceInfo[]) => void) {
     const handleDeviceChange = () => {
       navigator.mediaDevices.enumerateDevices().then((newDevices) => {
-        emitter.emit("devicesChanged", newDevices);
+        onDevicesChanged(newDevices);
       }).catch((e: unknown) => {
         console.error("MediaDeviceService: Failed to enumerate devices on change", e);
       });

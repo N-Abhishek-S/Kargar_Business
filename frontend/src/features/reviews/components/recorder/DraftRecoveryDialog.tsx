@@ -3,6 +3,7 @@
  */
 
 import { Save, Trash2 } from 'lucide-react';
+import { useState } from 'react';
 import { clsx } from 'clsx';
 import type { DraftRecoveryDialogProps } from '../../types/video-recorder.types';
 import { recorderStrings } from '../../i18n/recorder.i18n';
@@ -12,13 +13,14 @@ export function DraftRecoveryDialog({
   onRestore,
   onDiscard,
 }: DraftRecoveryDialogProps) {
-  const agoMs = Date.now() - draft.createdAt;
-  const agoMinutes = Math.floor(agoMs / 60_000);
-  const agoLabel = agoMinutes < 1
-    ? 'Just now'
-    : agoMinutes < 60
-      ? `${agoMinutes} min ago`
-      : `${Math.floor(agoMinutes / 60)}h ago`;
+  // Compute the "ago" label once at mount time, avoiding Date.now() during render.
+  const [agoLabel] = useState(() => {
+    const agoMs = Date.now() - draft.createdAt;
+    const agoMinutes = Math.floor(agoMs / 60_000);
+    if (agoMinutes < 1) return 'Just now';
+    if (agoMinutes < 60) return `${agoMinutes} min ago`;
+    return `${Math.floor(agoMinutes / 60)}h ago`;
+  });
 
   return (
     <div className="flex flex-col items-center text-center py-8 px-4">

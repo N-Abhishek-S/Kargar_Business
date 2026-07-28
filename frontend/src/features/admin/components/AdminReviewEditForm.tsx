@@ -1,17 +1,20 @@
 import { useState } from 'react';
-import { useForm, useWatch } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Loader2, Save, Trash2, Download } from 'lucide-react';
+import { Loader2, Save } from 'lucide-react';
 import type { AdminReview } from '@/types';
 import { Input } from '@/components/ui/Input';
-import { VideoUploadCard } from '@/features/reviews/components/VideoUploadCard';
+import { Avatar } from '@/components/ui/Avatar';
+import { MediaToolbar } from '@/features/reviews/components/media/MediaToolbar';
+import { ReviewVideo } from '@/features/reviews/components/media/ReviewVideo';
+import type { MediaType } from '@/services/reviews.service';
+
 const adminReviewSchema = z.object({
   customerName: z.string().min(2, 'Name is required'),
   companyName: z.string().optional(),
   rating: z.number().min(1).max(5),
   reviewText: z.string().min(10, 'Review is too short'),
-  videoFile: z.any().optional().nullable(), // File object for replacement
   status: z.enum(['pending', 'approved', 'rejected', 'spam', 'archived']),
   featured: z.boolean(),
 });
@@ -20,15 +23,16 @@ type AdminReviewFormValues = z.infer<typeof adminReviewSchema>;
 
 export interface AdminReviewEditFormProps {
   review: AdminReview;
-  onSave: (id: string, updates: Partial<AdminReview> & { newVideoFile?: File | null, removeVideo?: boolean }) => Promise<void>;
+  onSave: (id: string, updates: Partial<AdminReview>) => Promise<void>;
+  onUpdateMedia: (type: MediaType, file: File | null) => Promise<void>;
   onCancel: () => void;
   isSaving: boolean;
 }
 
-export function AdminReviewEditForm({ review, onSave, onCancel, isSaving }: AdminReviewEditFormProps) {
-  const [videoAction, setVideoAction] = useState<'keep' | 'remove' | 'replace'>('keep');
-  
-  const { register, handleSubmit, control, setValue, formState: { errors } } = useForm<AdminReviewFormValues>({
+export function AdminReviewEditForm({ review, onSave, onUpdateMedia, onCancel, isSaving }: AdminReviewEditFormProps) {
+  const [updatingMedia, setUpdatingMedia] = useState<MediaType | null>(null);
+
+  const { register, handleSubmit, formState: { errors } } = useForm<AdminReviewFormValues>({
     resolver: zodResolver(adminReviewSchema),
     defaultValues: {
       customerName: review.customerName,
@@ -37,15 +41,9 @@ export function AdminReviewEditForm({ review, onSave, onCancel, isSaving }: Admi
       reviewText: review.reviewText,
       status: review.status,
       featured: review.featured,
-      videoFile: null,
     },
   });
 
-  const videoFile = useWatch({
-    control,
-    name: 'videoFile',
-  }) as File | null;
-  
   const onSubmit = async (values: AdminReviewFormValues) => {
     await onSave(review.id, {
       customerName: values.customerName,
@@ -54,9 +52,16 @@ export function AdminReviewEditForm({ review, onSave, onCancel, isSaving }: Admi
       reviewText: values.reviewText,
       status: values.status,
       featured: values.featured,
-      newVideoFile: videoAction === 'replace' ? (values.videoFile as File | null) : null,
-      removeVideo: videoAction === 'remove',
     });
+  };
+
+  const handleUpdateMedia = async (type: MediaType, file: File | null) => {
+    setUpdatingMedia(type);
+    try {
+      await onUpdateMedia(type, file);
+    } finally {
+      setUpdatingMedia(null);
+    }
   };
 
   return (
@@ -118,72 +123,74 @@ export function AdminReviewEditForm({ review, onSave, onCancel, isSaving }: Admi
         </label>
       </div>
 
-      <div className="border-t border-gray-200 pt-6">
-        <h3 className="text-lg font-medium text-navy-900 mb-4">Video Testimonial</h3>
-        
-        {review.videoUrl && videoAction === 'keep' ? (
-          <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-            <div className="rounded-md overflow-hidden bg-black mb-4">
-              <video src={review.videoUrl} controls className="w-full max-h-64 object-contain" />
-            </div>
-            <div className="flex gap-3">
-              <a 
-                href={review.videoUrl} 
-                download 
-                target="_blank"
-                rel="noreferrer"
-                className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-white border border-gray-300 rounded hover:bg-gray-50 text-gray-700 transition-colors"
-              >
-                <Download size={16} /> Download
-              </a>
-              <button 
-                type="button"
-                onClick={() => { setVideoAction('replace'); }}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-white border border-gray-300 rounded hover:bg-gray-50 text-gray-700 transition-colors"
-              >
-                Replace
-              </button>
-              <button 
-                type="button"
-                onClick={() => { setVideoAction('remove'); }}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-red-50 text-red-600 rounded hover:bg-red-100 transition-colors ml-auto"
-              >
-                <Trash2 size={16} /> Delete Video
-              </button>
-            </div>
+      <div className="border-t border-gray-200 pt-6 space-y-8">
+        <div>
+          <h3 className="text-lg font-medium text-navy-900 mb-4">Media Testimonials</h3>
+          <p className="text-sm text-gray-500 mb-6">Updating media will immediately save the new file.</p>
+        </div>
+
+        {/* Profile Image */}
+        <div className="flex gap-4 items-start bg-gray-50 p-4 rounded-lg border border-gray-200">
+          <Avatar
+            src={review.profileImage ?? undefined}
+            alt="Profile"
+            fallbackInitials={review.customerName.slice(0, 2).toUpperCase()}
+            size="xl"
+            className="shrink-0 border border-gray-200 bg-white"
+          />
+          <div className="grow">
+            <h4 className="text-sm font-medium text-gray-700">Customer Photo</h4>
+            <MediaToolbar
+              hasMedia={!!review.profileImage}
+              accept="image/*"
+              isReplacing={updatingMedia === 'profile_image'}
+              isDeleting={updatingMedia === 'profile_image'}
+              onReplace={(file) => handleUpdateMedia('profile_image', file)}
+              onDelete={() => handleUpdateMedia('profile_image', null)}
+            />
           </div>
-        ) : (
-          <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-            {videoAction !== 'keep' && (
-              <div className="mb-4 flex justify-end">
-                <button 
-                  type="button" 
-                  onClick={() => {
-                    setVideoAction('keep');
-                    setValue('videoFile', null);
-                  }}
-                  className="text-sm font-medium text-gray-600 hover:text-gray-900 underline"
-                >
-                  Cancel Video Changes
-                </button>
-              </div>
-            )}
-            
-            {videoAction === 'remove' ? (
-              <div className="text-sm text-red-600 font-medium p-4 bg-red-50 rounded text-center">
-                The video will be permanently deleted when you save these changes.
-              </div>
-            ) : (
-              <VideoUploadCard 
-                label={review.videoUrl ? 'Upload Replacement Video' : 'Upload Video'}
-                value={videoFile}
-                onChange={(file) => { setValue('videoFile', file, { shouldValidate: true }); }}
-                maxSizeMB={100}
-                error={errors.videoFile?.message as string}
-              />
-            )}
+        </div>
+
+        {/* Company Logo */}
+        <div className="flex gap-4 items-start bg-gray-50 p-4 rounded-lg border border-gray-200">
+          <Avatar
+            src={review.companyLogo ?? undefined}
+            alt="Company Logo"
+            fallbackInitials={review.companyName.trim() ? review.companyName.slice(0, 2).toUpperCase() : 'CO'}
+            size="xl"
+            className="shrink-0 border border-gray-200 bg-white"
+          />
+          <div className="grow">
+            <h4 className="text-sm font-medium text-gray-700">Company Logo</h4>
+            <MediaToolbar
+              hasMedia={!!review.companyLogo}
+              accept="image/*"
+              isReplacing={updatingMedia === 'company_logo'}
+              isDeleting={updatingMedia === 'company_logo'}
+              onReplace={(file) => handleUpdateMedia('company_logo', file)}
+              onDelete={() => handleUpdateMedia('company_logo', null)}
+            />
           </div>
-        )}
+        </div>
+
+        {/* Video */}
+        <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+           <h4 className="text-sm font-medium text-gray-700 mb-4">Video Testimonial</h4>
+           {review.videoUrl && (
+             <div className="max-w-md mb-4 bg-black rounded-lg border border-gray-200 overflow-hidden">
+               <ReviewVideo src={review.videoUrl} className="max-h-64 mx-auto" />
+             </div>
+           )}
+           <MediaToolbar
+              hasMedia={!!review.videoUrl}
+              accept="video/*"
+              isReplacing={updatingMedia === 'video'}
+              isDeleting={updatingMedia === 'video'}
+              onReplace={(file) => handleUpdateMedia('video', file)}
+              onDelete={() => handleUpdateMedia('video', null)}
+              onDownload={() => review.videoUrl && window.open(review.videoUrl)}
+            />
+        </div>
       </div>
 
       <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
@@ -191,13 +198,13 @@ export function AdminReviewEditForm({ review, onSave, onCancel, isSaving }: Admi
           type="button"
           onClick={onCancel}
           className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
-          disabled={isSaving}
+          disabled={isSaving || updatingMedia !== null}
         >
           Cancel
         </button>
         <button
           type="submit"
-          disabled={isSaving}
+          disabled={isSaving || updatingMedia !== null}
           className="inline-flex items-center justify-center gap-2 px-6 py-2 text-sm font-bold text-white bg-navy-900 rounded-md hover:bg-navy-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-navy-900"
         >
           {isSaving ? (

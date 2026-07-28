@@ -1418,6 +1418,7 @@ export type Database = {
           admin_replied_at: string | null
           admin_reply: string | null
           approved_at: string | null
+          company_logo: string | null
           company_logo_url: string | null
           company_name: string | null
           created_at: string | null
@@ -1427,6 +1428,7 @@ export type Database = {
           is_featured: boolean | null
           like_count: number | null
           location: string | null
+          profile_image: string | null
           profile_image_url: string | null
           rating: number | null
           recommend: boolean | null

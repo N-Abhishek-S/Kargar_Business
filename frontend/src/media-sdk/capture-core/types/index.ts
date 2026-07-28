@@ -19,6 +19,7 @@ export interface OnCameraOpenedPayload {
   deviceId: string;
   browser: string;
   platform: string;
+  durationMs?: number;
 }
 
 export interface OnCameraSwitchedPayload {
@@ -34,50 +35,51 @@ export interface OnCaptureCompletedPayload {
 }
 
 // Public Event Bus Map
-export interface SDKEventMap {
+export type SDKEventMap = {
   "camera.opened": OnCameraOpenedPayload;
-  "camera.closed": void;
+  "camera.closed": undefined;
   "camera.switched": OnCameraSwitchedPayload;
-  "capture.started": void;
+  "capture.started": undefined;
   "capture.completed": OnCaptureCompletedPayload;
-  "recording.started": void;
-  "recording.paused": void;
-  "recording.resumed": void;
+  "recording.started": undefined;
+  "recording.paused": undefined;
+  "recording.resumed": undefined;
   "recording.finished": { file: File; duration: number };
   "error": Error;
-}
+  "transition.failed": { from: string; to: string; reason?: string | null };
+};
 
 // Explicit Errors
 export class SDKError extends Error {
   constructor(message: string, name?: string) {
     super(message);
-    this.name = name || "SDKError";
+    this.name = name ?? "SDKError";
   }
 }
 
 export class PermissionDeniedError extends SDKError {
-  constructor(message: string = "Camera permission denied.") {
+  constructor(message = "Camera permission denied.") {
     super(message);
     this.name = "PermissionDeniedError";
   }
 }
 
 export class CameraNotFoundError extends SDKError {
-  constructor(message: string = "No suitable camera found.") {
+  constructor(message = "No suitable camera found.") {
     super(message);
     this.name = "CameraNotFoundError";
   }
 }
 
 export class DeviceBusyError extends SDKError {
-  constructor(message: string = "Camera is currently in use by another application.") {
+  constructor(message = "Camera is currently in use by another application.") {
     super(message);
     this.name = "DeviceBusyError";
   }
 }
 
 export class ConstraintError extends SDKError {
-  constructor(message: string = "Could not satisfy camera constraints.") {
+  constructor(message = "Could not satisfy camera constraints.") {
     super(message);
     this.name = "ConstraintError";
   }

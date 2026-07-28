@@ -9,11 +9,10 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { Modal } from '@/components/ui/Modal';
 import { Spinner } from '@/components/ui/Spinner';
 import { StarRating } from '@/components/ui/StarRating';
-import { deleteAdminReview, fetchAdminReviews, updateAdminReview, type AdminReviewUpdatePayload } from '@/services/admin.service';
-import { uploadReviewVideo } from '@/services/reviews.service';
+import { deleteAdminReview, fetchAdminReviews, updateAdminReview } from '@/services/admin.service';
+import { updateReviewMedia, type UpdateReviewMediaPayload } from '@/services/reviews.service';
 import type { AdminReview } from '@/types';
 import { AdminReviewEditForm } from '../components/AdminReviewEditForm';
-import { supabase } from '@/supabase/client';
 
 type ReviewStatus = AdminReview['status'];
 
@@ -126,44 +125,9 @@ export default function AdminReviewsPage() {
       companyName?: string;
       rating?: number;
       reviewText?: string;
-      newVideoFile?: File | null;
-      removeVideo?: boolean;
     }) => {
-      const { id, newVideoFile, removeVideo, ...updates } = payload;
-      const finalUpdates: AdminReviewUpdatePayload = { ...updates };
-
-      if (removeVideo) {
-        // We do this cleanup inside the mutation
-        const { data: review } = await supabase.from('reviews').select('video_path').eq('id', id).single();
-        if (review?.video_path) {
-          await supabase.storage.from('review-videos').remove([review.video_path]).catch(() => undefined);
-        }
-        finalUpdates.videoUrl = null;
-        finalUpdates.videoPath = null;
-        finalUpdates.videoSize = null;
-        finalUpdates.videoContentType = null;
-      } else if (newVideoFile) {
-        // Upload new video and optionally remove old
-        const { data: review } = await supabase.from('reviews').select('video_path').eq('id', id).single();
-        if (review?.video_path) {
-          await supabase.storage.from('review-videos').remove([review.video_path]).catch(() => undefined);
-        }
-        const videoData = await uploadReviewVideo(newVideoFile);
-        finalUpdates.videoUrl = videoData.url;
-        finalUpdates.videoPath = videoData.path;
-        finalUpdates.videoSize = videoData.size;
-        finalUpdates.videoContentType = videoData.contentType;
-      }
-
-      try {
-        await updateAdminReview(id, finalUpdates);
-      } catch (err) {
-        if (newVideoFile && finalUpdates.videoPath) {
-          // Cleanup newly uploaded video if DB update fails
-          await supabase.storage.from('review-videos').remove([finalUpdates.videoPath]).catch(() => undefined);
-        }
-        throw err;
-      }
+      const { id, ...updates } = payload;
+      await updateAdminReview(id, updates);
     },
     onSuccess: () => {
       toast.success('Review updated.');
@@ -174,6 +138,19 @@ export default function AdminReviewsPage() {
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Review could not be updated.');
+    },
+  });
+
+  const mediaUpdateMutation = useMutation({
+    mutationFn: async (payload: UpdateReviewMediaPayload) => {
+      await updateReviewMedia(payload);
+    },
+    onSuccess: () => {
+      toast.success('Media updated.');
+      void queryClient.invalidateQueries({ queryKey: ['admin-reviews'] });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Media could not be updated.');
     },
   });
 
@@ -190,7 +167,7 @@ export default function AdminReviewsPage() {
     },
   });
 
-  const reviews = data?.items ?? [];
+  const reviews = (data?.items as AdminReview[]) ?? [];
   const busyReviewId = updateReviewMutation.variables?.id ?? deleteReviewMutation.variables;
   const isMutating = updateReviewMutation.isPending || deleteReviewMutation.isPending;
 
@@ -263,7 +240,7 @@ export default function AdminReviewsPage() {
                   </td>
                 </tr>
               ) : (
-                reviews.map((review) => {
+                reviews.map((review: AdminReview) => {
                   const rowBusy = isMutating && busyReviewId === review.id;
                   return (
                     <tr key={review.id} className="transition-colors hover:bg-gray-50">
@@ -347,10 +324,38 @@ export default function AdminReviewsPage() {
         {selectedReview && isEditing ? (
           <AdminReviewEditForm 
             review={selectedReview} 
-            isSaving={updateReviewMutation.isPending}
+            isSaving={updateReviewMutation.isPending || mediaUpdateMutation.isPending}
             onCancel={() => { setIsEditing(false); }}
             onSave={async (id, updates) => {
               await updateReviewMutation.mutateAsync({ id, ...updates });
+            }}
+            onUpdateMedia={async (mediaType, file) => {
+              if (selectedReview) {
+                let oldPath: string | null = null;
+                let contentType: string | undefined = undefined;
+                if (mediaType === 'profile_image') {
+                  oldPath = selectedReview.profileImagePath ?? null;
+                  contentType = file ? file.type : undefined;
+                } else if (mediaType === 'company_logo') {
+                  oldPath = selectedReview.companyLogoPath ?? null;
+                  contentType = file ? file.type : undefined;
+                } else if (mediaType === 'video') {
+                  oldPath = selectedReview.videoPath ?? null;
+                  contentType = file ? file.type : undefined;
+                }
+                
+                await mediaUpdateMutation.mutateAsync({
+                  reviewId: selectedReview.id,
+                  mediaType,
+                  fileData: file,
+                  contentType,
+                  oldPath,
+                });
+                
+                // Immediately update local selectedReview so UI reflects
+                // Since react-query will invalidate and refetch, this is just for optimistic UI
+                // But it's easier to just let it refetch and maybe close/re-open or just rely on refetch
+              }
             }}
           />
         ) : selectedReview ? (

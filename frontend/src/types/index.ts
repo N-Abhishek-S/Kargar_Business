@@ -56,6 +56,8 @@ export interface Review {
   admin_reply: string | null;
   video_url: string | null;
   video_path: string | null;
+  profile_image?: string | null;
+  company_logo?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -76,6 +78,8 @@ export interface PublicReview {
   companyLogo: string | null;
   videoUrl: string | null;
   videoPath: string | null;
+  profileImagePath: string | null;
+  companyLogoPath: string | null;
   videoSize: number | null;
   videoContentType: string | null;
   verified: boolean;
@@ -118,7 +122,9 @@ export interface ReviewSubmissionPayload {
   permissionToDisplay: boolean;
   profileImage?: ReviewImageUpload;
   companyLogo?: ReviewImageUpload;
-  videoFile?: File;
+  videoData?: { url: string; path: string; size: number; contentType: string };
+  /** Client-generated idempotency key to prevent duplicate submissions on retry */
+  submissionId?: string;
   websiteTrap?: string;
 }
 

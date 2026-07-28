@@ -17,6 +17,13 @@ export interface MagicBytesResult {
   readonly detectedType: string;
 }
 
+/**
+ * Discriminates between files created by the application's own Media SDK
+ * (browser-generated, trusted) and files uploaded from the user's disk
+ * (untrusted, require full validation).
+ */
+export type VideoOrigin = 'sdk-recorded' | 'user-uploaded';
+
 /* ================================================================
    Magic Bytes — File Signature Validation
    ================================================================ */
@@ -39,7 +46,7 @@ export async function validateMagicBytes(file: File | Blob): Promise<MagicBytesR
         const byteIndex = sig.offset + i;
         if (byteIndex >= view.length) { match = false; break; }
         const expected = sig.bytes[i];
-        const actual = sig.mask ? (view[byteIndex]! & sig.mask[i]!) : view[byteIndex]!;
+        const actual = sig.mask ? ((view[byteIndex] ?? 0) & (sig.mask[i] ?? 0)) : (view[byteIndex] ?? 0);
         if (actual !== expected) { match = false; break; }
       }
       if (match) {
@@ -166,35 +173,44 @@ export function extractResolution(
    Full Validation Pipeline
    ================================================================ */
 
-export async function validateVideoFile(file: File | Blob): Promise<ValidationResult> {
+export async function validateVideoFile(
+  file: File | Blob,
+  origin: VideoOrigin = 'user-uploaded',
+): Promise<ValidationResult> {
   const errors: string[] = [];
-  const mimeType = file instanceof File ? file.type : (file as Blob).type;
+  const mimeType = file instanceof File ? file.type : (file).type;
 
-  // 1. MIME type
-  if (mimeType && !validateMimeType(mimeType)) {
+  // SDK-recorded files: trust the browser's MediaRecorder output.
+  // Only validate size and duration — skip MIME and magic bytes.
+  const isTrusted = origin === 'sdk-recorded';
+
+  // 1. MIME type (external uploads only)
+  if (!isTrusted && mimeType && !validateMimeType(mimeType)) {
     errors.push(`Unsupported format: ${mimeType}. Use MP4, MOV, or WebM.`);
   }
 
-  // 2. Magic bytes — cross-reference with declared MIME
-  const magicResult = await validateMagicBytes(file);
-  if (!magicResult.valid) {
-    errors.push('File contents do not match a recognized video format.');
+  // 2. Magic bytes — cross-reference with declared MIME (external uploads only)
+  if (!isTrusted) {
+    const magicResult = await validateMagicBytes(file);
+    if (!magicResult.valid) {
+      errors.push('File contents do not match a recognized video format.');
+    }
   }
 
-  // 3. Size
+  // 3. Size (always validated)
   if (!validateFileSize(file.size)) {
     const maxMB = Math.round(RecorderLimits.MAX_FILE_SIZE_BYTES / (1024 * 1024));
     errors.push(`File is too large. Maximum size is ${maxMB} MB.`);
   }
 
-  // 4. Duration
+  // 4. Duration (always validated)
   const durationResult = await validateDuration(file);
   if (!durationResult.valid) {
     errors.push(`Video is too long. Maximum duration is ${RecorderLimits.MAX_DURATION_SECONDS / 60} minutes.`);
   }
 
   const valid = errors.length === 0;
-  ValidationLogger.info('Validation complete', { valid, errorCount: errors.length });
+  ValidationLogger.info('Validation complete', { valid, errorCount: errors.length, origin });
 
   return { valid, errors };
 }

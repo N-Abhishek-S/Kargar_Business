@@ -35,7 +35,7 @@ export function ReviewDetailsModal({
 }: ReviewDetailsModalProps) {
   if (!review) return null;
 
-  const images = review.images ?? (review.profileImage ? [review.profileImage] : []);
+  const images = review.images ?? [];
   const companyName = review.companyName.trim() ? review.companyName : 'Unknown Company';
   const customerName = review.customerName.trim() ? review.customerName : 'Anonymous';
   const reviewText = review.reviewText.trim() ? review.reviewText : 'No written review provided.';
@@ -114,13 +114,20 @@ export function ReviewDetailsModal({
           <header className="flex flex-col gap-6 mb-10">
             {/* Identity */}
             <div className="flex flex-col sm:flex-row sm:items-center gap-5">
-              <Avatar
-                src={review.companyLogo ?? ''}
-                alt={`${companyName} logo`}
-                fallbackInitials={getInitials(companyName !== 'Unknown Company' ? companyName : customerName)}
-                size="xl"
-                className="border border-gray-100 shadow-sm shrink-0"
-              />
+              <div className="relative shrink-0">
+                <Avatar
+                  src={review.profileImage ?? review.companyLogo ?? ''}
+                  alt={`${customerName} photo`}
+                  fallbackInitials={getInitials(customerName)}
+                  size="xl"
+                  className="border border-gray-100 shadow-sm shrink-0"
+                />
+                {review.profileImage && review.companyLogo && (
+                   <div className="absolute -bottom-1 -right-1 rounded-full border-2 border-white shadow-sm bg-white overflow-hidden w-8 h-8 flex items-center justify-center">
+                     <img src={review.companyLogo} alt={companyName} className="w-full h-full object-cover" loading="lazy" decoding="async" />
+                   </div>
+                )}
+              </div>
               <div className="flex flex-col">
                 <strong className="text-xl sm:text-2xl font-bold text-(--text-primary) tracking-tight break-words">
                   {customerName}

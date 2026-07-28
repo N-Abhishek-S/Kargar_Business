@@ -6,7 +6,7 @@
 
 /* ---- Components ---- */
 export { VideoRecorderModal } from './components/recorder/VideoRecorderModal';
-export { CameraPreview } from './components/recorder/CameraPreview';
+export { CameraPreview } from '../../media-sdk/capture-ui/CameraPreview';
 export { CountdownOverlay } from './components/recorder/CountdownOverlay';
 export { RecordingControls } from './components/recorder/RecordingControls';
 export { RecordingTimer } from './components/recorder/RecordingTimer';

@@ -13,12 +13,13 @@ export function useNavigationGuard(isActive: boolean): void {
 
     const handler = (e: BeforeUnloadEvent) => {
       e.preventDefault();
-      // Modern browsers show a generic message, but we set returnValue for compat
+      // Modern browsers show a generic message. returnValue is deprecated but
+      // still required by some older browsers for the prompt to appear.
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
       e.returnValue = recorderStrings.navigationWarning;
-      return recorderStrings.navigationWarning;
     };
 
     window.addEventListener('beforeunload', handler);
-    return () => window.removeEventListener('beforeunload', handler);
+    return () => { window.removeEventListener('beforeunload', handler); };
   }, [isActive]);
 }

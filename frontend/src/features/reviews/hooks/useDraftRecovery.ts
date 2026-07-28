@@ -8,13 +8,16 @@ import { StorageLogger } from '../services/logger.service';
 import { RecorderFlags } from '../config/recorder.config';
 import type { RecordingDraft, VideoMetadata, UseDraftRecoveryReturn } from '../types/video-recorder.types';
 
+// Extract flag to a runtime variable so TypeScript doesn't narrow `true as const`
+const draftRecoveryEnabled: boolean = RecorderFlags.ENABLE_DRAFT_RECOVERY;
+
 export function useDraftRecovery(): UseDraftRecoveryReturn {
   const [hasDraft, setHasDraft] = useState(false);
   const [draft, setDraft] = useState<RecordingDraft | null>(null);
 
   // Check for existing draft on mount
   useEffect(() => {
-    if (!RecorderFlags.ENABLE_DRAFT_RECOVERY) return;
+    if (!draftRecoveryEnabled) return;
 
     void (async () => {
       const existing = await loadDraft();
@@ -28,7 +31,7 @@ export function useDraftRecovery(): UseDraftRecoveryReturn {
 
   const saveDraft = useCallback(
     async (blob: Blob, metadata: VideoMetadata, thumbnail: string) => {
-      if (!RecorderFlags.ENABLE_DRAFT_RECOVERY) return;
+      if (!draftRecoveryEnabled) return;
 
       const draftData: RecordingDraft = {
         id: crypto.randomUUID(),

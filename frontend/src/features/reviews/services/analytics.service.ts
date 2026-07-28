@@ -11,7 +11,7 @@ import { RecorderFlags } from '../config/recorder.config';
 import { detectBrowser, detectDeviceType } from '../utils/video-recorder.utils';
 import type { RecorderAnalyticsEvent, AnalyticsPayload } from '../types/video-recorder.types';
 
-const IS_ENABLED = RecorderFlags.ENABLE_ANALYTICS;
+const isAnalyticsEnabled: boolean = RecorderFlags.ENABLE_ANALYTICS;
 
 /**
  * Track a recorder analytics event.
@@ -20,7 +20,7 @@ export function trackRecorderEvent(
   event: RecorderAnalyticsEvent,
   extra?: Record<string, unknown>,
 ): void {
-  if (!IS_ENABLED) return;
+  if (!isAnalyticsEnabled) return;
 
   const payload: AnalyticsPayload = {
     event,

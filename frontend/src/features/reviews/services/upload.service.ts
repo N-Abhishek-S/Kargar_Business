@@ -84,7 +84,8 @@ function xhrUpload(
     xhr.open('POST', url, true);
     xhr.setRequestHeader('apikey', apiKey);
     xhr.setRequestHeader('Authorization', `Bearer ${apiKey}`);
-    xhr.setRequestHeader('Content-Type', file.type || 'video/webm');
+    const contentType = (file.type || 'video/webm').split(';')[0]?.trim() ?? 'video/webm';
+    xhr.setRequestHeader('Content-Type', contentType);
     xhr.setRequestHeader('x-upsert', 'false');
     xhr.setRequestHeader('Cache-Control', 'max-age=31536000');
 
@@ -107,11 +108,12 @@ function xhrUpload(
         const { data } = supabase.storage.from(REVIEW_VIDEO_BUCKET).getPublicUrl(
           url.split(`/${REVIEW_VIDEO_BUCKET}/`)[1] ?? '',
         );
+        const contentType = (file.type || 'video/webm').split(';')[0]?.trim() ?? 'video/webm';
         resolve({
           url: data.publicUrl,
           path: url.split(`/${REVIEW_VIDEO_BUCKET}/`)[1] ?? '',
           size: file.size,
-          contentType: file.type || 'video/webm',
+          contentType: contentType,
         });
       } else {
         UploadLogger.error('XHR upload failed', { status: xhr.status, response: xhr.responseText });
@@ -128,7 +130,7 @@ function xhrUpload(
       signal.addEventListener('abort', () => {
         xhr.abort();
         reject(new DOMException('Upload cancelled', 'AbortError'));
-      });
+      }, { once: true });
     }
 
     xhr.send(file);
@@ -165,8 +167,9 @@ async function supabaseFallbackUpload(
     throw new DOMException('Upload cancelled', 'AbortError');
   }
 
+  const contentType = (file.type || 'video/webm').split(';')[0]?.trim() ?? 'video/webm';
   const { error } = await supabase.storage.from(REVIEW_VIDEO_BUCKET).upload(path, file, {
-    contentType: file.type || 'video/webm',
+    contentType: contentType,
     cacheControl: '31536000',
     upsert: false,
   });
@@ -186,7 +189,7 @@ async function supabaseFallbackUpload(
     url: data.publicUrl,
     path,
     size: file.size,
-    contentType: file.type || 'video/webm',
+    contentType: contentType,
   };
 }
 

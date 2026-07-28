@@ -8,14 +8,14 @@ import type { UseNetworkStatusReturn } from '../types/video-recorder.types';
 export function useNetworkStatus(): UseNetworkStatusReturn {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [wasOffline, setWasOffline] = useState(false);
-  const [lastOnlineAt, setLastOnlineAt] = useState(Date.now());
+  const [lastOnlineAt, setLastOnlineAt] = useState(() => Date.now());
 
   const handleOnline = useCallback(() => {
     setIsOnline(true);
     setLastOnlineAt(Date.now());
     if (wasOffline) {
       // Brief "back online" state — consumer can show a green banner
-      setTimeout(() => setWasOffline(false), 3000);
+      setTimeout(() => { setWasOffline(false); }, 3000);
     }
   }, [wasOffline]);
 

@@ -4,7 +4,7 @@
  * If a required variable is missing, the app fails fast with a clear error.
  */
 
-function getEnvVar(key: string, fallback?: string, required: boolean = false): string {
+function getEnvVar(key: string, fallback?: string, required = false): string {
   const value = import.meta.env[key] as string | undefined;
   if (!value && fallback === undefined && required) {
     console.warn(`[Config] Missing required environment variable: ${key}`);

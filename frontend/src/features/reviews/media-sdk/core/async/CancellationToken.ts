@@ -5,7 +5,7 @@
 export class CancellationToken {
   private _isCancelled = false;
   private _reason?: string;
-  private _listeners: Array<(reason?: string) => void> = [];
+  private _listeners: ((reason?: string) => void)[] = [];
 
   public get isCancelled(): boolean {
     return this._isCancelled;
@@ -19,20 +19,20 @@ export class CancellationToken {
     if (this._isCancelled) return;
     this._isCancelled = true;
     this._reason = reason;
-    this._listeners.forEach(listener => listener(reason));
+    this._listeners.forEach(listener => { listener(reason); });
     this._listeners = [];
   }
 
   public throwIfCancelled(): void {
     if (this._isCancelled) {
-      throw new Error(`Operation cancelled: ${this._reason || 'No reason provided'}`);
+      throw new Error(`Operation cancelled: ${this._reason ?? 'No reason provided'}`);
     }
   }
 
   public onCancelled(listener: (reason?: string) => void): () => void {
     if (this._isCancelled) {
       listener(this._reason);
-      return () => {};
+      return () => { /* no-op */ };
     }
     this._listeners.push(listener);
     return () => {

@@ -46,7 +46,7 @@ import { useMediaCapture } from '../../../../media-sdk/capture-react/useMediaCap
 import { trackRecorderEvent } from '../../services/analytics.service';
 
 /* ---- Components ---- */
-import { CameraPreview } from './CameraPreview';
+import { CameraPreview } from '../../../../media-sdk/capture-ui/CameraPreview';
 import { CountdownOverlay } from './CountdownOverlay';
 import { RecordingControls } from './RecordingControls';
 import { RecordingIndicator } from './RecordingIndicator';
@@ -525,12 +525,12 @@ export function VideoRecorderModal({ isOpen, onClose, onUseVideo }: VideoRecorde
               {/* ======== CAMERA PREVIEW ======== */}
               {isSupported && isCameraLive && !showDraftDialog && (
                 <div className="relative">
-                  <CameraPreview
-                    stream={stream}
-                    isRecording={state === 'recording'}
-                    isPaused={state === 'paused'}
-                    videoRef={cameraVideoRef}
-                  />
+                  <div className="aspect-video-container">
+                    <CameraPreview
+                      ref={cameraVideoRef}
+                      className="w-full h-full"
+                    />
+                  </div>
 
                   {/* Countdown overlay */}
                   {state === 'countdown' && countdownValue !== null && (

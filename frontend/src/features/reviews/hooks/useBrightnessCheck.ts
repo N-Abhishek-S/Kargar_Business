@@ -6,6 +6,9 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { RecorderLimits, RecorderFlags } from '../config/recorder.config';
 import type { UseBrightnessCheckReturn } from '../types/video-recorder.types';
 
+// Extract flag to runtime variable so TypeScript doesn't narrow `true as const`
+const brightnessCheckEnabled: boolean = RecorderFlags.ENABLE_BRIGHTNESS_CHECK;
+
 export function useBrightnessCheck(
   videoElement: HTMLVideoElement | null,
   isActive: boolean,
@@ -18,9 +21,7 @@ export function useBrightnessCheck(
   const analyze = useCallback(() => {
     if (!videoElement || videoElement.readyState < 2) return;
 
-    if (!canvasRef.current) {
-      canvasRef.current = document.createElement('canvas');
-    }
+    canvasRef.current ??= document.createElement('canvas');
     const canvas = canvasRef.current;
     // Use a small sample size for performance
     canvas.width = 64;
@@ -38,7 +39,10 @@ export function useBrightnessCheck(
 
     for (let i = 0; i < pixels.length; i += 4) {
       // Perceived luminance formula
-      totalLuminance += 0.299 * pixels[i]! + 0.587 * pixels[i + 1]! + 0.114 * pixels[i + 2]!;
+      const r = pixels[i] ?? 0;
+      const g = pixels[i + 1] ?? 0;
+      const b = pixels[i + 2] ?? 0;
+      totalLuminance += 0.299 * r + 0.587 * g + 0.114 * b;
     }
 
     const avg = totalLuminance / pixelCount;
@@ -47,8 +51,7 @@ export function useBrightnessCheck(
   }, [videoElement]);
 
   useEffect(() => {
-    if (!RecorderFlags.ENABLE_BRIGHTNESS_CHECK || !isActive || !videoElement) {
-      setIsTooDark(false);
+    if (!brightnessCheckEnabled || !isActive || !videoElement) {
       return;
     }
 

@@ -20,8 +20,8 @@ export class TelemetryContext {
 
   constructor(initialData: Partial<TelemetryContextData> = {}) {
     this.data = {
-      sessionId: initialData.sessionId || crypto.randomUUID(),
-      pipelineVersion: initialData.pipelineVersion || 'v1.0.0',
+      sessionId: initialData.sessionId ?? crypto.randomUUID(),
+      pipelineVersion: initialData.pipelineVersion ?? 'v1.0.0',
       ...initialData
     };
   }

@@ -9,6 +9,9 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { RecorderFlags } from '../config/recorder.config';
 import type { UseFaceDetectionReturn } from '../types/video-recorder.types';
 
+// Extract flag to runtime variable so TypeScript doesn't narrow `false as const`
+const faceDetectionEnabled: boolean = RecorderFlags.ENABLE_FACE_DETECTION;
+
 export function useFaceDetection(
   videoElement: HTMLVideoElement | null,
   isActive: boolean,
@@ -20,9 +23,7 @@ export function useFaceDetection(
   const analyze = useCallback(() => {
     if (!videoElement || videoElement.readyState < 2) return;
 
-    if (!canvasRef.current) {
-      canvasRef.current = document.createElement('canvas');
-    }
+    canvasRef.current ??= document.createElement('canvas');
     const canvas = canvasRef.current;
     canvas.width = 64;
     canvas.height = 64;
@@ -48,9 +49,9 @@ export function useFaceDetection(
       for (let x = 1; x < 64; x++) {
         const idx = (y * 64 + x) * 4;
         const prevIdx = (y * 64 + x - 1) * 4;
-        const diff = Math.abs(pixels[idx]! - pixels[prevIdx]!) +
-                     Math.abs(pixels[idx + 1]! - pixels[prevIdx + 1]!) +
-                     Math.abs(pixels[idx + 2]! - pixels[prevIdx + 2]!);
+        const diff = Math.abs((pixels[idx] ?? 0) - (pixels[prevIdx] ?? 0)) +
+                     Math.abs((pixels[idx + 1] ?? 0) - (pixels[prevIdx + 1] ?? 0)) +
+                     Math.abs((pixels[idx + 2] ?? 0) - (pixels[prevIdx + 2] ?? 0));
         if (diff > 60) edgeCount++;
       }
     }
@@ -62,8 +63,7 @@ export function useFaceDetection(
   }, [videoElement]);
 
   useEffect(() => {
-    if (!RecorderFlags.ENABLE_FACE_DETECTION || !isActive || !videoElement) {
-      setFaceVisible(true);
+    if (!faceDetectionEnabled || !isActive || !videoElement) {
       return;
     }
 

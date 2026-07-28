@@ -82,8 +82,7 @@ export function useVideoRecorder(): UseVideoRecorderReturn & {
     releasePreview();
     setElapsedSeconds(0);
     setInternalState('idle');
-    mediaCapture.close();
-  }, [clearTimer, clearCountdown, releasePreview, mediaCapture]);
+  }, [clearTimer, clearCountdown, releasePreview]);
 
   /* ---- Cleanup on unmount ---- */
   useEffect(() => {
@@ -105,11 +104,11 @@ export function useVideoRecorder(): UseVideoRecorderReturn & {
     try {
       await mediaCapture.open({
         facingMode: selectedFacingModeRef.current,
-        deviceId: selectedCameraRef.current || undefined,
+        deviceId: selectedCameraRef.current ?? undefined,
         audio: true
       });
       setInternalState('ready');
-    } catch (err) {
+    } catch {
       setInternalState('error');
     }
   }, [mediaCapture]);
@@ -163,10 +162,10 @@ export function useVideoRecorder(): UseVideoRecorderReturn & {
         // Auto-stop at max duration
         if (seconds >= RecorderLimits.MAX_DURATION_SECONDS) {
           RecorderLogger.info('Max duration reached, auto-stopping');
-          stopRecordingInternal();
+          void stopRecordingInternal();
         }
       }, 1000);
-    } catch (e) {
+    } catch {
        RecorderLogger.error('Failed to start recording');
        setInternalState('error');
     }
@@ -213,7 +212,7 @@ export function useVideoRecorder(): UseVideoRecorderReturn & {
       setElapsedSeconds(seconds);
 
       if (seconds >= RecorderLimits.MAX_DURATION_SECONDS) {
-        stopRecordingInternal();
+        void stopRecordingInternal();
       }
     }, 1000);
   }, [mediaCapture, elapsedSeconds, stopRecordingInternal]);

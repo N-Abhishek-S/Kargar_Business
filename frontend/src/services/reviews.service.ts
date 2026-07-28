@@ -1,5 +1,6 @@
 import { supabase } from '@/supabase/client';
 import { throwSupabaseError } from '@/lib/supabaseError';
+import { ReviewRepository } from '../repositories/review.repository';
 import type {
   ClientLogo,
   PaginatedResponse,
@@ -52,11 +53,13 @@ function mapActiveReview(row: ActiveReviewRow): PublicReview {
     reviewText: row.review_text ?? '',
     recommend: row.recommend ?? true,
     profileImage: row.profile_image_url ?? '',
+    profileImagePath: (row as ActiveReviewRow & { profile_image?: string | null }).profile_image ?? null,
     companyLogo: row.company_logo_url ?? '',
+    companyLogoPath: (row as ActiveReviewRow & { company_logo?: string | null }).company_logo ?? null,
     videoUrl: row.video_url ?? null,
-    videoPath: (row as any).video_path ?? null,
-    videoSize: (row as any).video_size ?? null,
-    videoContentType: (row as any).video_content_type ?? null,
+    videoPath: (row as ActiveReviewRow & { video_path?: string | null }).video_path ?? null,
+    videoSize: (row as ActiveReviewRow & { video_size?: number | null }).video_size ?? null,
+    videoContentType: (row as ActiveReviewRow & { video_content_type?: string | null }).video_content_type ?? null,
     verified: true,
     featured: row.is_featured ?? false,
     createdAt: row.created_at ?? '',
@@ -100,10 +103,15 @@ function dataUrlToBlob(dataUrl: string, contentType: string): Blob {
   return new Blob([bytes], { type: contentType });
 }
 
+interface ImageUploadResult {
+  url: string;
+  path: string;
+}
+
 async function uploadReviewImage(
   upload: ReviewImageUploadPayload,
   folder: 'profile-images' | 'company-logos',
-): Promise<string> {
+): Promise<ImageUploadResult> {
   const extension = extensionForContentType(upload.contentType);
   const dateFolder = new Date().toISOString().slice(0, 10);
   const path = `${folder}/${dateFolder}/${crypto.randomUUID()}.${extension}`;
@@ -120,7 +128,23 @@ async function uploadReviewImage(
   }
 
   const { data } = supabase.storage.from(reviewImageBucket).getPublicUrl(path);
-  return data.publicUrl;
+  return { url: data.publicUrl, path };
+}
+
+/**
+ * Best-effort cleanup of uploaded assets on submission failure.
+ * Logs errors but never throws — rollback failures must not mask the original error.
+ */
+async function cleanupUploadedAssets(
+  assets: { bucket: string; path: string }[],
+): Promise<void> {
+  for (const asset of assets) {
+    try {
+      await supabase.storage.from(asset.bucket).remove([asset.path]);
+    } catch (e: unknown) {
+      console.error(`Failed to cleanup orphaned asset ${asset.bucket}/${asset.path}`, e);
+    }
+  }
 }
 
 export async function uploadReviewVideo(file: File): Promise<{ url: string; path: string; size: number; contentType: string }> {
@@ -241,61 +265,83 @@ export async function submitPublicReview(payload: ReviewSubmissionPayload): Prom
     throw new Error('Permission to display the review is required');
   }
 
-  const profileImageUrl = payload.profileImage
-    ? await uploadReviewImage(payload.profileImage, 'profile-images')
-    : null;
-  const companyLogoUrl = payload.companyLogo
-    ? await uploadReviewImage(payload.companyLogo, 'company-logos')
-    : null;
-    
-  let videoData = null;
-  if (payload.videoFile) {
-    videoData = await uploadReviewVideo(payload.videoFile);
-  }
+  // Track all uploaded assets for transactional rollback
+  const uploadedAssets: { bucket: string; path: string }[] = [];
 
-  const record: Inserts<'reviews'> = {
-    customer_name: payload.customerName.trim(),
-    company_name: normalizeNullable(payload.companyName),
-    email: payload.email.trim().toLowerCase(),
-    phone: normalizeNullable(payload.phone),
-    service_id: payload.serviceId,
-    location: normalizeNullable(payload.location),
-    rating: payload.rating,
-    review_title: payload.reviewTitle.trim(),
-    review_text: payload.reviewText.trim(),
-    recommend: payload.recommend,
-    profile_image_url: profileImageUrl,
-    company_logo_url: companyLogoUrl,
-    video_url: videoData?.url ?? null,
-    video_path: videoData?.path ?? null,
-    video_size: videoData?.size ?? null,
-    video_content_type: videoData?.contentType ?? null,
-    status: 'pending',
-    is_featured: false,
-    display_order: 0,
-    browser_info: window.navigator.userAgent,
-    metadata: {
-      permissionToDisplay: payload.permissionToDisplay,
-      source: 'website',
-    },
-  };
-
-  const { error } = await supabase.from('reviews').insert(record);
-  
-  if (error) {
-    if (videoData?.path) {
-      // Best effort cleanup of orphaned video if DB insert fails
-      await supabase.storage.from(reviewVideoBucket).remove([videoData.path]).catch((e: unknown) => {
-        console.error('Failed to cleanup orphaned video', e);
-      });
+  try {
+    // 1. Upload profile image
+    let profileImageUrl: string | null = null;
+    let profileImagePath: string | null = null;
+    if (payload.profileImage) {
+      const result = await uploadReviewImage(payload.profileImage, 'profile-images');
+      profileImageUrl = result.url;
+      profileImagePath = result.path;
+      uploadedAssets.push({ bucket: reviewImageBucket, path: result.path });
     }
-    throwSupabaseError(error, 'Review submission failed');
-  }
 
-  return {
-    id: 'submitted',
-    status: 'pending',
-  };
+    // 2. Upload company logo
+    let companyLogoUrl: string | null = null;
+    let companyLogoPath: string | null = null;
+    if (payload.companyLogo) {
+      const result = await uploadReviewImage(payload.companyLogo, 'company-logos');
+      companyLogoUrl = result.url;
+      companyLogoPath = result.path;
+      uploadedAssets.push({ bucket: reviewImageBucket, path: result.path });
+    }
+
+    // 3. Video data (already uploaded by useUploadProgress, or fallback upload)
+    const videoData = payload.videoData ?? null;
+    if (videoData?.path) {
+      uploadedAssets.push({ bucket: reviewVideoBucket, path: videoData.path });
+    }
+
+    // 4. Build the database record
+    const record: Inserts<'reviews'> = {
+      customer_name: payload.customerName.trim(),
+      company_name: normalizeNullable(payload.companyName),
+      email: payload.email.trim().toLowerCase(),
+      phone: normalizeNullable(payload.phone),
+      service_id: payload.serviceId,
+      location: normalizeNullable(payload.location),
+      rating: payload.rating,
+      review_title: payload.reviewTitle.trim(),
+      review_text: payload.reviewText.trim(),
+      recommend: payload.recommend,
+      profile_image_url: profileImageUrl,
+      profile_image: profileImagePath,
+      company_logo_url: companyLogoUrl,
+      company_logo: companyLogoPath,
+      video_url: videoData?.url ?? null,
+      video_path: videoData?.path ?? null,
+      video_size: videoData?.size ?? null,
+      video_content_type: videoData?.contentType ?? null,
+      status: 'pending',
+      is_featured: false,
+      display_order: 0,
+      browser_info: window.navigator.userAgent,
+      metadata: {
+        permissionToDisplay: payload.permissionToDisplay,
+        submissionId: payload.submissionId,
+        source: 'website',
+      },
+    };
+
+    // 5. Insert into database
+    const { error } = await supabase.from('reviews').insert(record);
+
+    if (error) {
+      throwSupabaseError(error, 'Review submission failed');
+    }
+
+    return {
+      id: 'submitted',
+      status: 'pending',
+    };
+  } catch (error) {
+    // Rollback: clean up ALL uploaded assets on any failure
+    await cleanupUploadedAssets(uploadedAssets);
+    throw error;
+  }
 }
 
 export async function fetchServiceOptions(): Promise<ServiceOption[]> {
@@ -336,5 +382,82 @@ export async function fetchClientLogos(): Promise<ClientLogo[]> {
   } catch (error) {
     console.error('Error fetching client logos:', error);
     return [];
+  }
+}
+
+export type MediaType = 'profile_image' | 'company_logo' | 'video';
+
+export interface UpdateReviewMediaPayload {
+  reviewId: string;
+  mediaType: MediaType;
+  fileData?: string | File | null; // dataURL for images, File for video, null for delete
+  contentType?: string; // used for images
+  oldPath?: string | null;
+}
+
+export async function updateReviewMedia(payload: UpdateReviewMediaPayload): Promise<void> {
+  let newUrl: string | null = null;
+  let newPath: string | null = null;
+  let newSize: number | null = null;
+  let newContentType: string | null = null;
+  let uploadedBucket: string | null = null;
+  let uploadedPath: string | null = null;
+
+  try {
+    // 1. Upload new asset if provided
+    if (payload.fileData) {
+      if (payload.mediaType === 'video' && payload.fileData instanceof File) {
+        const result = await uploadReviewVideo(payload.fileData);
+        newUrl = result.url;
+        newPath = result.path;
+        newSize = result.size;
+        newContentType = result.contentType;
+        uploadedBucket = reviewVideoBucket;
+        uploadedPath = result.path;
+      } else if (payload.fileData instanceof File && payload.contentType) {
+        const folder = payload.mediaType === 'profile_image' ? 'profile-images' : 'company-logos';
+        // Convert File to Base64
+        const buffer = await payload.fileData.arrayBuffer();
+        const base64 = btoa(new Uint8Array(buffer).reduce((data, byte) => data + String.fromCharCode(byte), ''));
+        const dataUrl = `data:${payload.contentType};base64,${base64}`;
+        
+        const result = await uploadReviewImage({ 
+          fileName: payload.fileData.name,
+          size: payload.fileData.size,
+          data: dataUrl, 
+          contentType: payload.contentType as 'image/jpeg' | 'image/png' | 'image/webp' | 'image/svg+xml'
+        }, folder);
+        newUrl = result.url;
+        newPath = result.path;
+        uploadedBucket = reviewImageBucket;
+        uploadedPath = result.path;
+      } else {
+        throw new Error('Invalid file data for media update');
+      }
+    }
+
+    // 2. Update Database via Repository
+    try {
+      await ReviewRepository.updateMedia(payload.reviewId, payload.mediaType, {
+        url: newUrl,
+        path: newPath,
+        size: newSize,
+        contentType: newContentType
+      });
+    } catch (dbError) {
+      throwSupabaseError(dbError as { message: string; code?: string }, 'Failed to update review media record in database');
+    }
+
+    // 3. Delete Old Asset (Best Effort)
+    if (payload.oldPath) {
+      const oldBucket = payload.mediaType === 'video' ? reviewVideoBucket : reviewImageBucket;
+      await cleanupUploadedAssets([{ bucket: oldBucket, path: payload.oldPath }]);
+    }
+  } catch (error) {
+    // Rollback: if database update failed, delete the newly uploaded asset
+    if (uploadedBucket && uploadedPath) {
+      await cleanupUploadedAssets([{ bucket: uploadedBucket, path: uploadedPath }]);
+    }
+    throw error;
   }
 }

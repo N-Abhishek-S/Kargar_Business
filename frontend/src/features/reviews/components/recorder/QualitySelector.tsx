@@ -27,7 +27,7 @@ export function QualitySelector({
             type="button"
             role="radio"
             aria-checked={isActive}
-            onClick={() => onQualityChange(q)}
+            onClick={() => { onQualityChange(q); }}
             disabled={disabled}
             className={clsx(
               'px-2.5 py-1 rounded-md text-xs font-semibold transition-all duration-200',

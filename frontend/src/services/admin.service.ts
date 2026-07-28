@@ -1,6 +1,7 @@
 import type { User } from '@supabase/supabase-js';
 import { supabase } from '@/supabase/client';
 import { throwSupabaseError } from '@/lib/supabaseError';
+import { ReviewRepository } from '../repositories/review.repository';
 import type { AdminDashboardSummary, AdminReview, ContactMessage, PaginatedResponse } from '@/types';
 import type { Tables, Updates } from '@/supabase/types';
 
@@ -24,10 +25,6 @@ export interface AdminReviewUpdatePayload {
   companyName?: string;
   rating?: number;
   reviewText?: string;
-  videoUrl?: string | null;
-  videoPath?: string | null;
-  videoSize?: number | null;
-  videoContentType?: string | null;
 }
 
 type ReviewRow = Tables<'reviews'>;
@@ -68,7 +65,9 @@ function mapAdminReview(row: ReviewRow, serviceNames: Map<string, string>): Admi
     reviewText: row.review_text,
     recommend: row.recommend,
     profileImage: row.profile_image_url,
+    profileImagePath: row.profile_image,
     companyLogo: row.company_logo_url,
+    companyLogoPath: row.company_logo,
     videoUrl: row.video_url,
     videoPath: row.video_path,
     videoSize: row.video_size,
@@ -209,11 +208,6 @@ export async function updateAdminReview(id: string, payload: AdminReviewUpdatePa
   if (payload.rating !== undefined) updates.rating = payload.rating;
   if (payload.reviewText !== undefined) updates.review_text = payload.reviewText;
   
-  // Video updates
-  if (payload.videoUrl !== undefined) updates.video_url = payload.videoUrl;
-  if (payload.videoPath !== undefined) updates.video_path = payload.videoPath;
-  if (payload.videoSize !== undefined) updates.video_size = payload.videoSize;
-  if (payload.videoContentType !== undefined) updates.video_content_type = payload.videoContentType;
 
   if (Object.keys(updates).length > 0) {
     const { error } = await supabase.from('reviews').update(updates).eq('id', id);
@@ -232,21 +226,13 @@ export async function updateAdminReview(id: string, payload: AdminReviewUpdatePa
 }
 
 export async function deleteAdminReview(id: string): Promise<void> {
-  // First fetch the review to check if it has a video
-  const { data: review } = await supabase.from('reviews').select('video_path').eq('id', id).single();
-  
-  if (review?.video_path) {
-    await supabase.storage.from('review-videos').remove([review.video_path]).catch(() => {});
-  }
+  // Use repository to delete video media and storage
+  await ReviewRepository.clearMedia(id, 'video');
 
   const updates: Updates<'reviews'> = {
     status: 'archived',
     is_featured: false,
     deleted_at: new Date().toISOString(),
-    video_url: null,
-    video_path: null,
-    video_size: null,
-    video_content_type: null,
   };
 
   const { error } = await supabase.from('reviews').update(updates).eq('id', id);

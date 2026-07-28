@@ -15,5 +15,5 @@
     "noFallthroughCasesInSwitch": true,
     "types": ["node"]
   },
-  "include": ["*.ts", "api/**/*.ts"]
+  "include": ["*.ts", "api/**/*.ts", "tests/**/*.ts"]
 }

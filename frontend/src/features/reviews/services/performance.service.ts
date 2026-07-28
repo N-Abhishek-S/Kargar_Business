@@ -10,7 +10,7 @@ import type { PerformanceMetrics } from '../types/video-recorder.types';
 
 class PerformanceMonitor {
   private metrics: Partial<PerformanceMetrics> = {};
-  private marks: Map<string, number> = new Map();
+  private marks = new Map<string, number>();
 
   /** Start a performance mark */
   mark(name: string): void {
@@ -42,7 +42,7 @@ class PerformanceMonitor {
 
   /** Log all metrics */
   report(): void {
-    PerformanceLogger.info('Performance report', this.metrics as Record<string, unknown>);
+    PerformanceLogger.info('Performance report', this.metrics);
   }
 
   /** Reset all metrics */

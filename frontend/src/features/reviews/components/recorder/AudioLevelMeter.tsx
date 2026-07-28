@@ -18,9 +18,9 @@ export function AudioLevelMeter({ level, isSilent }: AudioLevelMeterProps) {
     <div className="flex items-center gap-2 w-full">
       {/* Mic icon */}
       {isSilent ? (
-        <MicOff size={14} className="text-amber-400 flex-shrink-0" />
+        <MicOff size={14} className="text-amber-400 shrink-0" />
       ) : (
-        <Mic size={14} className="text-gray-400 flex-shrink-0" />
+        <Mic size={14} className="text-gray-400 shrink-0" />
       )}
 
       {/* Level bar container */}
@@ -38,10 +38,10 @@ export function AudioLevelMeter({ level, isSilent }: AudioLevelMeterProps) {
 
       {/* Label / Warning */}
       <span className={clsx(
-        'text-xs flex-shrink-0 min-w-[4.5rem] text-right',
+        'text-xs shrink-0 min-w-18 text-right',
         isSilent ? 'text-amber-400 font-medium' : 'text-gray-500',
       )}>
-        {isSilent ? recorderStrings.noAudioDetected.split('—')[0]!.trim() : recorderStrings.micLevel}
+        {isSilent ? (recorderStrings.noAudioDetected.split('—')[0] ?? '').trim() : recorderStrings.micLevel}
       </span>
     </div>
   );

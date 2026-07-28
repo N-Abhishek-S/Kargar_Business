@@ -33,7 +33,7 @@ function openDB(): Promise<IDBDatabase> {
       StorageLogger.error('IndexedDB open failed', {
         error: request.error?.message,
       });
-      reject(request.error);
+      reject(request.error instanceof Error ? request.error : new Error(String(request.error)));
     };
   });
 }
@@ -46,8 +46,8 @@ export async function saveDraft(draft: RecordingDraft): Promise<void> {
     store.put(draft);
 
     await new Promise<void>((resolve, reject) => {
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => reject(tx.error);
+      tx.oncomplete = () => { resolve(); };
+      tx.onerror = () => { reject(tx.error instanceof Error ? tx.error : new Error(String(tx.error))); };
     });
 
     StorageLogger.info('Draft saved', { id: draft.id, size: draft.blob.size });
@@ -66,16 +66,19 @@ export async function loadDraft(): Promise<RecordingDraft | null> {
     const request = store.getAll();
 
     const drafts = await new Promise<RecordingDraft[]>((resolve, reject) => {
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
+      request.onsuccess = () => { resolve(request.result); };
+      request.onerror = () => { reject(request.error instanceof Error ? request.error : new Error(String(request.error))); };
     });
 
     if (drafts.length === 0) return null;
 
     // Return the most recent draft
     drafts.sort((a, b) => b.createdAt - a.createdAt);
-    StorageLogger.info('Draft loaded', { id: drafts[0]!.id });
-    return drafts[0] ?? null;
+    const firstDraft = drafts[0];
+    if (firstDraft) {
+      StorageLogger.info('Draft loaded', { id: firstDraft.id });
+    }
+    return firstDraft ?? null;
   } catch (err) {
     StorageLogger.error('Failed to load draft', {
       error: err instanceof Error ? err.message : String(err),
@@ -97,8 +100,8 @@ export async function deleteDraft(id?: string): Promise<void> {
     }
 
     await new Promise<void>((resolve, reject) => {
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => reject(tx.error);
+      tx.oncomplete = () => { resolve(); };
+      tx.onerror = () => { reject(tx.error instanceof Error ? tx.error : new Error(String(tx.error))); };
     });
 
     StorageLogger.info('Draft deleted', { id: id ?? 'all' });
@@ -117,8 +120,8 @@ export async function hasDraft(): Promise<boolean> {
     const request = store.count();
 
     const count = await new Promise<number>((resolve, reject) => {
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
+      request.onsuccess = () => { resolve(request.result); };
+      request.onerror = () => { reject(request.error instanceof Error ? request.error : new Error(String(request.error))); };
     });
 
     return count > 0;

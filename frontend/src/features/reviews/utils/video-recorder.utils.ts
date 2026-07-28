@@ -73,7 +73,7 @@ export function generateRecordingFileName(mimeType: string): string {
  * Safely revoke an object URL.
  */
 export function safeRevokeObjectURL(url: string | null): void {
-  if (url && url.startsWith('blob:')) {
+  if (url?.startsWith('blob:')) {
     try {
       URL.revokeObjectURL(url);
     } catch {

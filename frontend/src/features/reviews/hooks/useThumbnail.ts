@@ -66,7 +66,7 @@ function captureFrame(videoUrl: string, seekSeconds: number): Promise<string> {
 
         resolve(dataUrl);
       } catch (err) {
-        reject(err);
+        reject(err instanceof Error ? err : new Error(String(err)));
       }
     };
 

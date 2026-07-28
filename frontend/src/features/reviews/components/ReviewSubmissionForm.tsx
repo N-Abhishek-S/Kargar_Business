@@ -12,12 +12,13 @@ import { ReviewImageField } from './ReviewImageField';
 import { VideoUploadCard } from './VideoUploadCard';
 import { useServiceOptions, useSubmitReview } from '@/features/reviews/hooks';
 import type { ReviewSubmissionPayload } from '@/types';
+import { useUploadProgress, UploadProgressBar } from '@/features/reviews/video-recorder';
 
 const duplicateWindowMs = 5 * 60 * 1000;
 
 const imageFileSchema = z.object({
   fileName: z.string(),
-  contentType: z.enum(['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml']),
+  contentType: z.enum(['image/jpeg', 'image/png', 'image/webp']),
   size: z.number().max(5 * 1024 * 1024, 'Image must be less than 5MB'),
   data: z.string(),
 });
@@ -27,7 +28,16 @@ const ACCEPTED_VIDEO_TYPES = ['video/mp4', 'video/quicktime', 'video/webm'];
 
 const videoFileSchema = z.custom<File>((val) => val instanceof File, 'Please upload a valid file')
   .refine((file) => file.size <= MAX_VIDEO_SIZE, 'Video must be less than 100MB')
-  .refine((file) => ACCEPTED_VIDEO_TYPES.includes(file.type), 'Video must be MP4, MOV, or WebM');
+  .refine((file) => {
+    console.log('[Validation] Validating Blob/File:', {
+      name: file.name,
+      type: file.type,
+      size: file.size,
+      constructor: file.constructor.name,
+    });
+    const baseType = file.type.split(';')[0]?.trim();
+    return baseType ? ACCEPTED_VIDEO_TYPES.includes(baseType) : false;
+  }, 'Video must be MP4, MOV, or WebM');
 
 const reviewFormSchema = z.object({
   customerName: z.string().trim().min(2, 'Enter your full name').max(120),
@@ -66,7 +76,9 @@ function currentTimestamp(): number {
 export function ReviewSubmissionForm() {
   const { data: services, isLoading: servicesLoading } = useServiceOptions();
   const submitReview = useSubmitReview();
+  const { upload, cancelUpload, progress, isUploading, isRetrying, error: uploadError } = useUploadProgress();
   const [fileError, setFileError] = useState<string | null>(null);
+  const [submissionId, setSubmissionId] = useState(() => crypto.randomUUID());
 
   const serviceOptions = useMemo(() => services ?? [], [services]);
 
@@ -128,7 +140,7 @@ export function ReviewSubmissionForm() {
       const dataUrl = event.target?.result as string;
       setValue(fieldName, {
         fileName: file.name,
-        contentType: file.type === 'image/jpg' ? 'image/jpeg' : (file.type as 'image/jpeg' | 'image/png' | 'image/webp' | 'image/svg+xml'),
+        contentType: file.type === 'image/jpg' ? 'image/jpeg' : (file.type as 'image/jpeg' | 'image/png' | 'image/webp'),
         size: file.size,
         data: dataUrl
       }, { shouldValidate: true });
@@ -146,8 +158,14 @@ export function ReviewSubmissionForm() {
       return;
     }
 
+    submitReview.reset();
     setFileError(null);
     try {
+      let videoData;
+      if (values.videoFile) {
+        videoData = await upload(values.videoFile);
+      }
+
       const payload: ReviewSubmissionPayload = {
         customerName: values.customerName,
         companyName: values.companyName,
@@ -163,14 +181,21 @@ export function ReviewSubmissionForm() {
         websiteTrap: values.websiteTrap,
         profileImage: values.profileImage ?? undefined,
         companyLogo: values.companyLogo ?? undefined,
-        videoFile: values.videoFile ?? undefined,
+        videoData,
+        submissionId,
       };
 
       await submitReview.mutateAsync(payload);
+      // Regenerate submissionId so the next submission gets a fresh idempotency key
+      setSubmissionId(crypto.randomUUID());
       window.localStorage.setItem('kargar_review_submitted_at', String(currentTimestamp()));
       toast.success('Review submitted successfully! It will appear once approved by our team.', { duration: 5000 });
       reset();
     } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        // Upload cancelled by user, don't show an error toast
+        return;
+      }
       const message = error instanceof Error ? error.message : 'Review submission failed';
       setFileError(message);
       toast.error(message);
@@ -328,28 +353,73 @@ export function ReviewSubmissionForm() {
         </div>
       )}
       
-      {submitReview.isSuccess && (
+      {submitReview.isSuccess && !fileError && (
         <div className="mb-6 p-4 rounded-md bg-green-50 border border-green-100 text-green-700 text-sm font-medium flex items-center gap-2" role="status">
           <CheckCircle2 size={18} /> Review submitted successfully!
         </div>
       )}
 
-      <div className="flex flex-col sm:flex-row items-center gap-5 pt-6 border-t border-gray-100">
-        <button 
-          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-lg bg-orange-500 px-8 py-3 text-sm font-bold text-white shadow-sm hover:bg-orange-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-500 transition-all disabled:opacity-70 disabled:cursor-not-allowed hover:-translate-y-0.5 active:translate-y-0" 
-          type="submit" 
-          disabled={isSubmitting || submitReview.isPending}
+      <div className="bg-orange-50/50 -mx-6 md:-mx-8 px-6 md:px-8 py-6 mb-8 mt-4 rounded-xl border border-orange-100/50 relative overflow-hidden">
+        <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
+          <Lock size={120} />
+        </div>
+        
+        <h4 className="text-sm font-bold text-navy-900 mb-4 flex items-center gap-2">
+          <CheckCircle2 size={16} className="text-orange-500" />
+          Data & Privacy
+        </h4>
+        
+        <div className="space-y-4 relative z-10">
+          <label className="flex items-start gap-3 p-3 rounded-lg border border-white bg-white/50 hover:bg-white transition-colors cursor-pointer group">
+            <div className="mt-0.5 shrink-0">
+              <input 
+                type="checkbox" 
+                {...register('permissionToDisplay')}
+                className="w-4 h-4 rounded border-gray-300 text-orange-500 focus:ring-orange-500/20"
+              />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-navy-900 mb-0.5">I grant permission to use this review</p>
+              <p className="text-xs text-gray-500">I allow Kargar Construction to use my review and media for marketing purposes on their website and social media.</p>
+              {errors.permissionToDisplay && (
+                <p className="mt-1.5 text-xs font-medium text-red-500 flex items-center gap-1">
+                  ⚠ {errors.permissionToDisplay.message}
+                </p>
+              )}
+            </div>
+          </label>
+        </div>
+      </div>
+
+      {isUploading && progress && (
+        <div className="mb-6 p-4 rounded-xl border border-gray-100 bg-gray-50/50">
+          <UploadProgressBar 
+            progress={progress} 
+            isRetrying={isRetrying} 
+            onCancel={cancelUpload} 
+          />
+          {uploadError && <p className="mt-2 text-sm text-red-500">{uploadError}</p>}
+        </div>
+      )}
+
+      <div className="flex justify-end pt-4 border-t border-gray-100">
+        <button
+          type="submit"
+          disabled={isSubmitting || isUploading}
+          className="flex items-center gap-2 px-8 py-3.5 bg-orange-500 hover:bg-orange-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold rounded-xl shadow-sm hover:shadow-md transition-all duration-200"
         >
-          {isSubmitting || submitReview.isPending ? (
-            <><Loader2 className="w-5 h-5 animate-spin" /> {videoFile ? 'Uploading video...' : 'Submitting...'}</>
+          {isSubmitting || isUploading ? (
+            <>
+              <Loader2 className="w-5 h-5 animate-spin" />
+              {isUploading ? 'Uploading Video...' : 'Submitting Review...'}
+            </>
           ) : (
-            <><Send className="w-5 h-5" /> Submit Review</>
+            <>
+              Submit Review
+              <Send size={18} className="ml-1" />
+            </>
           )}
         </button>
-        <div className="flex items-center justify-center gap-2 text-sm font-medium text-gray-500 w-full sm:w-auto">
-          <Lock size={16} className="text-gray-400" />
-          <span>Your information is securely stored and never shared publicly.</span>
-        </div>
       </div>
     </form>
   );

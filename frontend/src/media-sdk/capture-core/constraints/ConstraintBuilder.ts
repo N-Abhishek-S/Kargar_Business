@@ -1,5 +1,5 @@
 import type { FacingMode } from "../types";
-import { CameraCapabilityService } from "../services/CameraCapabilityService";
+import type { CameraCapabilityService } from "../services/CameraCapabilityService";
 import type { CameraConfig } from "../config/camera.config";
 
 export interface BuildConstraintsOptions {
@@ -27,7 +27,7 @@ export class ConstraintBuilder {
     if (isMobile) {
       // Mobile: Strictly default to environment camera.
       // Ignore deviceId during initial mobile camera selection to prevent overriding.
-      const targetMode = options.facingMode || "environment";
+      const targetMode = options.facingMode ?? "environment";
       videoConstraints.facingMode = { ideal: targetMode };
     } else {
       // Desktop: Prefer deviceId. Users expect to switch to specific USB/Virtual webcams
@@ -35,7 +35,7 @@ export class ConstraintBuilder {
         videoConstraints.deviceId = { exact: options.deviceId };
       } else {
         // Fallback for desktop when no specific device is chosen
-        videoConstraints.facingMode = options.facingMode || "user";
+        videoConstraints.facingMode = options.facingMode ?? "user";
       }
     }
 

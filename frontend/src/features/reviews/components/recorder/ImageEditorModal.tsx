@@ -97,14 +97,51 @@ export const ImageEditorModal: React.FC<ImageEditorModalProps> = ({
   };
 
   const handleSave = async () => {
-    if (!imageBitmap || !canvasRef.current) return;
+    if (!imageBitmap) return;
     setIsProcessing(true);
     
     try {
-      // In production, dispatch this to the WorkerPool.
-      // For this UI component, we just export the current canvas state directly for simplicity.
+      // Export at FULL RESOLUTION — not the preview canvas size.
+      // The preview canvas is viewport-scaled for display; the export canvas
+      // preserves the original ImageBitmap dimensions.
+
+      // Determine final dimensions based on rotation
+      let exportWidth = imageBitmap.width;
+      let exportHeight = imageBitmap.height;
+      const rotationOps = operations.filter(op => op.type === 'rotate').length;
+      if (rotationOps % 2 !== 0) {
+        exportWidth = imageBitmap.height;
+        exportHeight = imageBitmap.width;
+      }
+
+      // Create off-screen canvas at full resolution
+      const exportCanvas = document.createElement('canvas');
+      exportCanvas.width = exportWidth;
+      exportCanvas.height = exportHeight;
+      const exportCtx = exportCanvas.getContext('2d');
+      if (!exportCtx) throw new Error('Failed to create export canvas context');
+
+      // Apply rotation operations at full resolution
+      let totalRotation = 0;
+      operations.forEach(op => {
+        if (op.type === 'rotate') totalRotation += Math.PI / 2;
+      });
+
+      exportCtx.save();
+      exportCtx.translate(exportWidth / 2, exportHeight / 2);
+      exportCtx.rotate(totalRotation);
+      exportCtx.drawImage(
+        imageBitmap,
+        -imageBitmap.width / 2,
+        -imageBitmap.height / 2,
+        imageBitmap.width,
+        imageBitmap.height,
+      );
+      exportCtx.restore();
+
+      // Export full-resolution JPEG
       const blob = await new Promise<Blob | null>(resolve => {
-        canvasRef.current?.toBlob(resolve, 'image/jpeg', 0.9);
+        exportCanvas.toBlob(resolve, 'image/jpeg', 0.92);
       });
       
       if (blob) {

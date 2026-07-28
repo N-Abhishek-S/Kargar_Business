@@ -151,7 +151,11 @@ export type RecorderAnalyticsEvent =
   | 'brightness_warning'
   | 'face_not_detected'
   | 'network_lost'
-  | 'network_restored';
+  | 'network_restored'
+  | 'camera_opened'
+  | 'camera_open_failed'
+  | 'state_transition_failed'
+  | 'review_submission_failed';
 
 export interface AnalyticsPayload {
   readonly event: RecorderAnalyticsEvent;

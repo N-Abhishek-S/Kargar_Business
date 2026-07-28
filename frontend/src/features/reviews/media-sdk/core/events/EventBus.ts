@@ -4,24 +4,24 @@
 
 export type EventType = string;
 
-export interface EventMessage<T = any> {
+export interface EventMessage<T = unknown> {
   type: EventType;
   payload?: T;
   timestamp: number;
 }
 
-export type EventHandler<T = any> = (event: EventMessage<T>) => void;
+export type EventHandler<T = unknown> = (event: EventMessage<T>) => void;
 
 export class EventBus {
-  private listeners: Map<EventType, Set<EventHandler>> = new Map();
+  private listeners = new Map<EventType, Set<EventHandler>>();
 
   public subscribe<T>(type: EventType, handler: EventHandler<T>): () => void {
     if (!this.listeners.has(type)) {
       this.listeners.set(type, new Set());
     }
-    this.listeners.get(type)!.add(handler as EventHandler);
+    this.listeners.get(type)?.add(handler as EventHandler);
 
-    return () => this.unsubscribe(type, handler as EventHandler);
+    return () => { this.unsubscribe(type, handler as EventHandler); };
   }
 
   public unsubscribe<T>(type: EventType, handler: EventHandler<T>): void {
@@ -34,8 +34,8 @@ export class EventBus {
     }
   }
 
-  public publish<T>(type: EventType, payload?: T): void {
-    const event: EventMessage<T> = {
+  public publish(type: EventType, payload?: unknown): void {
+    const event: EventMessage = {
       type,
       payload,
       timestamp: Date.now(),

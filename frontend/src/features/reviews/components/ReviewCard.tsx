@@ -40,7 +40,7 @@ export function ReviewCard({ review, isActive, onReadMore }: ReviewCardProps) {
   const textRef = useRef<HTMLParagraphElement>(null);
 
   // Normalize data for fallbacks
-  const images = review.images ?? (review.profileImage ? [review.profileImage] : []);
+  const images = review.images ?? [];
   const companyName = review.companyName.trim() ? review.companyName : 'Unknown Company';
   const customerName = review.customerName.trim() ? review.customerName : 'Anonymous';
   const reviewText = review.reviewText.trim() ? review.reviewText : 'No written review provided.';
@@ -136,24 +136,31 @@ export function ReviewCard({ review, isActive, onReadMore }: ReviewCardProps) {
       {/* Separator */}
       <hr className="my-8 border-t border-(--border-subtle) shrink-0" />
 
-      {/* Footer: Company Identity */}
+      {/* Footer: Customer & Company Identity */}
       <footer className="flex items-center gap-4 relative z-10 shrink-0">
-        <Avatar
-          src={review.companyLogo ?? ''}
-          alt={`${companyName} logo`}
-          fallbackInitials={getInitials(companyName !== 'Unknown Company' ? companyName : customerName)}
-          size="lg"
-          className="border border-gray-100 shadow-sm shrink-0"
-        />
+        <div className="relative shrink-0">
+          <Avatar
+            src={review.profileImage ?? review.companyLogo ?? ''}
+            alt={`${customerName} photo`}
+            fallbackInitials={getInitials(customerName)}
+            size="lg"
+            className="border border-gray-100 shadow-sm shrink-0"
+          />
+          {review.profileImage && review.companyLogo && (
+             <div className="absolute -bottom-1 -right-1 rounded-full border-2 border-white shadow-sm bg-white overflow-hidden w-6 h-6 flex items-center justify-center">
+               <img src={review.companyLogo} alt={companyName} className="w-full h-full object-cover" loading="lazy" decoding="async" />
+             </div>
+          )}
+        </div>
         <div className="flex flex-col overflow-hidden">
           <strong className="truncate text-[18px] font-bold text-(--text-primary)">
-            {companyName}
+            {customerName}
           </strong>
-          {review.location && (
-            <span className="truncate text-[15px] font-medium text-(--text-muted)">
-              {review.location}
-            </span>
-          )}
+          <span className="truncate text-[15px] font-medium text-(--text-muted)">
+            {companyName !== 'Unknown Company' ? companyName : ''}
+            {companyName !== 'Unknown Company' && review.location ? ' · ' : ''}
+            {review.location}
+          </span>
         </div>
       </footer>
     </article>

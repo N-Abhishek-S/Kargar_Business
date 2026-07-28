@@ -15,9 +15,7 @@ export enum MediaState {
   ERROR = 'ERROR'
 }
 
-type TransitionMap = {
-  [key in MediaState]?: MediaState[];
-};
+type TransitionMap = Partial<Record<MediaState, MediaState[]>>;
 
 const ValidTransitions: TransitionMap = {
   [MediaState.IDLE]: [MediaState.PERMISSION, MediaState.ERROR],
@@ -34,7 +32,7 @@ const ValidTransitions: TransitionMap = {
 
 export class MediaStateMachine {
   private _state: MediaState = MediaState.IDLE;
-  private _listeners: Array<(state: MediaState, previousState: MediaState) => void> = [];
+  private _listeners: ((state: MediaState, previousState: MediaState) => void)[] = [];
 
   public get state(): MediaState {
     return this._state;
@@ -42,7 +40,7 @@ export class MediaStateMachine {
 
   public transitionTo(newState: MediaState): boolean {
     const allowed = ValidTransitions[this._state];
-    if (allowed && allowed.includes(newState)) {
+    if (allowed?.includes(newState)) {
       const oldState = this._state;
       this._state = newState;
       this._notify(newState, oldState);

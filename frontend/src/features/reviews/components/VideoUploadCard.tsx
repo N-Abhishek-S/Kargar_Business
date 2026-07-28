@@ -8,10 +8,11 @@
  * the existing onChange(file) callback — zero changes to parent form.
  */
 
-import { useState, useRef, useEffect, lazy, Suspense, type ChangeEvent } from 'react';
+import { useState, useRef, useEffect, useMemo, lazy, Suspense, type ChangeEvent } from 'react';
 import { clsx } from 'clsx';
 import { X, UploadCloud, Video, Loader2 } from 'lucide-react';
 import { recorderStrings } from '../i18n/recorder.i18n';
+import { trackRecorderEvent } from '../services/analytics.service';
 import { RecorderFlags } from '../config/recorder.config';
 import { CameraProvider } from '../../../media-sdk/capture-react/useMediaCapture';
 
@@ -19,6 +20,9 @@ import { CameraProvider } from '../../../media-sdk/capture-react/useMediaCapture
 const VideoRecorderModal = lazy(() =>
   import('./recorder/VideoRecorderModal').then((m) => ({ default: m.VideoRecorderModal })),
 );
+
+// Extract flag to runtime variable so TypeScript doesn't narrow `true as const`
+const videoRecordingEnabled: boolean = RecorderFlags.ENABLE_VIDEO_RECORDING;
 
 export interface VideoUploadCardProps {
   label: string;
@@ -30,21 +34,16 @@ export interface VideoUploadCardProps {
 
 export function VideoUploadCard({ label, error, value, onChange, maxSizeMB = 100 }: VideoUploadCardProps) {
   const [isDragActive, setIsDragActive] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isRecorderOpen, setIsRecorderOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   /* ---- Preview URL lifecycle ---- */
+  const previewUrl = useMemo(() => value ? URL.createObjectURL(value) : null, [value]);
   useEffect(() => {
-    if (value) {
-      const url = URL.createObjectURL(value);
-      setPreviewUrl(url);
-      return () => URL.revokeObjectURL(url);
-    } else {
-      setPreviewUrl(null);
-      return undefined;
-    }
-  }, [value]);
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [previewUrl]);
 
   /* ---- Upload handlers (preserved from original) ---- */
   const handleDragOver = (e: React.DragEvent) => {
@@ -213,7 +212,7 @@ export function VideoUploadCard({ label, error, value, onChange, maxSizeMB = 100
         </div>
 
         {/* ---- Option 2: Record Video ---- */}
-        {RecorderFlags.ENABLE_VIDEO_RECORDING && (
+        {videoRecordingEnabled && (
           <button
             type="button"
             onClick={handleOpenRecorder}
@@ -256,7 +255,17 @@ export function VideoUploadCard({ label, error, value, onChange, maxSizeMB = 100
             </div>
           }
         >
-          <CameraProvider>
+          <CameraProvider
+            onSDKEvent={(eventName, payload) => {
+              if (eventName === 'camera_error') {
+                 trackRecorderEvent('camera_open_failed' as any, payload);
+              } else if (eventName === 'camera_opened') {
+                 trackRecorderEvent('camera_opened' as any, payload);
+              } else if (eventName === 'state_transition_failed') {
+                 trackRecorderEvent('state_transition_failed' as any, payload);
+              }
+            }}
+          >
             <VideoRecorderModal
               isOpen={isRecorderOpen}
               onClose={handleCloseRecorder}

@@ -22,9 +22,8 @@ export interface MediaCaptureSDK {
   facingMode: FacingMode | null;
   recordingState: RecordingState | "destroyed";
   
-  // Actions
   open: (options?: { facingMode?: FacingMode; deviceId?: string; audio?: boolean }) => Promise<void>;
-  close: () => Promise<void>;
+  close: () => void;
   switchCamera: (options?: { audio?: boolean }) => Promise<void>;
   capturePhoto: (videoElement: HTMLVideoElement) => Promise<Blob>;
   
@@ -37,7 +36,36 @@ export interface MediaCaptureSDK {
 
 const CameraContext = createContext<MediaCaptureSDK | null>(null);
 
-export const CameraProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+function initCore() {
+  const emitter = createEmitter<SDKEventMap>();
+  const permissionService = new PermissionService();
+  const deviceService = new MediaDeviceService();
+  const capabilityService = new CameraCapabilityService();
+  const constraintBuilder = new ConstraintBuilder(capabilityService);
+  const browserAdapter = new BrowserAdapter();
+
+  const cameraController = new MediaCameraController(
+    emitter,
+    defaultConfig,
+    permissionService,
+    deviceService,
+    constraintBuilder,
+    capabilityService,
+    browserAdapter
+  );
+
+  const imageProcessor = new ImageProcessor(defaultConfig);
+  const videoRecorderController = new VideoRecorderController(emitter);
+
+  return { emitter, cameraController, imageProcessor, deviceService, videoRecorderController };
+}
+
+interface CameraProviderProps {
+  children: React.ReactNode;
+  onSDKEvent?: (eventName: string, payload: any) => void;
+}
+
+export const CameraProvider: React.FC<CameraProviderProps> = ({ children, onSDKEvent }) => {
   const [state, setState] = useState<CameraState>("IDLE");
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [error, setError] = useState<Error | null>(null);
@@ -45,30 +73,8 @@ export const CameraProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [facingMode, setFacingMode] = useState<FacingMode | null>(null);
   const [recordingState, setRecordingState] = useState<RecordingState | "destroyed">("STOPPED");
 
-  // Initialize Core SDK singletons once
-  const core = useMemo(() => {
-    const emitter = createEmitter<SDKEventMap>();
-    const permissionService = new PermissionService();
-    const deviceService = new MediaDeviceService();
-    const capabilityService = new CameraCapabilityService();
-    const constraintBuilder = new ConstraintBuilder(capabilityService);
-    const browserAdapter = new BrowserAdapter();
-
-    const cameraController = new MediaCameraController(
-      emitter,
-      defaultConfig,
-      permissionService,
-      deviceService,
-      constraintBuilder,
-      capabilityService,
-      browserAdapter
-    );
-
-    const imageProcessor = new ImageProcessor(defaultConfig);
-    const videoRecorderController = new VideoRecorderController(emitter);
-
-    return { emitter, cameraController, imageProcessor, deviceService, videoRecorderController };
-  }, []);
+  // Initialize Core SDK singletons once, securely held in a ref
+  const [core] = useState(() => initCore());
 
   // Sync React State with Core SDK State
   useEffect(() => {
@@ -95,26 +101,55 @@ export const CameraProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     core.emitter.on("recording.paused", syncState);
     core.emitter.on("recording.resumed", syncState);
     core.emitter.on("recording.finished", syncState);
-    core.emitter.on("error", (err) => {
+    core.emitter.on("error", (err: Error) => {
       setError(err);
+      if (onSDKEvent) onSDKEvent("camera_error", { errorName: err.name, errorMessage: err.message });
       syncState();
     });
 
-    const unsubscribeDevices = core.deviceService.listenForDeviceChanges((allDevices) => {
+    let onSDKOpened: ((payload: any) => void) | undefined;
+    let onSDKTransitionFailed: ((payload: any) => void) | undefined;
+
+    if (onSDKEvent) {
+      onSDKOpened = (payload) => onSDKEvent("camera_opened", payload);
+      onSDKTransitionFailed = (payload) => onSDKEvent("state_transition_failed", payload);
+      
+      core.emitter.on("camera.opened", onSDKOpened);
+      core.emitter.on("transition.failed", onSDKTransitionFailed);
+    }
+
+    const unsubscribeDevices = core.deviceService.listenForDeviceChanges((allDevices: MediaDeviceInfo[]) => {
       setDevices({
-        cameras: allDevices.filter((d) => d.kind === "videoinput"),
-        microphones: allDevices.filter((d) => d.kind === "audioinput"),
-        speakers: allDevices.filter((d) => d.kind === "audiooutput"),
+        cameras: allDevices.filter((d: MediaDeviceInfo) => d.kind === "videoinput"),
+        microphones: allDevices.filter((d: MediaDeviceInfo) => d.kind === "audioinput"),
+        speakers: allDevices.filter((d: MediaDeviceInfo) => d.kind === "audiooutput"),
       });
     });
 
     void core.deviceService.getDevices().then(setDevices);
 
     return () => {
-      core.emitter.clear();
+      // Unsubscribe only the listeners attached in THIS effect cycle
+      core.emitter.off("camera.opened", syncState);
+      core.emitter.off("camera.switched", syncState);
+      core.emitter.off("camera.closed", syncState);
+      core.emitter.off("recording.started", syncState);
+      core.emitter.off("recording.paused", syncState);
+      core.emitter.off("recording.resumed", syncState);
+      core.emitter.off("recording.finished", syncState);
+      
+      if (onSDKEvent) {
+        if (onSDKOpened) core.emitter.off("camera.opened", onSDKOpened);
+        if (onSDKTransitionFailed) core.emitter.off("transition.failed", onSDKTransitionFailed);
+      }
+      
       unsubscribeDevices();
-      core.videoRecorderController.destroy();
-      void core.cameraController.close(); // Cleanup on unmount
+      
+      // Do NOT destroy the controllers here, as they are owned by the provider component.
+      // If the user wants to close the camera when the provider unmounts, they should call close() explicitly,
+      // or we can stop the stream but not destroy the controller structure.
+      // We'll let the garbage collector handle it or rely on a dedicated cleanup hook if needed.
+      core.cameraController.close();
     };
   }, [core]);
 
@@ -125,8 +160,8 @@ export const CameraProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       // Errors will be captured and emitted by the core controller anyway
       await core.cameraController.open(options);
     },
-    close: async () => {
-      await core.cameraController.close();
+    close: () => {
+      core.cameraController.close();
     },
     switchCamera: async (options?: { audio?: boolean }) => {
       await core.cameraController.switchCamera(options);

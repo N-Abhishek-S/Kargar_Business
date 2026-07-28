@@ -24,7 +24,7 @@ export function DeviceSelector({
           <Camera size={14} className="text-gray-400 flex-shrink-0" />
           <select
             value={selectedCamera ?? ''}
-            onChange={(e) => onCameraChange(e.target.value)}
+            onChange={(e) => { onCameraChange(e.target.value); }}
             disabled={disabled}
             className={clsx(
               'device-select-compact flex-1 min-w-0',
@@ -50,7 +50,7 @@ export function DeviceSelector({
           <Mic size={14} className="text-gray-400 flex-shrink-0" />
           <select
             value={selectedMic ?? ''}
-            onChange={(e) => onMicChange(e.target.value)}
+            onChange={(e) => { onMicChange(e.target.value); }}
             disabled={disabled}
             className={clsx(
               'device-select-compact flex-1 min-w-0',

@@ -29,7 +29,7 @@ export function useUploadProgress(): UseUploadProgressReturn {
     try {
       const result = await uploadVideoWithRetry(
         file,
-        (p) => setProgress(p),
+        (p) => { setProgress(p); },
         controller.signal,
         (attempt) => {
           setIsRetrying(true);

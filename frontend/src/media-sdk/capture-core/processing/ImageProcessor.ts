@@ -17,14 +17,14 @@ export class ImageProcessor {
    */
   async capture(videoElement: HTMLVideoElement, facingMode: FacingMode): Promise<Blob> {
     return new Promise((resolve, reject) => {
-      if (videoElement.readyState !== videoElement.HAVE_ENOUGH_DATA) {
-        return reject(new Error("Video is not ready for capture"));
+      if (videoElement.readyState < videoElement.HAVE_CURRENT_DATA) {
+        reject(new Error(`Video is not ready for capture (readyState: ${videoElement.readyState})`)); return;
       }
 
       const canvas = document.createElement("canvas");
       const ctx = canvas.getContext("2d");
       if (!ctx) {
-        return reject(new Error("Could not get 2d context for canvas"));
+        reject(new Error("Could not get 2d context for canvas")); return;
       }
 
       // 1. Determine Dimensions (respecting config max limits but preserving aspect ratio)

@@ -44,21 +44,23 @@ export class PluginManager {
     return this.plugins;
   }
 
-  public async runHook<K extends keyof Omit<MediaPlugin, 'name' | 'version' | 'priority' | 'capabilities' | 'dependencies'>>(
-    hookName: K,
-    initialValue?: any
-  ): Promise<any> {
+  public async runHook(
+    hookName: keyof Omit<MediaPlugin, 'name' | 'version' | 'priority' | 'capabilities' | 'dependencies'>,
+    initialValue?: unknown
+  ): Promise<unknown> {
     let currentValue = initialValue;
 
     for (const plugin of this.plugins) {
       if (plugin[hookName]) {
         try {
-          const fn = plugin[hookName] as Function;
-          // If a value is passed, thread it through the plugins (waterfall)
-          if (currentValue !== undefined) {
-            currentValue = await fn.call(plugin, currentValue);
-          } else {
-            await fn.call(plugin);
+          const fn = plugin[hookName] as ((arg?: unknown) => unknown) | undefined;
+          if (typeof fn === 'function') {
+            // If a value is passed, thread it through the plugins (waterfall)
+            if (currentValue !== undefined) {
+              currentValue = await fn.call(plugin, currentValue);
+            } else {
+              await fn.call(plugin);
+            }
           }
         } catch (error) {
           console.error(`Error in plugin ${plugin.name} during ${hookName}:`, error);

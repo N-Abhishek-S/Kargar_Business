@@ -14,14 +14,15 @@ export class CameraCapabilityService {
    * Note: Safari on iOS supports it but sometimes requires specific patterns.
    */
   supportsFacingMode(): boolean {
-    if (typeof navigator === "undefined" || !navigator.mediaDevices) return false;
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    if (!navigator.mediaDevices) return false;
     
     const supportedConstraints = navigator.mediaDevices.getSupportedConstraints();
     return !!supportedConstraints.facingMode;
   }
 
   getBrowserCapabilities() {
-    const hasGetUserMedia = !!(navigator.mediaDevices?.getUserMedia);
+    const hasGetUserMedia = !!navigator.mediaDevices.getUserMedia;
     const hasMediaRecorder = typeof MediaRecorder !== 'undefined';
 
     let supportsWebM = false;
@@ -58,5 +59,53 @@ export class CameraCapabilityService {
     }
 
     return '';
+  }
+
+  detectAdvancedCapabilities(track?: MediaStreamTrack) {
+    const isImageCaptureSupported = 'ImageCapture' in window;
+    
+    // Default canvas support
+    const canvasSupported = typeof HTMLCanvasElement !== 'undefined';
+
+    let hasTorch = false;
+    let hasZoom = false;
+    let hasFocus = false;
+    let hasFacingMode = false;
+
+    if (track) {
+      const typedTrack = track as MediaStreamTrack & { getCapabilities?: () => MediaTrackCapabilities };
+      if (typeof typedTrack.getCapabilities === 'function') {
+        try {
+          const caps = typedTrack.getCapabilities();
+          hasTorch = 'torch' in caps;
+          hasZoom = 'zoom' in caps;
+          hasFocus = 'focusMode' in caps || 'focusDistance' in caps;
+          hasFacingMode = 'facingMode' in caps;
+        } catch (err) {
+          console.warn('Failed to read track capabilities:', err);
+        }
+      }
+    }
+
+    return {
+      hasImageCapture: isImageCaptureSupported,
+      hasTorch,
+      hasZoom,
+      hasFocus,
+      hasFacingMode,
+      canvasSupported
+    };
+  }
+
+  async getAvailableCameras(): Promise<MediaDeviceInfo[]> {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+      if (!navigator.mediaDevices) return [];
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      return devices.filter(device => device.kind === 'videoinput');
+    } catch (err) {
+      console.warn('Failed to enumerate cameras:', err);
+      return [];
+    }
   }
 }

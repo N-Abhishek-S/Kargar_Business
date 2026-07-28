@@ -1,13 +1,13 @@
 import type { Emitter } from "../utils/EventEmitter";
 import type { CameraState, SDKEventMap, FacingMode } from "../types";
 import { SDKError } from "../types";
-import { PermissionService } from "../services/PermissionService";
-import { MediaDeviceService } from "../services/MediaDeviceService";
-import { ConstraintBuilder } from "../constraints/ConstraintBuilder";
+import type { PermissionService } from "../services/PermissionService";
+import type { MediaDeviceService } from "../services/MediaDeviceService";
+import type { ConstraintBuilder } from "../constraints/ConstraintBuilder";
 import type { CameraConfig } from "../config/camera.config";
-import { CameraCapabilityService } from "../services/CameraCapabilityService";
+import type { CameraCapabilityService } from "../services/CameraCapabilityService";
 
-import { BrowserAdapter } from "./BrowserAdapter";
+import type { BrowserAdapter } from "./BrowserAdapter";
 
 export class MediaCameraController {
   private state: CameraState = "IDLE";
@@ -15,6 +15,7 @@ export class MediaCameraController {
   private currentFacingMode: FacingMode | null = null;
   private currentDeviceId: string | null = null;
   private abortController: AbortController | null = null;
+  private cancellationReason: "close" | "switch" | null = null;
 
   constructor(
     private emitter: Emitter<SDKEventMap>,
@@ -34,22 +35,26 @@ export class MediaCameraController {
     return this.stream;
   }
 
-  private transition(newState: CameraState) {
-    // Basic FSM enforcement (in a full production SDK, this might be a table lookup)
+  private transition(newState: CameraState): boolean {
     const validTransitions: Record<CameraState, CameraState[]> = {
       IDLE: ["OPENING"],
-      OPENING: ["READY", "ERROR", "IDLE"],
+      OPENING: ["READY", "ERROR", "IDLE", "CLOSING"],
       READY: ["SWITCHING", "CLOSING"],
-      SWITCHING: ["READY", "ERROR"],
+      SWITCHING: ["READY", "ERROR", "CLOSING"],
       CLOSING: ["IDLE"],
-      ERROR: ["IDLE", "OPENING"],
+      ERROR: ["IDLE", "OPENING", "CLOSING"],
     };
 
-    if (!validTransitions[this.state].includes(newState)) {
-      console.warn(`Invalid state transition: ${this.state} -> ${newState}. Forcing state anyway for safety.`);
+    const isValid = validTransitions[this.state].includes(newState);
+
+    if (!isValid) {
+      console.warn(`MediaCameraController: Invalid state transition ${this.state} -> ${newState}`);
+      this.emitter.emit("transition.failed", { from: this.state, to: newState, reason: this.cancellationReason });
+      return false;
     }
 
     this.state = newState;
+    return true;
   }
 
   async open(options?: { facingMode?: FacingMode; deviceId?: string; audio?: boolean }): Promise<void> {
@@ -57,7 +62,7 @@ export class MediaCameraController {
       return;
     }
 
-    this.transition("OPENING");
+    if (!this.transition("OPENING")) return;
 
     // Cancel any previous pending open operations
     if (this.abortController) {
@@ -65,6 +70,7 @@ export class MediaCameraController {
     }
     this.abortController = new AbortController();
     const signal = this.abortController.signal;
+    const startMs = performance.now();
 
     try {
       // 1. Ensure permissions are granted
@@ -80,15 +86,15 @@ export class MediaCameraController {
       }
 
       // Determine initial facing mode or device
-      this.currentFacingMode = options?.facingMode || this.config.mobileDefaultFacingMode;
+      this.currentFacingMode = options?.facingMode ?? this.config.mobileDefaultFacingMode;
       // Do not override facing mode with default device ID on mobile
       const isMobile = this.capabilityService.isMobileDevice();
-      this.currentDeviceId = isMobile ? (options?.deviceId || null) : (options?.deviceId || (devices[0]?.deviceId ?? null));
+      this.currentDeviceId = isMobile ? (options?.deviceId ?? null) : (options?.deviceId ?? (devices[0]?.deviceId ?? null));
 
       // 3. Build Constraints
       const constraints = this.constraintBuilder.build({
-        facingMode: this.currentFacingMode || undefined,
-        deviceId: this.currentDeviceId || undefined,
+        facingMode: this.currentFacingMode,
+        deviceId: this.currentDeviceId ?? undefined,
         config: this.config,
         audio: options?.audio,
       });
@@ -96,6 +102,7 @@ export class MediaCameraController {
       // 4. Request Stream using BrowserAdapter
       this.stream = await this.browserAdapter.getStream(constraints);
 
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       if (signal.aborted) {
         this.stopCurrentStream();
         throw new SDKError("Aborted");
@@ -116,20 +123,34 @@ export class MediaCameraController {
         }
       }
 
-      this.transition("READY");
+      if (!this.transition("READY")) {
+        this.stopCurrentStream();
+        return;
+      }
 
       this.emitter.emit("camera.opened", {
-        camera: this.currentFacingMode!,
-        deviceId: this.currentDeviceId || "unknown",
+        camera: this.currentFacingMode,
+        deviceId: this.currentDeviceId ?? "unknown",
         browser: navigator.userAgent,
         platform: isMobile ? "mobile" : "desktop",
+        durationMs: Math.round(performance.now() - startMs),
       });
-    } catch (e: any) {
-      if (e.message !== "Aborted") {
+    } catch (e: unknown) {
+      if (this.cancellationReason !== null) {
+        this.cancellationReason = null;
+        return;
+      }
+
+      if (e instanceof Error) {
         this.transition("ERROR");
-        this.emitter.emit("error", e instanceof Error ? e : new Error(String(e)));
+        Object.assign(e, {
+          durationMs: Math.round(performance.now() - startMs),
+          facingMode: this.currentFacingMode
+        });
+        this.emitter.emit("error", e);
       } else {
-        this.transition("IDLE"); // Transition back to idle if aborted before finishing
+        this.transition("ERROR");
+        this.emitter.emit("error", new Error(String(e)));
       }
     }
   }
@@ -149,7 +170,7 @@ export class MediaCameraController {
           if (granted) {
             console.log("MediaCameraController: Permission still granted, attempting reconnect...");
             this.state = "IDLE";
-            await this.open({ facingMode: this.currentFacingMode || undefined, deviceId: this.currentDeviceId || undefined, audio });
+            await this.open({ facingMode: this.currentFacingMode ?? undefined, deviceId: this.currentDeviceId ?? undefined, audio });
           } else {
             console.error("MediaCameraController: Permission lost after stream ended.");
             this.transition("ERROR");
@@ -177,15 +198,16 @@ export class MediaCameraController {
       return;
     }
 
-    this.transition("SWITCHING");
+    if (!this.transition("SWITCHING")) return;
 
     if (this.abortController) {
+      this.cancellationReason = "switch";
       this.abortController.abort();
     }
     this.abortController = new AbortController();
     const signal = this.abortController.signal;
 
-    const fromMode = this.currentFacingMode!;
+    const fromMode = this.currentFacingMode ?? "user";
     let toMode: FacingMode = fromMode === "environment" ? "user" : "environment";
 
     try {
@@ -206,8 +228,8 @@ export class MediaCameraController {
       }
 
       const constraints = this.constraintBuilder.build({
-        facingMode: this.currentFacingMode || toMode,
-        deviceId: this.currentDeviceId || undefined,
+        facingMode: this.currentFacingMode ?? toMode,
+        deviceId: this.currentDeviceId ?? undefined,
         config: this.config,
         audio: options?.audio,
       });
@@ -225,21 +247,33 @@ export class MediaCameraController {
 
       this.wireUpStreamRecovery(options?.audio);
 
-      this.transition("READY");
+      if (!this.transition("READY")) {
+        this.stopCurrentStream();
+        return;
+      }
       this.emitter.emit("camera.switched", { from: fromMode, to: toMode });
-    } catch (e: any) {
-      if (e.message !== "Aborted") {
+    } catch (e: unknown) {
+      if (this.cancellationReason !== null) {
+        this.cancellationReason = null;
+        return;
+      }
+
+      if (e instanceof Error) {
         this.transition("ERROR");
-        this.emitter.emit("error", e instanceof Error ? e : new Error(String(e)));
+        this.emitter.emit("error", e);
+      } else {
+        this.transition("ERROR");
+        this.emitter.emit("error", new Error(String(e)));
       }
     }
   }
 
-  async close(): Promise<void> {
+  close(): void {
     if (this.state === "IDLE") return;
-    this.transition("CLOSING");
+    if (!this.transition("CLOSING")) return;
 
     if (this.abortController) {
+      this.cancellationReason = "close";
       this.abortController.abort();
     }
     
@@ -249,7 +283,7 @@ export class MediaCameraController {
     this.currentDeviceId = null;
     
     this.transition("IDLE");
-    this.emitter.emit("camera.closed", undefined as any);
+    this.emitter.emit("camera.closed", undefined);
   }
 
   private stopCurrentStream() {

@@ -10,8 +10,8 @@ export function MentorSearch() {
 
   // Debounce search input to prevent excessive RPC calls
   React.useEffect(() => {
-    const handler = setTimeout(() => setDebouncedSearch(search), 300);
-    return () => clearTimeout(handler);
+    const handler = setTimeout(() => { setDebouncedSearch(search); }, 300);
+    return () => { clearTimeout(handler); };
   }, [search]);
 
   // CQRS Query Hook
@@ -30,7 +30,7 @@ export function MentorSearch() {
           id="mentor-search"
           type="search" 
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => { setSearch(e.target.value); }}
           placeholder="Search by name, skill, or bio..."
           className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-4 py-2"
           aria-describedby={error ? "search-error" : undefined}
@@ -78,7 +78,7 @@ export function MentorSearch() {
       <div className="flex justify-between items-center mt-6">
         <button 
           disabled={page === 1}
-          onClick={() => setPage(p => Math.max(1, p - 1))}
+          onClick={() => { setPage(p => Math.max(1, p - 1)); }}
           className="px-4 py-2 border rounded-md disabled:opacity-50"
         >
           Previous
@@ -86,7 +86,7 @@ export function MentorSearch() {
         <span className="text-sm text-gray-500">Page {page}</span>
         <button 
           disabled={!mentors || mentors.length < 10}
-          onClick={() => setPage(p => p + 1)}
+          onClick={() => { setPage(p => p + 1); }}
           className="px-4 py-2 border rounded-md disabled:opacity-50"
         >
           Next

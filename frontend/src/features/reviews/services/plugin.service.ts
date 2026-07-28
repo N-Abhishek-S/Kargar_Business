@@ -10,7 +10,7 @@ import { PluginLogger } from './logger.service';
 import type { RecorderPlugin, UploadResult, VideoMetadata } from '../types/video-recorder.types';
 
 class RecorderPluginManager {
-  private plugins: Map<string, RecorderPlugin> = new Map();
+  private plugins = new Map<string, RecorderPlugin>();
 
   /** Register a plugin */
   register(plugin: RecorderPlugin): void {

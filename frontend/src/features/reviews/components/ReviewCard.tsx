@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
 import { clsx } from 'clsx';
-import { Camera, Video } from 'lucide-react';
 import type { PublicReview } from '@/types';
 import { Avatar } from '@/components/ui/Avatar';
 import { ReviewStars } from './ui/ReviewStars';
@@ -40,7 +39,6 @@ export function ReviewCard({ review, isActive, onReadMore }: ReviewCardProps) {
   const textRef = useRef<HTMLParagraphElement>(null);
 
   // Normalize data for fallbacks
-  const images = review.images ?? [];
   const companyName = review.companyName.trim() ? review.companyName : 'Unknown Company';
   const customerName = review.customerName.trim() ? review.customerName : 'Anonymous';
   const reviewText = review.reviewText.trim() ? review.reviewText : 'No written review provided.';
@@ -68,7 +66,7 @@ export function ReviewCard({ review, isActive, onReadMore }: ReviewCardProps) {
 
   return (
     <article
-      onDoubleClick={() => { onReadMore?.(review); }}
+      onClick={() => { onReadMore?.(review); }}
       className={clsx(
         'kb-enterprise-card relative flex flex-col overflow-hidden rounded-2xl bg-(--surface-primary) p-8 sm:p-10 w-full',
         'h-full min-h-96 shrink-0', // Fluid flex height
@@ -110,27 +108,6 @@ export function ReviewCard({ review, isActive, onReadMore }: ReviewCardProps) {
           </button>
         )}
 
-        {/* Media Indicators */}
-        {(images.length > 0 || review.videoUrl) && (
-          <div className="mt-4 flex flex-wrap items-center gap-3">
-            {review.videoUrl && (
-              <button
-                type="button"
-                onClick={() => { onReadMore?.(review); }}
-                className="flex items-center gap-1.5 text-orange-600 bg-orange-50 px-2.5 py-1 rounded-full text-sm font-semibold hover:bg-orange-100 transition-colors"
-              >
-                <Video size={16} />
-                <span>Play Video</span>
-              </button>
-            )}
-            {images.length > 0 && (
-              <div className="flex items-center gap-1.5 text-(--text-muted) text-sm font-medium px-2.5 py-1 bg-gray-50 rounded-full border border-gray-100">
-                <Camera size={16} />
-                <span>{images.length} Photo{images.length !== 1 ? 's' : ''}</span>
-              </div>
-            )}
-          </div>
-        )}
       </div>
 
       {/* Separator */}
@@ -140,17 +117,12 @@ export function ReviewCard({ review, isActive, onReadMore }: ReviewCardProps) {
       <footer className="flex items-center gap-4 relative z-10 shrink-0">
         <div className="relative shrink-0">
           <Avatar
-            src={review.profileImage ?? review.companyLogo ?? ''}
-            alt={`${customerName} photo`}
-            fallbackInitials={getInitials(customerName)}
+            src={review.companyLogo ?? ''}
+            alt={`${companyName !== 'Unknown Company' ? companyName : customerName} logo`}
+            fallbackInitials={getInitials(companyName !== 'Unknown Company' ? companyName : customerName)}
             size="lg"
             className="border border-gray-100 shadow-sm shrink-0"
           />
-          {review.profileImage && review.companyLogo && (
-             <div className="absolute -bottom-1 -right-1 rounded-full border-2 border-white shadow-sm bg-white overflow-hidden w-6 h-6 flex items-center justify-center">
-               <img src={review.companyLogo} alt={companyName} className="w-full h-full object-cover" loading="lazy" decoding="async" />
-             </div>
-          )}
         </div>
         <div className="flex flex-col overflow-hidden">
           <strong className="truncate text-[18px] font-bold text-(--text-primary)">

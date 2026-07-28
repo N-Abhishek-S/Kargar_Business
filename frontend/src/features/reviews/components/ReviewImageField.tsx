@@ -1,47 +1,36 @@
 import React, { useState } from 'react';
 import { ImageUploadCard, type ImageUploadCardProps } from '../../../components/ui/ImageUploadCard';
 import { PhotoCaptureModal } from './recorder/PhotoCaptureModal';
-import { ImageEditorModal } from './recorder/ImageEditorModal';
-
 
 export type ReviewImageFieldProps = Omit<ImageUploadCardProps, 'onTakePhoto'>;
 
 export const ReviewImageField: React.FC<ReviewImageFieldProps> = (props) => {
   const [isCameraOpen, setIsCameraOpen] = useState(false);
-  const [isEditorOpen, setIsEditorOpen] = useState(false);
-  const [capturedBitmap, setCapturedBitmap] = useState<ImageBitmap | null>(null);
 
   const handleTakePhoto = () => {
     setIsCameraOpen(true);
   };
 
   const handleCapture = (bitmap: ImageBitmap) => {
-    setCapturedBitmap(bitmap);
     setIsCameraOpen(false);
-    setIsEditorOpen(true);
-  };
-
-  const handleEditorSave = (editedBlob: Blob) => {
-    // Generate a unique filename
-    const fileName = `photo_${new Date().getTime()}.jpg`;
-    const file = new File([editedBlob], fileName, { type: 'image/jpeg' });
     
-    // Pass the created file up to the parent via onChange
-    props.onChange(file);
-    
-    // Cleanup
-    setIsEditorOpen(false);
-    if (capturedBitmap) {
-      capturedBitmap.close();
-      setCapturedBitmap(null);
-    }
-  };
-
-  const handleEditorClose = () => {
-    setIsEditorOpen(false);
-    if (capturedBitmap) {
-      capturedBitmap.close();
-      setCapturedBitmap(null);
+    // Instead of opening ImageEditorModal, we convert directly and upload
+    const canvas = document.createElement('canvas');
+    canvas.width = bitmap.width;
+    canvas.height = bitmap.height;
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      ctx.drawImage(bitmap, 0, 0);
+      canvas.toBlob((blob) => {
+        if (blob) {
+          const fileName = `photo_${new Date().getTime()}.jpg`;
+          const file = new File([blob], fileName, { type: 'image/jpeg' });
+          props.onChange(file);
+        }
+        bitmap.close();
+      }, 'image/jpeg', 0.85);
+    } else {
+      bitmap.close();
     }
   };
 
@@ -57,13 +46,11 @@ export const ReviewImageField: React.FC<ReviewImageFieldProps> = (props) => {
         onClose={() => { setIsCameraOpen(false); }}
         onCapture={handleCapture}
       />
-
-      <ImageEditorModal
-        isOpen={isEditorOpen}
-        imageBitmap={capturedBitmap}
-        onClose={handleEditorClose}
-        onSave={handleEditorSave}
-      />
+      {/* 
+        ImageEditorModal was here. 
+        It has been removed from this flow to bypass the confusing editor UX.
+        If business rules require cropping in the future, it can be re-enabled here conditionally.
+      */}
     </>
   );
 };

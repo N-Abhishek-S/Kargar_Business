@@ -54,6 +54,7 @@ function mapActiveReview(row: ActiveReviewRow): PublicReview {
     recommend: row.recommend ?? true,
     profileImage: row.profile_image_url ?? '',
     profileImagePath: (row as ActiveReviewRow & { profile_image?: string | null }).profile_image ?? null,
+    images: [], // Traced from UI: images array is missing in v_active_reviews, defaulting to empty
     companyLogo: row.company_logo_url ?? '',
     companyLogoPath: (row as ActiveReviewRow & { company_logo?: string | null }).company_logo ?? null,
     videoUrl: row.video_url ?? null,
@@ -110,7 +111,7 @@ interface ImageUploadResult {
 
 async function uploadReviewImage(
   upload: ReviewImageUploadPayload,
-  folder: 'profile-images' | 'company-logos',
+  folder: 'profile-images' | 'company-logos' | 'gallery',
 ): Promise<ImageUploadResult> {
   const extension = extensionForContentType(upload.contentType);
   const dateFolder = new Date().toISOString().slice(0, 10);
@@ -223,8 +224,33 @@ export async function fetchPublicReviews(params: ReviewListParams = {}): Promise
   }
 
   const total = count ?? 0;
+  
+  // Fetch media for the current page
+  const reviewIds = data.map(r => r.id).filter((id): id is string => Boolean(id));
+  const { data: mediaData } = await supabase
+    .from('review_media')
+    .select('*')
+    .in('review_id', reviewIds)
+    .order('created_at', { ascending: true });
+
+  const mediaByReviewId = (mediaData ?? []).reduce<Record<string, NonNullable<typeof mediaData>[number][]>>((acc, item) => {
+    acc[item.review_id] ??= [];
+    const arr = acc[item.review_id];
+    if (arr) arr.push(item);
+    return acc;
+  }, {});
+
+  const items = data.map((row) => {
+    const review = mapActiveReview(row);
+    const media = mediaByReviewId[row.id ?? ''] ?? [];
+    review.images = media.filter(m => m.media_type === 'review_image').map(m => m.public_url);
+    // If we want to support multiple videos later:
+    // const videos = media.filter(m => m.media_type === 'video');
+    return review;
+  });
+
   return {
-    items: data.map(mapActiveReview),
+    items,
     total,
     page,
     limit,
@@ -289,13 +315,23 @@ export async function submitPublicReview(payload: ReviewSubmissionPayload): Prom
       uploadedAssets.push({ bucket: reviewImageBucket, path: result.path });
     }
 
-    // 3. Video data (already uploaded by useUploadProgress, or fallback upload)
+    // 3. Upload gallery images
+    const galleryAssets: ImageUploadResult[] = [];
+    if (payload.galleryImages && payload.galleryImages.length > 0) {
+      for (const img of payload.galleryImages) {
+        const result = await uploadReviewImage(img, 'gallery');
+        galleryAssets.push(result);
+        uploadedAssets.push({ bucket: reviewImageBucket, path: result.path });
+      }
+    }
+
+    // 4. Video data (already uploaded by useUploadProgress, or fallback upload)
     const videoData = payload.videoData ?? null;
     if (videoData?.path) {
       uploadedAssets.push({ bucket: reviewVideoBucket, path: videoData.path });
     }
 
-    // 4. Build the database record
+    // 5. Build the database record
     const record: Inserts<'reviews'> = {
       customer_name: payload.customerName.trim(),
       company_name: normalizeNullable(payload.companyName),
@@ -326,15 +362,35 @@ export async function submitPublicReview(payload: ReviewSubmissionPayload): Prom
       },
     };
 
-    // 5. Insert into database
-    const { error } = await supabase.from('reviews').insert(record);
+    // 6. Insert into database
+    const { data, error } = await supabase.from('reviews').insert(record).select('id').single();
 
     if (error) {
       throwSupabaseError(error, 'Review submission failed');
     }
 
+    // 6. Insert gallery images into review_media table
+    if (galleryAssets.length > 0 && payload.galleryImages) {
+      const mediaRecords: Inserts<'review_media'>[] = galleryAssets.map((asset, i) => ({
+        review_id: data.id,
+        media_type: 'review_image',
+        public_url: asset.url,
+        path: asset.path,
+        bucket: reviewImageBucket,
+        content_type: payload.galleryImages?.[i]?.contentType ?? 'image/jpeg',
+        file_size: payload.galleryImages?.[i]?.size ?? 0,
+      }));
+      
+      const { error: mediaError } = await supabase.from('review_media').insert(mediaRecords);
+      if (mediaError) {
+        console.error('Failed to insert gallery images:', mediaError);
+        // We do NOT throw here to avoid failing the whole review submission if just the gallery insert fails,
+        // but ideally this should be a transaction.
+      }
+    }
+
     return {
-      id: 'submitted',
+      id: data.id,
       status: 'pending',
     };
   } catch (error) {

@@ -21,7 +21,7 @@ export function ReviewVideo({ src, poster, className, autoPlay = false }: Review
       if (isPlaying) {
         videoRef.current.pause();
       } else {
-        videoRef.current.play();
+        videoRef.current.play().catch(console.error);
       }
       setIsPlaying(!isPlaying);
     }
@@ -39,9 +39,9 @@ export function ReviewVideo({ src, poster, className, autoPlay = false }: Review
     e.stopPropagation();
     if (videoRef.current) {
       if (document.fullscreenElement) {
-        document.exitFullscreen();
+        document.exitFullscreen().catch(console.error);
       } else {
-        videoRef.current.requestFullscreen();
+        videoRef.current.requestFullscreen().catch(console.error);
       }
     }
   };
@@ -49,8 +49,8 @@ export function ReviewVideo({ src, poster, className, autoPlay = false }: Review
   return (
     <div 
       className={clsx("relative group overflow-hidden rounded-xl bg-black", className)}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      onMouseEnter={() => { setIsHovered(true); }}
+      onMouseLeave={() => { setIsHovered(false); }}
       onClick={togglePlay}
     >
       <video
@@ -62,8 +62,8 @@ export function ReviewVideo({ src, poster, className, autoPlay = false }: Review
         playsInline
         loop
         className="w-full h-full object-contain cursor-pointer"
-        onPlay={() => setIsPlaying(true)}
-        onPause={() => setIsPlaying(false)}
+        onPlay={() => { setIsPlaying(true); }}
+        onPause={() => { setIsPlaying(false); }}
       />
       
       {/* Overlay Controls */}

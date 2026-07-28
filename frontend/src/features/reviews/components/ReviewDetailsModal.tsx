@@ -35,6 +35,13 @@ export function ReviewDetailsModal({
 }: ReviewDetailsModalProps) {
   if (!review) return null;
 
+  console.log('--- DEBUG REVIEW DETAILS MODAL ---', {
+    profileImage: review.profileImage,
+    companyLogo: review.companyLogo,
+    galleryImages: review.images,
+    videoUrl: review.videoUrl
+  });
+
   const images = review.images ?? [];
   const companyName = review.companyName.trim() ? review.companyName : 'Unknown Company';
   const customerName = review.customerName.trim() ? review.customerName : 'Anonymous';
@@ -110,84 +117,96 @@ export function ReviewDetailsModal({
         </div>
 
         <div className="p-6 sm:p-10 lg:px-16 lg:py-12">
-          {/* Premium Header Profile & Metadata */}
-          <header className="flex flex-col gap-6 mb-10">
-            {/* Identity */}
-            <div className="flex flex-col sm:flex-row sm:items-center gap-5">
-              <div className="relative shrink-0">
-                <Avatar
-                  src={review.profileImage ?? review.companyLogo ?? ''}
-                  alt={`${customerName} photo`}
-                  fallbackInitials={getInitials(customerName)}
-                  size="xl"
-                  className="border border-gray-100 shadow-sm shrink-0"
-                />
-                {review.profileImage && review.companyLogo && (
-                   <div className="absolute -bottom-1 -right-1 rounded-full border-2 border-white shadow-sm bg-white overflow-hidden w-8 h-8 flex items-center justify-center">
-                     <img src={review.companyLogo} alt={companyName} className="w-full h-full object-cover" loading="lazy" decoding="async" />
-                   </div>
-                )}
-              </div>
-              <div className="flex flex-col">
-                <strong className="text-xl sm:text-2xl font-bold text-(--text-primary) tracking-tight break-words">
-                  {customerName}
-                </strong>
-                <span className="text-[17px] font-semibold text-(--color-navy-500) mt-0.5 break-words">
-                  {companyName}
-                </span>
-                {review.location && (
-                  <span className="text-sm font-medium text-(--text-muted) mt-1">
-                    {review.location}
-                  </span>
-                )}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+            {/* Left Column: Text & Metadata */}
+            <div className="flex flex-col">
+              {/* Premium Header Profile & Metadata */}
+              <header className="flex flex-col gap-6 mb-8 lg:mb-10">
+                {/* Identity */}
+                <div className="flex flex-col sm:flex-row sm:items-center gap-5">
+                  <div className="flex items-center gap-3 shrink-0">
+                    {review.profileImage && (
+                      <Avatar
+                        src={review.profileImage}
+                        alt={`${customerName} profile photo`}
+                        fallbackInitials={getInitials(customerName)}
+                        size="xl"
+                        className="border border-gray-100 shadow-sm shrink-0"
+                      />
+                    )}
+                    {review.companyLogo && (
+                      <Avatar
+                        src={review.companyLogo}
+                        alt={`${companyName} company logo`}
+                        fallbackInitials={getInitials(companyName)}
+                        size="xl"
+                        className="border border-gray-100 shadow-sm shrink-0"
+                      />
+                    )}
+                  </div>
+                  <div className="flex flex-col">
+                    <strong className="text-xl sm:text-2xl font-bold text-(--text-primary) tracking-tight break-words">
+                      {customerName}
+                    </strong>
+                    <span className="text-[17px] font-semibold text-(--color-navy-500) mt-0.5 break-words">
+                      {companyName}
+                    </span>
+                    {review.location && (
+                      <span className="text-sm font-medium text-(--text-muted) mt-1">
+                        {review.location}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Ratings & Badges */}
+                <div className="flex flex-wrap items-center gap-4 pt-4 border-t border-gray-50/80">
+                  <ReviewStars rating={safeRating} />
+                  <div className="flex items-center gap-3 text-sm font-medium text-(--text-muted)">
+                    {review.verified && (
+                      <span className="flex items-center gap-1.5 text-green-700 bg-green-50/80 px-2.5 py-1 rounded-md border border-green-100/50">
+                        <BadgeCheck size={16} className="text-green-600" /> Verified Client
+                      </span>
+                    )}
+                    {formattedDate && (
+                      <span className="flex items-center gap-1.5 text-gray-500 bg-gray-50/50 px-2.5 py-1 rounded-md border border-gray-100/50">
+                        <Calendar size={16} /> {formattedDate}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </header>
+
+              {/* Full Review Text */}
+              <div className="w-full mb-8 lg:mb-10">
+                <p className="text-(--text-primary) font-medium text-[20px] lg:text-[22px] leading-[1.6] tracking-tight whitespace-pre-wrap break-words">
+                  {reviewText}
+                </p>
               </div>
             </div>
 
-            {/* Ratings & Badges */}
-            <div className="flex flex-wrap items-center gap-4 pt-4 border-t border-gray-50/80">
-              <ReviewStars rating={safeRating} />
-              <div className="flex items-center gap-3 text-sm font-medium text-(--text-muted)">
-                {review.verified && (
-                  <span className="flex items-center gap-1.5 text-green-700 bg-green-50/80 px-2.5 py-1 rounded-md border border-green-100/50">
-                    <BadgeCheck size={16} className="text-green-600" /> Verified Client
-                  </span>
-                )}
-                {formattedDate && (
-                  <span className="flex items-center gap-1.5 text-gray-500 bg-gray-50/50 px-2.5 py-1 rounded-md border border-gray-100/50">
-                    <Calendar size={16} /> {formattedDate}
-                  </span>
-                )}
-              </div>
-            </div>
-          </header>
+            {/* Right Column: Media */}
+            <div className="flex flex-col gap-8">
+              {/* Optional Video Player */}
+              {review.videoUrl && (
+                <div className="rounded-xl overflow-hidden bg-black w-full shadow-md">
+                  <video
+                    src={review.videoUrl}
+                    controls
+                    preload="metadata"
+                    className="w-full max-h-[60vh] lg:max-h-[50vh] object-contain"
+                  />
+                </div>
+              )}
 
-          {/* Full Review Text */}
-          <div className="w-full mb-10">
-            <p className="text-(--text-primary) font-medium text-[22px] leading-[1.6] tracking-tight whitespace-pre-wrap break-words">
-              {reviewText}
-            </p>
+              {/* Optional Image Gallery */}
+              {images.length > 0 && (
+                <div className="w-full">
+                  <ReviewGallery images={images} companyName={companyName} />
+                </div>
+              )}
+            </div>
           </div>
-
-          {/* Optional Video Player */}
-          {review.videoUrl && (
-            <div className="mb-10 rounded-xl overflow-hidden bg-black max-w-4xl mx-auto shadow-md">
-              <video
-                src={review.videoUrl}
-                controls
-                preload="metadata"
-                className="w-full max-h-[60vh] object-contain"
-              />
-            </div>
-          )}
-
-          {/* Optional Image Gallery */}
-          {images.length > 0 && (
-            <div className="mb-10">
-              <ReviewGallery images={images} companyName={companyName} />
-            </div>
-          )}
-
-
         </div>
       </div>
     </Modal>

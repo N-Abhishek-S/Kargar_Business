@@ -167,7 +167,7 @@ export default function AdminReviewsPage() {
     },
   });
 
-  const reviews = (data?.items as AdminReview[]) ?? [];
+  const reviews = data?.items ?? [];
   const busyReviewId = updateReviewMutation.variables?.id ?? deleteReviewMutation.variables;
   const isMutating = updateReviewMutation.isPending || deleteReviewMutation.isPending;
 
@@ -330,21 +330,20 @@ export default function AdminReviewsPage() {
               await updateReviewMutation.mutateAsync({ id, ...updates });
             }}
             onUpdateMedia={async (mediaType, file) => {
-              if (selectedReview) {
-                let oldPath: string | null = null;
-                let contentType: string | undefined = undefined;
-                if (mediaType === 'profile_image') {
-                  oldPath = selectedReview.profileImagePath ?? null;
-                  contentType = file ? file.type : undefined;
-                } else if (mediaType === 'company_logo') {
-                  oldPath = selectedReview.companyLogoPath ?? null;
-                  contentType = file ? file.type : undefined;
-                } else if (mediaType === 'video') {
-                  oldPath = selectedReview.videoPath ?? null;
-                  contentType = file ? file.type : undefined;
-                }
-                
-                await mediaUpdateMutation.mutateAsync({
+              let oldPath: string | null;
+              let contentType: string | undefined;
+              if (mediaType === 'profile_image') {
+                oldPath = selectedReview.profileImagePath ?? null;
+                contentType = file ? file.type : undefined;
+              } else if (mediaType === 'company_logo') {
+                oldPath = selectedReview.companyLogoPath ?? null;
+                contentType = file ? file.type : undefined;
+              } else {
+                oldPath = selectedReview.videoPath ?? null;
+                contentType = file ? file.type : undefined;
+              }
+              
+              await mediaUpdateMutation.mutateAsync({
                   reviewId: selectedReview.id,
                   mediaType,
                   fileData: file,
@@ -352,10 +351,9 @@ export default function AdminReviewsPage() {
                   oldPath,
                 });
                 
-                // Immediately update local selectedReview so UI reflects
-                // Since react-query will invalidate and refetch, this is just for optimistic UI
-                // But it's easier to just let it refetch and maybe close/re-open or just rely on refetch
-              }
+              // Immediately update local selectedReview so UI reflects
+              // Since react-query will invalidate and refetch, this is just for optimistic UI
+              // But it's easier to let it refetch and maybe close/re-open or just rely on refetch
             }}
           />
         ) : selectedReview ? (

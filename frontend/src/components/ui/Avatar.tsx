@@ -48,7 +48,10 @@ export function Avatar({ src, alt, fallbackInitials, size = 'md', className, ...
               isLoaded ? 'opacity-100' : 'opacity-0'
             )}
             onLoad={() => { setIsLoaded(true); }}
-            onError={() => { setHasError(true); }}
+            onError={(e) => {
+              console.error('Avatar image failed to load:', src, e);
+              setHasError(true);
+            }}
             {...props}
           />
         </>

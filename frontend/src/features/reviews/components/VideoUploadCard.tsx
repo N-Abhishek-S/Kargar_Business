@@ -258,11 +258,11 @@ export function VideoUploadCard({ label, error, value, onChange, maxSizeMB = 100
           <CameraProvider
             onSDKEvent={(eventName, payload) => {
               if (eventName === 'camera_error') {
-                 trackRecorderEvent('camera_open_failed' as any, payload);
+                 trackRecorderEvent('camera_open_failed', payload);
               } else if (eventName === 'camera_opened') {
-                 trackRecorderEvent('camera_opened' as any, payload);
+                 trackRecorderEvent('camera_opened', payload);
               } else if (eventName === 'state_transition_failed') {
-                 trackRecorderEvent('state_transition_failed' as any, payload);
+                 trackRecorderEvent('state_transition_failed', payload);
               }
             }}
           >

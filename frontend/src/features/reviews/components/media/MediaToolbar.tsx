@@ -87,7 +87,7 @@ export function MediaToolbar({
             </button>
             <button
               type="button"
-              onClick={() => setShowConfirm(false)}
+              onClick={() => { setShowConfirm(false); }}
               className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 border border-gray-200 bg-white hover:bg-gray-100 h-9 px-3"
             >
               Cancel

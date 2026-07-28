@@ -122,6 +122,7 @@ export interface ReviewSubmissionPayload {
   permissionToDisplay: boolean;
   profileImage?: ReviewImageUpload;
   companyLogo?: ReviewImageUpload;
+  galleryImages?: ReviewImageUpload[];
   videoData?: { url: string; path: string; size: number; contentType: string };
   /** Client-generated idempotency key to prevent duplicate submissions on retry */
   submissionId?: string;

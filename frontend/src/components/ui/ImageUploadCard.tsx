@@ -1,6 +1,8 @@
-import { useState, useRef, type ChangeEvent } from 'react';
+import { useState } from 'react';
 import { clsx } from 'clsx';
 import { ImagePlus, X, UploadCloud, Camera } from 'lucide-react';
+
+import { ImageAcquisitionService } from '../../media-sdk/capture-core/services/ImageAcquisitionService';
 
 export interface ImageUploadCardProps {
   label: string;
@@ -13,7 +15,7 @@ export interface ImageUploadCardProps {
 
 export function ImageUploadCard({ label, error, value, onChange, onTakePhoto, maxSizeMB = 5 }: ImageUploadCardProps) {
   const [isDragActive, setIsDragActive] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -25,23 +27,56 @@ export function ImageUploadCard({ label, error, value, onChange, onTakePhoto, ma
     setIsDragActive(false);
   };
 
-  const handleDrop = (e: React.DragEvent) => {
+  const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragActive(false);
     const file = e.dataTransfer.files[0];
     if (file) {
-      onChange(file);
+      setIsProcessing(true);
+      try {
+        const result = await ImageAcquisitionService.processFile(file, { source: 'filepicker', maxSizeMB });
+        if (result) onChange(result.file);
+      } catch (err) {
+        // Here we could toast the error
+        console.error(err);
+      } finally {
+        setIsProcessing(false);
+      }
     }
   };
 
-  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      onChange(file);
+  const handleClick = async () => {
+    if (isProcessing) return;
+    setIsProcessing(true);
+    try {
+      const result = await ImageAcquisitionService.acquire({ source: 'gallery', maxSizeMB });
+      if (result) onChange(result.file);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsProcessing(false);
     }
-    // Reset input value to allow uploading the same file again if removed
-    if (inputRef.current) {
-      inputRef.current.value = '';
+  };
+
+  const handleCameraClick = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isProcessing) return;
+    
+    // If onTakePhoto is provided, it means the parent handles the camera explicitly (e.g. via ReviewImageField).
+    // If not, we could fall back to our global acquisition service.
+    // For now, we preserve the existing prop contract.
+    if (onTakePhoto) {
+      onTakePhoto();
+    } else {
+      setIsProcessing(true);
+      try {
+        const result = await ImageAcquisitionService.acquire({ source: 'camera', maxSizeMB });
+        if (result) onChange(result.file);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setIsProcessing(false);
+      }
     }
   };
 
@@ -57,24 +92,16 @@ export function ImageUploadCard({ label, error, value, onChange, onTakePhoto, ma
       </label>
       
       <div
-        onClick={() => inputRef.current?.click()}
+        onClick={handleClick}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         className={clsx(
           'relative flex flex-col items-center justify-center w-full min-h-32 rounded-lg border-2 border-dashed transition-all duration-200 cursor-pointer overflow-hidden bg-gray-50/50 hover:bg-gray-50 focus-within:ring-2 focus-within:ring-orange-500/50 focus-within:ring-offset-1',
-          isDragActive ? 'border-orange-500 bg-orange-50/30' : error ? 'border-red-400' : 'border-gray-200 hover:border-gray-300'
+          isDragActive ? 'border-orange-500 bg-orange-50/30' : error ? 'border-red-400' : 'border-gray-200 hover:border-gray-300',
+          isProcessing && 'opacity-50 pointer-events-none'
         )}
       >
-        <input 
-          ref={inputRef}
-          type="file" 
-          accept="image/jpeg, image/png, image/webp" 
-          className="sr-only" 
-          onChange={handleChange}
-          aria-invalid={!!error}
-          aria-label={`Upload ${label}`}
-        />
 
         {value ? (
           <div className="absolute inset-0 w-full h-full p-2">
@@ -108,19 +135,15 @@ export function ImageUploadCard({ label, error, value, onChange, onTakePhoto, ma
               )}>
                 {isDragActive ? <UploadCloud size={20} /> : <ImagePlus size={20} />}
               </div>
-              {onTakePhoto && (
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onTakePhoto();
-                  }}
-                  className="w-10 h-10 rounded-full bg-white shadow-sm border border-gray-100 text-gray-500 flex items-center justify-center hover:bg-gray-50 hover:text-orange-500 transition-colors"
-                  aria-label="Take photo"
-                >
-                  <Camera size={20} />
-                </button>
-              )}
+              <button
+                type="button"
+                onClick={handleCameraClick}
+                disabled={isProcessing}
+                className="w-10 h-10 rounded-full bg-white shadow-sm border border-gray-100 text-gray-500 flex items-center justify-center hover:bg-gray-50 hover:text-orange-500 transition-colors disabled:opacity-50"
+                aria-label="Take photo"
+              >
+                <Camera size={20} />
+              </button>
             </div>
             <p className="text-sm font-medium text-gray-700">
               {isDragActive ? "Drop image here" : (

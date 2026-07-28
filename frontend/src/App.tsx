@@ -20,6 +20,7 @@ import { AuthProvider } from '@/contexts/AuthProvider';
 import { ScrollToTop } from '@/components/layout/ScrollToTop';
 
 import { Analytics } from '@/components/Analytics';
+import { GlobalCameraModal } from '@/media-sdk/capture-ui/GlobalCameraModal';
 
 /**
  * Root application component.
@@ -56,6 +57,7 @@ export default function App() {
         </Routes>
       </Suspense>
       </ServicesProvider>
+      <GlobalCameraModal />
     </AuthProvider>
   );
 }

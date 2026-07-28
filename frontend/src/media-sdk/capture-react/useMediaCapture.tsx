@@ -62,7 +62,7 @@ function initCore() {
 
 interface CameraProviderProps {
   children: React.ReactNode;
-  onSDKEvent?: (eventName: string, payload: any) => void;
+  onSDKEvent?: (eventName: string, payload: Record<string, unknown>) => void;
 }
 
 export const CameraProvider: React.FC<CameraProviderProps> = ({ children, onSDKEvent }) => {
@@ -107,12 +107,12 @@ export const CameraProvider: React.FC<CameraProviderProps> = ({ children, onSDKE
       syncState();
     });
 
-    let onSDKOpened: ((payload: any) => void) | undefined;
-    let onSDKTransitionFailed: ((payload: any) => void) | undefined;
+    let onSDKOpened: ((payload: Record<string, unknown>) => void) | undefined;
+    let onSDKTransitionFailed: ((payload: Record<string, unknown>) => void) | undefined;
 
     if (onSDKEvent) {
-      onSDKOpened = (payload) => onSDKEvent("camera_opened", payload);
-      onSDKTransitionFailed = (payload) => onSDKEvent("state_transition_failed", payload);
+      onSDKOpened = (payload) => { onSDKEvent("camera_opened", payload); };
+      onSDKTransitionFailed = (payload) => { onSDKEvent("state_transition_failed", payload); };
       
       core.emitter.on("camera.opened", onSDKOpened);
       core.emitter.on("transition.failed", onSDKTransitionFailed);
@@ -151,7 +151,7 @@ export const CameraProvider: React.FC<CameraProviderProps> = ({ children, onSDKE
       // We'll let the garbage collector handle it or rely on a dedicated cleanup hook if needed.
       core.cameraController.close();
     };
-  }, [core]);
+  }, [core, onSDKEvent]);
 
   // Stabilize actions to prevent React dependency loops
   const actions = useMemo(() => ({

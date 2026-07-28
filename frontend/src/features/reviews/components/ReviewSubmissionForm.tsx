@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { CheckCircle2, Lock, PenLine, Send, Loader2 } from 'lucide-react';
+import { CheckCircle2, Lock, PenLine, Send, Loader2, ImagePlus, X } from 'lucide-react';
 import { useForm, useWatch } from 'react-hook-form';
 import toast from 'react-hot-toast';
 import { z } from 'zod';
@@ -59,6 +59,7 @@ const reviewFormSchema = z.object({
   websiteTrap: z.string().max(0).optional(),
   profileImage: imageFileSchema.optional().nullable(),
   companyLogo: imageFileSchema.optional().nullable(),
+  galleryImages: z.array(imageFileSchema).max(5, 'Maximum 5 gallery images allowed').optional(),
   videoFile: videoFileSchema.optional().nullable(), // File object
 });
 
@@ -106,6 +107,7 @@ export function ReviewSubmissionForm() {
       websiteTrap: '',
       profileImage: null,
       companyLogo: null,
+      galleryImages: [],
       videoFile: null,
     },
   });
@@ -114,6 +116,7 @@ export function ReviewSubmissionForm() {
   const reviewText = useWatch({ control, name: 'reviewText' });
   const profileImage = useWatch({ control, name: 'profileImage' });
   const companyLogo = useWatch({ control, name: 'companyLogo' });
+  const galleryImages = useWatch({ control, name: 'galleryImages' }) ?? [];
   const videoFile = useWatch({ control, name: 'videoFile' });
 
   const handleImageChange = (file: File | null, fieldName: 'profileImage' | 'companyLogo') => {
@@ -146,6 +149,48 @@ export function ReviewSubmissionForm() {
       }, { shouldValidate: true });
     };
     reader.readAsDataURL(file);
+  };
+
+  const handleGalleryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    if (!files.length) return;
+    
+    if (galleryImages.length + files.length > 5) {
+      setFileError('Maximum 5 gallery images allowed');
+      return;
+    }
+
+    const validFiles = files.filter(f => f.size <= 5 * 1024 * 1024 && ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'].includes(f.type));
+    if (validFiles.length !== files.length) {
+      setFileError('Some files were rejected. Must be <5MB and JPG/PNG/WEBP.');
+    }
+
+    const promises = validFiles.map(file => {
+      return new Promise<z.infer<typeof imageFileSchema>>((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          resolve({
+            fileName: file.name,
+            contentType: file.type === 'image/jpg' ? 'image/jpeg' : (file.type as 'image/jpeg' | 'image/png' | 'image/webp'),
+            size: file.size,
+            data: event.target?.result as string,
+          });
+        };
+        reader.readAsDataURL(file);
+      });
+    });
+
+    Promise.all(promises).then(results => {
+      setValue('galleryImages', [...galleryImages, ...results], { shouldValidate: true });
+    }).catch(console.error);
+    
+    e.target.value = '';
+  };
+
+  const removeGalleryImage = (index: number) => {
+    const newImages = [...galleryImages];
+    newImages.splice(index, 1);
+    setValue('galleryImages', newImages, { shouldValidate: true });
   };
 
   const handleVideoChange = (file: File | null) => {
@@ -181,6 +226,7 @@ export function ReviewSubmissionForm() {
         websiteTrap: values.websiteTrap,
         profileImage: values.profileImage ?? undefined,
         companyLogo: values.companyLogo ?? undefined,
+        galleryImages: values.galleryImages,
         videoData,
         submissionId,
       };
@@ -335,6 +381,49 @@ export function ReviewSubmissionForm() {
           value={profileImage}
           onChange={(file) => { handleImageChange(file, 'profileImage'); }}
         />
+      </div>
+
+      <div className="mb-8 bg-gray-50/50 p-6 rounded-xl border border-gray-100">
+        <label className="text-sm font-medium leading-none text-navy-900 block mb-1">
+          Gallery Images <span className="text-gray-400 font-normal ml-1">(Optional, up to 5)</span>
+        </label>
+        <p className="text-xs text-gray-500 mb-4">Share photos of the project, service outcome, or your facility.</p>
+        
+        {galleryImages.length > 0 && (
+          <div className="flex flex-wrap gap-3 mb-4">
+            {galleryImages.map((img, idx) => (
+              <div key={idx} className="relative w-24 h-24 rounded-md overflow-hidden border border-gray-200 bg-white group">
+                <img src={img.data} alt={`Gallery preview ${idx + 1}`} className="w-full h-full object-cover" />
+                <button
+                  type="button"
+                  onClick={() => { removeGalleryImage(idx); }}
+                  className="absolute top-1 right-1 p-1 bg-white/90 rounded-full text-red-500 opacity-0 group-hover:opacity-100 transition-opacity shadow-sm hover:bg-red-50"
+                  aria-label="Remove image"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {galleryImages.length < 5 && (
+          <div className="relative flex flex-col items-center justify-center p-5 rounded-xl border-2 border-dashed border-gray-200 hover:border-gray-300 bg-white transition-all cursor-pointer">
+            <input
+              type="file"
+              multiple
+              accept="image/jpeg, image/png, image/webp, image/jpg"
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+              onChange={handleGalleryChange}
+              title="Upload gallery images"
+            />
+            <div className="w-10 h-10 rounded-full bg-orange-50 text-orange-500 flex items-center justify-center mb-3">
+              <ImagePlus size={20} />
+            </div>
+            <p className="text-sm font-medium text-navy-900">Click or drag images to upload</p>
+            <p className="text-xs text-gray-500 mt-1">Up to {5 - galleryImages.length} more images (Max 5MB each)</p>
+          </div>
+        )}
       </div>
 
       <div className="mb-8 bg-gray-50/50 p-6 rounded-xl border border-gray-100">

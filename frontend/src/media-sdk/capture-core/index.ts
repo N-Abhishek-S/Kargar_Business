@@ -12,3 +12,5 @@ export { PermissionService } from "./services/PermissionService";
 export { MediaDeviceService } from "./services/MediaDeviceService";
 export { CameraCapabilityService } from "./services/CameraCapabilityService";
 export { ConstraintBuilder } from "./constraints/ConstraintBuilder";
+
+export * from './services/ImageAcquisitionService';

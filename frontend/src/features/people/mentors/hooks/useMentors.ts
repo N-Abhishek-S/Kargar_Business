@@ -4,7 +4,7 @@ import { MentorClient } from '../../sdk/v1/MentorClient';
 import type { SearchMentorsQuery } from '../../sdk/v1/types';
 
 export function useMentorClient() {
-  return new MentorClient(supabase as any);
+  return new MentorClient(supabase);
 }
 
 /**
@@ -30,7 +30,7 @@ export function useApproveMentor() {
     mutationFn: (mentorId: string) => client.approveMentor(mentorId),
     onSuccess: () => {
       // Invalidate both search queries and specific detail queries
-      queryClient.invalidateQueries({ queryKey: ['mentors'] });
+      void queryClient.invalidateQueries({ queryKey: ['mentors'] });
     },
   });
 }

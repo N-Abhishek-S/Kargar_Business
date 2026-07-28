@@ -35,7 +35,7 @@ export interface OnCaptureCompletedPayload {
 }
 
 // Public Event Bus Map
-export type SDKEventMap = {
+export interface SDKEventMap {
   "camera.opened": OnCameraOpenedPayload;
   "camera.closed": undefined;
   "camera.switched": OnCameraSwitchedPayload;
@@ -47,7 +47,8 @@ export type SDKEventMap = {
   "recording.finished": { file: File; duration: number };
   "error": Error;
   "transition.failed": { from: string; to: string; reason?: string | null };
-};
+  [key: string]: unknown;
+}
 
 // Explicit Errors
 export class SDKError extends Error {

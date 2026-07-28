@@ -2,8 +2,8 @@ import { z } from 'zod';
 
 // Base Models
 export const MentorProfileSchema = z.object({
-  id: z.string().uuid(),
-  userId: z.string().uuid(),
+  id: z.string(),
+  userId: z.string(),
   bio: z.string().nullable(),
   headline: z.string().nullable(),
   hourlyRate: z.number().nullable(),
@@ -24,7 +24,7 @@ export const SearchMentorsQuerySchema = z.object({
 export type SearchMentorsQuery = z.infer<typeof SearchMentorsQuerySchema>;
 
 export const SearchMentorsResponseSchema = z.array(z.object({
-  mentor_id: z.string().uuid(),
+  mentor_id: z.string(),
   first_name: z.string(),
   last_name: z.string(),
   headline: z.string().nullable(),

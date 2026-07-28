@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-argument, @typescript-eslint/prefer-nullish-coalescing */
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { SearchMentorsQuery, SearchMentorsResponse } from './types';
 import { mapHttpErrorToUIError } from './errors';

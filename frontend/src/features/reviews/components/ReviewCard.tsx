@@ -3,6 +3,7 @@ import { clsx } from 'clsx';
 import type { PublicReview } from '@/types';
 import { Avatar } from '@/components/ui/Avatar';
 import { ReviewStars } from './ui/ReviewStars';
+import { ChevronRight, BadgeCheck } from 'lucide-react';
 
 // Massive SVG Quote for decoration
 const QuoteIcon = ({ className }: { className?: string }) => (
@@ -68,29 +69,63 @@ export function ReviewCard({ review, isActive, onReadMore }: ReviewCardProps) {
     <article
       onClick={() => { onReadMore?.(review); }}
       className={clsx(
-        'kb-enterprise-card relative flex flex-col overflow-hidden rounded-2xl bg-(--surface-primary) p-8 sm:p-10 w-full',
-        'h-full min-h-96 shrink-0', // Fluid flex height
+        'kb-enterprise-card relative flex flex-col overflow-hidden rounded-2xl bg-(--surface-primary) p-6 sm:p-8 w-full',
+        'h-full min-h-96 shrink-0',
         'transition-all duration-(--duration-slow) ease-(--ease-smooth)',
         'border border-gray-100 hover:shadow-(--shadow-premium-hover) hover:-translate-y-2',
-        onReadMore && 'cursor-pointer',
+        onReadMore && 'cursor-pointer group',
         isActive ? 'shadow-(--shadow-premium-card) border-blue-100/50 scale-[1.015]' : 'shadow-sm',
       )}
     >
       {/* Absolute Decorative Quote */}
-      <QuoteIcon className="absolute left-10 top-10 text-(--color-navy-200) opacity-20" />
+      <QuoteIcon className="absolute right-8 bottom-8 text-(--color-navy-200) opacity-10 pointer-events-none" />
 
-      {/* Header */}
-      <header className="relative z-10 flex items-center justify-end mb-6 shrink-0">
-        <ReviewStars rating={safeRating} />
+      {/* Header: Company Logo, Title, Subtitle, Stars, Verified Badge */}
+      <header className="relative z-10 flex items-start gap-4 mb-4 sm:mb-6 shrink-0">
+        <div className="shrink-0">
+          <Avatar
+            src={review.companyLogo ?? ''}
+            alt={`${companyName !== 'Unknown Company' ? companyName : customerName} logo`}
+            fallbackInitials={getInitials(companyName !== 'Unknown Company' ? companyName : customerName)}
+            size="lg"
+            className="border border-gray-200 shadow-sm bg-white"
+          />
+        </div>
+        
+        <div className="flex-1 flex flex-col justify-start">
+          <strong className="text-[17px] sm:text-[19px] font-bold text-(--text-primary) leading-tight tracking-tight">
+            {customerName}
+          </strong>
+          <span className="text-[13px] sm:text-[14px] font-medium text-gray-500 mt-0.5">
+            {companyName !== 'Unknown Company' ? companyName : ''}
+            {companyName !== 'Unknown Company' && review.location ? ' • ' : ''}
+            {review.location}
+          </span>
+          <div className="flex items-center gap-2 mt-2">
+            <ReviewStars rating={safeRating} />
+            {review.verified && (
+              <span className="flex items-center gap-1 text-[12px] font-bold text-green-700 bg-green-50 px-2 py-0.5 rounded-full border border-green-200/50">
+                <BadgeCheck size={14} className="text-green-600" />
+                Verified Client
+              </span>
+            )}
+          </div>
+        </div>
+
+        {onReadMore && (
+          <div className="shrink-0 self-center text-gray-400 group-hover:text-blue-500 transition-colors">
+            <ChevronRight size={24} strokeWidth={2.5} />
+          </div>
+        )}
       </header>
 
       {/* Body: Review Text */}
-      <div className="relative z-10 flex-grow mt-4 flex flex-col min-h-0 overflow-hidden">
+      <div className="relative z-10 flex-grow flex flex-col min-h-0 overflow-hidden">
         <div ref={textRef} className="overflow-hidden flex-grow relative">
           <p
             className={clsx(
-              'text-(--text-primary) font-medium leading-relaxed tracking-tight break-words',
-              'text-[clamp(1.125rem,1.5vw,1.375rem)]',
+              'text-(--text-primary) font-medium leading-[1.6] tracking-tight break-words',
+              'text-[15px] sm:text-[16px]',
               'line-clamp-4 sm:line-clamp-5'
             )}
           >
@@ -101,40 +136,13 @@ export function ReviewCard({ review, isActive, onReadMore }: ReviewCardProps) {
         {isClamped && (
           <button
             type="button"
-            onClick={() => { onReadMore?.(review); }}
-            className="mt-3 text-left text-[15px] font-semibold text-orange-500 hover:text-orange-600 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500/20 rounded-sm w-max shrink-0 inline-flex items-center gap-1"
+            onClick={(e) => { e.stopPropagation(); onReadMore?.(review); }}
+            className="mt-3 text-left text-[14px] font-semibold text-blue-600 hover:text-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500/20 rounded-sm w-max shrink-0 inline-flex items-center gap-1"
           >
-            Read full review &rarr;
+            Read more
           </button>
         )}
-
       </div>
-
-      {/* Separator */}
-      <hr className="my-8 border-t border-(--border-subtle) shrink-0" />
-
-      {/* Footer: Customer & Company Identity */}
-      <footer className="flex items-center gap-4 relative z-10 shrink-0">
-        <div className="relative shrink-0">
-          <Avatar
-            src={review.companyLogo ?? ''}
-            alt={`${companyName !== 'Unknown Company' ? companyName : customerName} logo`}
-            fallbackInitials={getInitials(companyName !== 'Unknown Company' ? companyName : customerName)}
-            size="lg"
-            className="border border-gray-100 shadow-sm shrink-0"
-          />
-        </div>
-        <div className="flex flex-col overflow-hidden">
-          <strong className="truncate text-[18px] font-bold text-(--text-primary)">
-            {customerName}
-          </strong>
-          <span className="truncate text-[15px] font-medium text-(--text-muted)">
-            {companyName !== 'Unknown Company' ? companyName : ''}
-            {companyName !== 'Unknown Company' && review.location ? ' · ' : ''}
-            {review.location}
-          </span>
-        </div>
-      </footer>
     </article>
   );
 }

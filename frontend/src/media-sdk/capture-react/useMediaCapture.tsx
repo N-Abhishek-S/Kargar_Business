@@ -107,12 +107,12 @@ export const CameraProvider: React.FC<CameraProviderProps> = ({ children, onSDKE
       syncState();
     });
 
-    let onSDKOpened: ((payload: Record<string, unknown>) => void) | undefined;
-    let onSDKTransitionFailed: ((payload: Record<string, unknown>) => void) | undefined;
+    let onSDKOpened: ((payload: unknown) => void) | undefined;
+    let onSDKTransitionFailed: ((payload: unknown) => void) | undefined;
 
     if (onSDKEvent) {
-      onSDKOpened = (payload) => { onSDKEvent("camera_opened", payload); };
-      onSDKTransitionFailed = (payload) => { onSDKEvent("state_transition_failed", payload); };
+      onSDKOpened = (payload) => { onSDKEvent("camera_opened", payload as Record<string, unknown>); };
+      onSDKTransitionFailed = (payload) => { onSDKEvent("state_transition_failed", payload as Record<string, unknown>); };
       
       core.emitter.on("camera.opened", onSDKOpened);
       core.emitter.on("transition.failed", onSDKTransitionFailed);

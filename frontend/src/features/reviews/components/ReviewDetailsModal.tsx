@@ -1,4 +1,4 @@
-import { BadgeCheck, Calendar, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { BadgeCheck, Calendar, X, ChevronLeft, ChevronRight, User, Home, MapPin } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { Avatar } from '@/components/ui/Avatar';
 import type { PublicReview } from '@/types';
@@ -116,43 +116,37 @@ export function ReviewDetailsModal({
           </button>
         </div>
 
-        <div className="p-6 sm:p-10 lg:px-16 lg:py-12">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
-            {/* Left Column: Text & Metadata */}
-            <div className="flex flex-col">
+        <div className="p-6 sm:p-10 lg:p-0">
+          <div className="flex flex-col lg:flex-row min-h-full">
+            {/* Left Column: Review Content & Media */}
+            <div className="flex-1 lg:p-12 xl:p-16 flex flex-col">
               {/* Premium Header Profile & Metadata */}
-              <header className="flex flex-col gap-6 mb-8 lg:mb-10">
+              <header className="flex flex-col gap-5 mb-8 border-b border-gray-100 pb-6">
                 {/* Identity */}
-                <div className="flex flex-col sm:flex-row sm:items-center gap-5">
-                  <div className="flex items-center gap-3 shrink-0">
-                    {review.profileImage && (
-                      <Avatar
-                        src={review.profileImage}
-                        alt={`${customerName} profile photo`}
-                        fallbackInitials={getInitials(customerName)}
-                        size="xl"
-                        className="border border-gray-100 shadow-sm shrink-0"
-                      />
-                    )}
-                    {review.companyLogo && (
-                      <Avatar
-                        src={review.companyLogo}
-                        alt={`${companyName} company logo`}
-                        fallbackInitials={getInitials(companyName)}
-                        size="xl"
-                        className="border border-gray-100 shadow-sm shrink-0"
-                      />
-                    )}
-                  </div>
+                <div className="flex items-start gap-4">
+                  {review.profileImage ? (
+                    <Avatar
+                      src={review.profileImage}
+                      alt={`${customerName} profile photo`}
+                      fallbackInitials={getInitials(customerName)}
+                      size="xl"
+                      className="border border-gray-100 shadow-sm shrink-0"
+                    />
+                  ) : (
+                    <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center shrink-0">
+                      <span className="text-xl font-bold text-gray-500">{getInitials(customerName)}</span>
+                    </div>
+                  )}
                   <div className="flex flex-col">
-                    <strong className="text-xl sm:text-2xl font-bold text-(--text-primary) tracking-tight break-words">
+                    <strong className="text-lg sm:text-xl font-bold text-(--text-primary) tracking-tight break-words">
                       {customerName}
                     </strong>
-                    <span className="text-[17px] font-semibold text-(--color-navy-500) mt-0.5 break-words">
+                    <span className="text-[15px] font-bold text-blue-600 mt-0.5 break-words">
                       {companyName}
                     </span>
                     {review.location && (
-                      <span className="text-sm font-medium text-(--text-muted) mt-1">
+                      <span className="flex items-center gap-1.5 text-sm font-medium text-gray-500 mt-1">
+                        <MapPin size={14} className="text-gray-400" />
                         {review.location}
                       </span>
                     )}
@@ -160,17 +154,17 @@ export function ReviewDetailsModal({
                 </div>
 
                 {/* Ratings & Badges */}
-                <div className="flex flex-wrap items-center gap-4 pt-4 border-t border-gray-50/80">
+                <div className="flex flex-wrap items-center gap-4 mt-1">
                   <ReviewStars rating={safeRating} />
-                  <div className="flex items-center gap-3 text-sm font-medium text-(--text-muted)">
+                  <div className="flex items-center gap-3 text-[13px] font-semibold">
                     {review.verified && (
-                      <span className="flex items-center gap-1.5 text-green-700 bg-green-50/80 px-2.5 py-1 rounded-md border border-green-100/50">
-                        <BadgeCheck size={16} className="text-green-600" /> Verified Client
+                      <span className="flex items-center gap-1 text-green-700 bg-green-50 px-2 py-0.5 rounded-full border border-green-200/50">
+                        <BadgeCheck size={14} className="text-green-600" /> Verified Client
                       </span>
                     )}
                     {formattedDate && (
-                      <span className="flex items-center gap-1.5 text-gray-500 bg-gray-50/50 px-2.5 py-1 rounded-md border border-gray-100/50">
-                        <Calendar size={16} /> {formattedDate}
+                      <span className="flex items-center gap-1.5 text-gray-500">
+                        <Calendar size={14} className="text-gray-400" /> {formattedDate}
                       </span>
                     )}
                   </div>
@@ -178,33 +172,77 @@ export function ReviewDetailsModal({
               </header>
 
               {/* Full Review Text */}
-              <div className="w-full mb-8 lg:mb-10">
-                <p className="text-(--text-primary) font-medium text-[20px] lg:text-[22px] leading-[1.6] tracking-tight whitespace-pre-wrap break-words">
+              <div className="w-full mb-10">
+                <h4 className="text-[15px] font-bold text-gray-900 mb-3">Review</h4>
+                <p className="text-(--text-primary) font-medium text-[15px] lg:text-[16px] leading-[1.6] tracking-tight whitespace-pre-wrap break-words">
                   {reviewText}
                 </p>
               </div>
-            </div>
 
-            {/* Right Column: Media */}
-            <div className="flex flex-col gap-8">
-              {/* Optional Video Player */}
-              {review.videoUrl && (
-                <div className="rounded-xl overflow-hidden bg-black w-full shadow-md">
-                  <video
-                    src={review.videoUrl}
-                    controls
-                    preload="metadata"
-                    className="w-full max-h-[60vh] lg:max-h-[50vh] object-contain"
-                  />
-                </div>
-              )}
-
-              {/* Optional Image Gallery */}
+              {/* Uploaded Images */}
               {images.length > 0 && (
-                <div className="w-full">
+                <div className="w-full mb-10">
+                  <h4 className="text-[15px] font-bold text-gray-900 mb-4">Uploaded Images</h4>
                   <ReviewGallery images={images} companyName={companyName} />
                 </div>
               )}
+
+              {/* Video Testimonial */}
+              {review.videoUrl && (
+                <div className="w-full">
+                  <h4 className="text-[15px] font-bold text-gray-900 mb-4">Video Testimonial</h4>
+                  <div className="rounded-xl overflow-hidden bg-black w-full shadow-md relative group">
+                    <video
+                      src={review.videoUrl}
+                      controls
+                      preload="metadata"
+                      className="w-full max-h-[60vh] lg:max-h-[50vh] object-contain"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Right Column: Sidebar (Company Info) */}
+            <div className="w-full lg:w-[320px] xl:w-[360px] shrink-0 bg-white border-t lg:border-t-0 lg:border-l border-gray-100 p-8 lg:p-12 flex flex-col items-center lg:items-start relative">
+              <button onClick={onClose} className="absolute right-6 top-6 p-2 rounded-full bg-gray-50 text-gray-600 hover:bg-gray-100 transition-colors hidden lg:flex">
+                <X size={20} />
+              </button>
+              
+              <div className="flex flex-col items-center lg:items-start w-full">
+                <span className="text-[13px] font-medium text-gray-400 mb-4">Company Logo</span>
+                
+                {review.companyLogo ? (
+                  <div className="w-24 h-24 rounded-full border border-gray-200 shadow-sm flex items-center justify-center p-2 mb-10">
+                    <img src={review.companyLogo} alt={`${companyName} logo`} className="w-full h-full object-contain rounded-full" />
+                  </div>
+                ) : (
+                  <div className="w-24 h-24 rounded-full border border-gray-200 bg-gray-50 flex items-center justify-center mb-10">
+                    <span className="text-xl font-bold text-gray-400">{getInitials(companyName)}</span>
+                  </div>
+                )}
+                
+                <h4 className="text-[15px] font-bold text-gray-900 mb-5 w-full text-center lg:text-left">About the Client</h4>
+                
+                <ul className="flex flex-col gap-4 w-full">
+                  <li className="flex items-center gap-3 text-[14px] font-medium text-gray-700">
+                    <User size={16} className="text-gray-400 shrink-0" />
+                    <span className="break-words">{customerName}</span>
+                  </li>
+                  {review.serviceName && (
+                    <li className="flex items-center gap-3 text-[14px] font-medium text-gray-700">
+                      <Home size={16} className="text-gray-400 shrink-0" />
+                      <span className="break-words">{review.serviceName}</span>
+                    </li>
+                  )}
+                  {review.location && (
+                    <li className="flex items-center gap-3 text-[14px] font-medium text-gray-700">
+                      <MapPin size={16} className="text-gray-400 shrink-0" />
+                      <span className="break-words">{review.location}</span>
+                    </li>
+                  )}
+                </ul>
+              </div>
             </div>
           </div>
         </div>

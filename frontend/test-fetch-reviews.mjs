@@ -21,6 +21,8 @@ async function testFetch() {
     return;
   }
   
+  console.log('Reviews:', data);
+  
   if (!data || data.length === 0) {
     console.log('No reviews found.');
     return;
@@ -33,7 +35,7 @@ async function testFetch() {
     .from('review_media')
     .select('*')
     .in('review_id', reviewIds)
-    .order('display_order', { ascending: true });
+    .order('created_at', { ascending: true });
     
   if (mediaError) {
     console.error('Error fetching review_media:', mediaError);

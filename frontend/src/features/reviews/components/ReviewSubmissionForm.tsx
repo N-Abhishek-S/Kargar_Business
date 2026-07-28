@@ -29,12 +29,6 @@ const ACCEPTED_VIDEO_TYPES = ['video/mp4', 'video/quicktime', 'video/webm'];
 const videoFileSchema = z.custom<File>((val) => val instanceof File, 'Please upload a valid file')
   .refine((file) => file.size <= MAX_VIDEO_SIZE, 'Video must be less than 100MB')
   .refine((file) => {
-    console.log('[Validation] Validating Blob/File:', {
-      name: file.name,
-      type: file.type,
-      size: file.size,
-      constructor: file.constructor.name,
-    });
     const baseType = file.type.split(';')[0]?.trim();
     return baseType ? ACCEPTED_VIDEO_TYPES.includes(baseType) : false;
   }, 'Video must be MP4, MOV, or WebM');

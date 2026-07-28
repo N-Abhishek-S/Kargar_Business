@@ -41,7 +41,7 @@ export function Avatar({ src, alt, fallbackInitials, size = 'md', className, ...
           <img
             src={src}
             alt={alt ?? fallbackInitials}
-            loading="lazy"
+            loading={props.loading ?? "eager"}
             decoding="async"
             className={clsx(
               'h-full w-full object-contain transition-opacity duration-300',

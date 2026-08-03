@@ -34,27 +34,27 @@ export const PAGE_IMAGES: Record<string, { src: string; alt: string }> = {
   '/': { src: '/images/page/hero-building.webp', alt: 'Kargar facility management hero building' },
   '/services': { src: '/images/page/services-hero.webp', alt: 'Kargar integrated facility management services' },
   '/services/hard-services': {
-    src: '/images/services/hard-services.png',
+    src: '/images/services/hard-services.webp',
     alt: 'Hard services — electrical, HVAC, and plumbing maintenance',
   },
   '/services/soft-services': {
-    src: '/images/services/soft-services.png',
+    src: '/images/services/soft-services.webp',
     alt: 'Soft services — housekeeping, pantry, and waste management',
   },
   '/services/hard-services/electrical-maintenance': {
-    src: '/images/services/hard-services.png',
+    src: '/images/services/hard-services.webp',
     alt: 'Enterprise electrical maintenance and HT panels',
   },
   '/services/hard-services/hvac-maintenance': {
-    src: '/images/services/hard-services.png',
+    src: '/images/services/hard-services.webp',
     alt: 'Commercial HVAC and chiller maintenance',
   },
   '/services/soft-services/housekeeping': {
-    src: '/images/services/housekeeping-services.png',
+    src: '/images/services/housekeeping-services.webp',
     alt: 'Corporate housekeeping and deep cleaning',
   },
   '/services/soft-services/security-services': {
-    src: '/images/services/security-services.png',
+    src: '/images/services/security-services.webp',
     alt: 'Corporate security and manned guarding',
   },
 };

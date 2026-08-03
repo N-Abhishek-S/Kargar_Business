@@ -176,13 +176,6 @@ function Header({ activePath }: { activePath: string }) {
               <a href="tel:+919226903010"><Phone size={15} /> +91-9226903010</a>
             )}
           </div>
-          <div className="kb-socials" aria-label="Social links">
-            {contactPage ? <strong>Follow Us:</strong> : null}
-            <a href="https://facebook.com" aria-label="Facebook">f</a>
-            <a href="https://instagram.com" aria-label="Instagram">◎</a>
-            <a href="https://linkedin.com" aria-label="LinkedIn">in</a>
-            <a href="https://youtube.com" aria-label="YouTube">▶</a>
-          </div>
         </div>
       </div>
 
@@ -484,7 +477,7 @@ function ContactPage() {
               <ContactInfo icon={MapPin} title="Our Office" text="301, 3rd Floor, Unity Commercial, Baner, Pune, Maharashtra 411045, India" />
               <ContactInfo icon={Phone} title="Call Us" text="+91 87887 26752|Mon - Sat: 09:00 AM - 06:00 PM" />
               <ContactInfo icon={Mail} title="Email Us" text="bd@kargar.co.in|We'll reply as soon as possible" />
-              <ContactInfo icon={Globe} title="Website" text="www.kargar.co.in|Visit our website for more information" />
+              <ContactInfo icon={Globe} title="Website" text="www.kargarbusinessservices.com|Visit our website for more information" />
             </div>
           </div>
           <MapPreview />

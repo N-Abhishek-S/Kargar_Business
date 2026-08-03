@@ -1,9 +1,6 @@
-import { useState, useMemo } from 'react';
-import { Helmet } from 'react-helmet-async';
+import { useState } from 'react';
 import { useInView } from 'react-intersection-observer';
 import { PenLine } from 'lucide-react';
-import { config } from '@/config';
-import { useReviewStats } from '@/features/reviews/hooks';
 import { ReviewSubmissionForm } from './ReviewSubmissionForm';
 import { ReviewsCarousel } from './ReviewsCarousel';
 import { ReviewsHeader } from './ReviewsHeader';
@@ -14,38 +11,11 @@ import type { ReviewListParams } from '@/services/reviews.service';
 
 export function ReviewsSection() {
   const { ref, inView } = useInView({ triggerOnce: true, rootMargin: '220px' });
-  const statsQuery = useReviewStats({ enabled: inView });
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [filterParams, setFilterParams] = useState<ReviewListParams>({ sortBy: 'featured', fetchAll: true });
 
-  const stats = statsQuery.data;
-
-  const aggregateSchema = useMemo(() => {
-    if (!stats || stats.totalReviews === 0) return null;
-
-    return {
-      '@context': 'https://schema.org',
-      '@type': 'Organization',
-      name: 'Kargar Business Services',
-      url: config.siteUrl,
-      aggregateRating: {
-        '@type': 'AggregateRating',
-        ratingValue: stats.averageRating,
-        reviewCount: stats.totalReviews,
-        bestRating: 5,
-        worstRating: 1,
-      },
-    };
-  }, [stats]);
-
   return (
     <section className="relative w-full py-20 lg:py-32 bg-(--surface-secondary) overflow-hidden" id="reviews" ref={ref}>
-      {aggregateSchema && (
-        <Helmet>
-          <script type="application/ld+json">{JSON.stringify(aggregateSchema)}</script>
-        </Helmet>
-      )}
-
       {/* Decorative Background Blob */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-screen-xl min-h-96 md:h-[500px] bg-blue-50/50 rounded-full blur-3xl opacity-50 pointer-events-none" aria-hidden="true" />
 

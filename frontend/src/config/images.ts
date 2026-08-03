@@ -41,7 +41,7 @@ export const aboutImages: Record<string, ImageConfig> = {
 
 export const serviceImages: Record<string, ImageConfig> = {
   softServices: {
-    src: '/images/services/soft-services.png',
+    src: '/images/services/soft-services.webp',
     alt: 'Soft services — housekeeping, pantry, and waste management',
     width: 600,
     height: 400,
@@ -50,7 +50,7 @@ export const serviceImages: Record<string, ImageConfig> = {
     sizes: '(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 20vw',
   },
   hardServices: {
-    src: '/images/services/hard-services.png',
+    src: '/images/services/hard-services.webp',
     alt: 'Hard services — electrical, HVAC, and plumbing maintenance',
     width: 600,
     height: 400,
@@ -59,7 +59,7 @@ export const serviceImages: Record<string, ImageConfig> = {
     sizes: '(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 20vw',
   },
   security: {
-    src: '/images/services/security-services.png',
+    src: '/images/services/security-services.webp',
     alt: 'Security management services',
     width: 600,
     height: 400,
@@ -68,7 +68,7 @@ export const serviceImages: Record<string, ImageConfig> = {
     sizes: '(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 20vw',
   },
   housekeeping: {
-    src: '/images/services/housekeeping-services.png',
+    src: '/images/services/housekeeping-services.webp',
     alt: 'Professional housekeeping services',
     width: 600,
     height: 400,
@@ -77,7 +77,7 @@ export const serviceImages: Record<string, ImageConfig> = {
     sizes: '(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 20vw',
   },
   facilitySupport: {
-    src: '/images/services/facility-support.png',
+    src: '/images/services/facility-support.webp',
     alt: 'Facility support and management services',
     width: 600,
     height: 400,

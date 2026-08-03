@@ -14,6 +14,10 @@ export class MediaCameraController {
   private stream: MediaStream | null = null;
   private currentFacingMode: FacingMode | null = null;
   private currentDeviceId: string | null = null;
+  private currentWidth: number | undefined = undefined;
+  private currentHeight: number | undefined = undefined;
+  private currentFrameRate: number | undefined = undefined;
+  private currentAudioDeviceId: string | undefined = undefined;
   private abortController: AbortController | null = null;
   private cancellationReason: "close" | "switch" | null = null;
 
@@ -57,7 +61,7 @@ export class MediaCameraController {
     return true;
   }
 
-  async open(options?: { facingMode?: FacingMode; deviceId?: string; audio?: boolean }): Promise<void> {
+  async open(options?: { facingMode?: FacingMode; deviceId?: string; audio?: boolean; width?: number; height?: number; frameRate?: number; audioDeviceId?: string }): Promise<void> {
     if (this.state === "READY" || this.state === "OPENING") {
       return;
     }
@@ -80,7 +84,7 @@ export class MediaCameraController {
 
       // 2. Fetch devices
       const { cameras: devices } = await this.deviceService.getDevices();
-      
+
       if (devices.length === 0) {
         throw new SDKError("CameraNotFoundError");
       }
@@ -90,6 +94,10 @@ export class MediaCameraController {
       // Do not override facing mode with default device ID on mobile
       const isMobile = this.capabilityService.isMobileDevice();
       this.currentDeviceId = isMobile ? (options?.deviceId ?? null) : (options?.deviceId ?? (devices[0]?.deviceId ?? null));
+      this.currentWidth = options?.width;
+      this.currentHeight = options?.height;
+      this.currentFrameRate = options?.frameRate;
+      this.currentAudioDeviceId = options?.audioDeviceId;
 
       // 3. Build Constraints
       const constraints = this.constraintBuilder.build({
@@ -97,6 +105,10 @@ export class MediaCameraController {
         deviceId: this.currentDeviceId ?? undefined,
         config: this.config,
         audio: options?.audio,
+        width: this.currentWidth,
+        height: this.currentHeight,
+        frameRate: this.currentFrameRate,
+        audioDeviceId: this.currentAudioDeviceId,
       });
 
       // 4. Request Stream using BrowserAdapter
@@ -170,7 +182,15 @@ export class MediaCameraController {
           if (granted) {
             console.log("MediaCameraController: Permission still granted, attempting reconnect...");
             this.state = "IDLE";
-            await this.open({ facingMode: this.currentFacingMode ?? undefined, deviceId: this.currentDeviceId ?? undefined, audio });
+            await this.open({
+              facingMode: this.currentFacingMode ?? undefined,
+              deviceId: this.currentDeviceId ?? undefined,
+              audio,
+              width: this.currentWidth,
+              height: this.currentHeight,
+              frameRate: this.currentFrameRate,
+              audioDeviceId: this.currentAudioDeviceId,
+            });
           } else {
             console.error("MediaCameraController: Permission lost after stream ended.");
             this.transition("ERROR");
@@ -232,6 +252,10 @@ export class MediaCameraController {
         deviceId: this.currentDeviceId ?? undefined,
         config: this.config,
         audio: options?.audio,
+        width: this.currentWidth,
+        height: this.currentHeight,
+        frameRate: this.currentFrameRate,
+        audioDeviceId: this.currentAudioDeviceId,
       });
 
       // Crucial: Stop previous stream BEFORE requesting new one on mobile to free hardware
@@ -268,6 +292,99 @@ export class MediaCameraController {
     }
   }
 
+  /**
+   * Change the ACTIVE stream in place — resolution/framerate (a recording-quality change),
+   * a specific camera device, and/or a specific microphone device — without a full close/
+   * reopen. Used because open() intentionally no-ops when already READY/OPENING (see its
+   * guard above), so it cannot be reused to swap the live stream. Mirrors switchCamera()'s
+   * proven stop-old-then-get-new pattern and its AbortController-based in-flight-request
+   * handling, rather than inventing a new one.
+   *
+   * Any field omitted from `options` is PRESERVED from the current session (e.g. changing
+   * only `deviceId` keeps the current width/height/frameRate/audioDeviceId) — callers only
+   * need to pass what actually changed, but in practice useVideoRecorder always resends the
+   * full current selection set so quality/camera/mic can never be silently dropped by one
+   * selector's change overwriting another's.
+   *
+   * Only valid from READY — the state-transition guard below both prevents overlapping
+   * reconfigure calls (a second call while already SWITCHING is rejected, not queued) and
+   * ensures a caller cannot race an old getUserMedia response into the active stream once
+   * a newer request has started.
+   */
+  async reconfigure(options?: { width?: number; height?: number; frameRate?: number; deviceId?: string; audioDeviceId?: string; audio?: boolean }): Promise<void> {
+    if (this.state !== "READY") {
+      console.warn(`MediaCameraController: reconfigure not allowed in state ${this.state}.`);
+      return;
+    }
+
+    if (!this.transition("SWITCHING")) return;
+
+    if (this.abortController) {
+      this.cancellationReason = "switch";
+      this.abortController.abort();
+    }
+    this.abortController = new AbortController();
+    const signal = this.abortController.signal;
+
+    // Preserve facing mode; only fields explicitly passed are changed, everything else
+    // (including facing mode itself, which this operation never touches) carries forward.
+    this.currentWidth = options?.width ?? this.currentWidth;
+    this.currentHeight = options?.height ?? this.currentHeight;
+    this.currentFrameRate = options?.frameRate ?? this.currentFrameRate;
+    this.currentDeviceId = options?.deviceId ?? this.currentDeviceId;
+    this.currentAudioDeviceId = options?.audioDeviceId ?? this.currentAudioDeviceId;
+    const fromMode = this.currentFacingMode ?? "user";
+
+    try {
+      const constraints = this.constraintBuilder.build({
+        facingMode: this.currentFacingMode ?? undefined,
+        deviceId: this.currentDeviceId ?? undefined,
+        config: this.config,
+        audio: options?.audio,
+        width: this.currentWidth,
+        height: this.currentHeight,
+        frameRate: this.currentFrameRate,
+        audioDeviceId: this.currentAudioDeviceId,
+      });
+
+      // Stop the old stream before requesting the new one — same reasoning as switchCamera().
+      this.stopCurrentStream();
+
+      this.stream = await this.browserAdapter.getStream(constraints);
+
+      if (signal.aborted) {
+        this.stopCurrentStream();
+        throw new SDKError("Aborted");
+      }
+
+      this.wireUpStreamRecovery(options?.audio);
+
+      if (!this.transition("READY")) {
+        this.stopCurrentStream();
+        return;
+      }
+
+      // Reuse the existing "active stream changed" signal — CameraProvider already
+      // listens for it and re-syncs React state (stream/facingMode/etc). Facing mode
+      // itself didn't change here, so from/to are reported identically (accurate, not
+      // a real switch — just the same event shape the provider already understands).
+      this.emitter.emit("camera.switched", { from: fromMode, to: fromMode });
+    } catch (e: unknown) {
+      if (this.cancellationReason !== null) {
+        this.cancellationReason = null;
+        return;
+      }
+
+      if (e instanceof Error) {
+        this.transition("ERROR");
+        this.emitter.emit("error", e);
+      } else {
+        this.transition("ERROR");
+        this.emitter.emit("error", new Error(String(e)));
+      }
+    }
+  }
+
   close(): void {
     if (this.state === "IDLE") return;
     if (!this.transition("CLOSING")) return;
@@ -281,7 +398,11 @@ export class MediaCameraController {
     this.stream = null;
     this.currentFacingMode = null;
     this.currentDeviceId = null;
-    
+    this.currentWidth = undefined;
+    this.currentHeight = undefined;
+    this.currentFrameRate = undefined;
+    this.currentAudioDeviceId = undefined;
+
     this.transition("IDLE");
     this.emitter.emit("camera.closed", undefined);
   }

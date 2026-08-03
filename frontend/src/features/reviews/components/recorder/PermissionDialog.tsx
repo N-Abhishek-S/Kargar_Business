@@ -17,9 +17,10 @@ const ICON_MAP = {
   info: Info,
 } as const;
 
-export function PermissionDialog({ errorType, onRetry, onFallbackUpload }: PermissionDialogProps) {
+export function PermissionDialog({ errorType, message, onRetry, onFallbackUpload }: PermissionDialogProps) {
   const isDenied = errorType === 'permission_denied';
   const isNotFound = errorType === 'not_found';
+  const isRecordingFailed = errorType === 'recording_failed';
 
   const instructions = isDenied ? getPermissionInstructions() : null;
   const HintIcon = instructions ? ICON_MAP[instructions.iconHint] : Camera;
@@ -28,13 +29,20 @@ export function PermissionDialog({ errorType, onRetry, onFallbackUpload }: Permi
     ? recorderStrings.permissionDeniedTitle
     : isNotFound
       ? 'Camera or Microphone Not Found'
-      : recorderStrings.permissionTitle;
+      : isRecordingFailed
+        ? recorderStrings.recordingFailedTitle
+        : recorderStrings.permissionTitle;
 
   const description = isDenied
     ? recorderStrings.permissionDeniedDescription
     : isNotFound
       ? 'No camera or microphone was detected. Please connect a device and try again.'
-      : recorderStrings.permissionDescription;
+      : isRecordingFailed
+        // Prefer the specific, already-user-safe message from the caught error (see
+        // useVideoRecorder's startRecordingInternal/stopRecordingInternal — these are
+        // fixed, non-technical strings, never a raw error/stack trace) over the generic copy.
+        ? (message ?? recorderStrings.recordingFailedDescription)
+        : recorderStrings.permissionDescription;
 
   return (
     <div className="flex flex-col items-center text-center py-8 px-4">

@@ -35,9 +35,7 @@ export const RecorderLimits = {
   MAX_DURATION_SECONDS: 180,
   /** Maximum file size in bytes (100 MB) */
   MAX_FILE_SIZE_BYTES: 100 * 1024 * 1024,
-  /** Target video bitrate — keeps 3 min ≈ 33 MB */
-  VIDEO_BITS_PER_SECOND: 1_500_000,
-  /** Audio bitrate */
+  /** Audio bitrate — shared across all quality presets; audio doesn't need to scale with video resolution */
   AUDIO_BITS_PER_SECOND: 128_000,
   /** Pre-recording countdown length */
   COUNTDOWN_SECONDS: 3,
@@ -58,12 +56,20 @@ export interface QualityPreset {
   readonly height: number;
   readonly frameRate: number;
   readonly label: string;
+  /** Requested (not guaranteed) MediaRecorder video encoding bitrate for this preset. */
+  readonly videoBitsPerSecond: number;
 }
 
+/**
+ * Single source of truth for recording quality — resolution, framerate, and a
+ * bitrate scaled to that resolution (testimonial/talking-head content, not
+ * professional video: priorities are smooth capture and reasonable file size
+ * over maximum visual fidelity).
+ */
 export const QualityPresets = {
-  '360p': { width: 640, height: 360, frameRate: 30, label: '360p' },
-  '720p': { width: 1280, height: 720, frameRate: 30, label: '720p' },
-  '1080p': { width: 1920, height: 1080, frameRate: 30, label: '1080p' },
+  '360p': { width: 640, height: 360, frameRate: 30, label: '360p', videoBitsPerSecond: 800_000 },
+  '720p': { width: 1280, height: 720, frameRate: 30, label: '720p', videoBitsPerSecond: 1_500_000 },
+  '1080p': { width: 1920, height: 1080, frameRate: 30, label: '1080p', videoBitsPerSecond: 2_500_000 },
 } as const satisfies Record<string, QualityPreset>;
 
 export const DEFAULT_QUALITY = '720p' as const;

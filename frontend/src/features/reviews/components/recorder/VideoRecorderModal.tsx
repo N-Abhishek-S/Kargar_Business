@@ -32,7 +32,6 @@ import { formatRecordingTime } from '../../utils/video-recorder.utils';
 import { useVideoRecorder } from '../../hooks/useVideoRecorder';
 import { useBrowserCapabilities } from '../../hooks/useBrowserCapabilities';
 import { useMediaDevices } from '../../hooks/useMediaDevices';
-import { useAudioLevel } from '../../hooks/useAudioLevel';
 import { useNetworkStatus } from '../../hooks/useNetworkStatus';
 import { useNavigationGuard } from '../../hooks/useNavigationGuard';
 import { useThumbnail } from '../../hooks/useThumbnail';
@@ -79,9 +78,9 @@ export function VideoRecorderModal({ isOpen, onClose, onUseVideo }: VideoRecorde
   /* ---- Destructure recorder ---- */
   const {
     state, error, stream, previewUrl, recordedBlob,
-    elapsedSeconds, countdownValue,
+    elapsedSeconds, countdownValue, isReconfiguring,
     requestPermission, startCountdown, pauseRecording, resumeRecording,
-    stopRecording, retake, getRecordedFile, cleanup,
+    stopRecording, retake, reconfigureActiveStream, getRecordedFile, cleanup,
   } = recorder;
 
   /* ---- State ---- */
@@ -97,23 +96,21 @@ export function VideoRecorderModal({ isOpen, onClose, onUseVideo }: VideoRecorde
   const [brightnessWarningDismissed, setBrightnessWarningDismissed] = useState(false);
   const [faceHintDismissed, setFaceHintDismissed] = useState(false);
   const [showDraftDialog, setShowDraftDialog] = useState(false);
+  // Debounced (not frame-rate) — only flips when AudioLevelMeter's internal silence
+  // detection actually changes, see AudioLevelMeter.tsx's onSilenceChange contract.
+  const [isAudioSilent, setIsAudioSilent] = useState(false);
 
-  /* ---- Refs ---- */
-  const cameraVideoRef = useRef<HTMLVideoElement>(null);
-  // Track the video element in state so brightness/face hooks get a stable value
+  /* ---- Video element access for brightness/face hooks ---- */
+  // Track the video element in state so brightness/face hooks get a stable value.
+  // Populated via a callback ref (fires once per actual mount/unmount) instead of polling.
   const [videoElement, setVideoElement] = useState<HTMLVideoElement | null>(null);
+  const cameraVideoRef = useCallback((el: HTMLVideoElement | null) => {
+    setVideoElement(el);
+  }, []);
 
-  /* ---- Sync ref → state for hooks that need the element ---- */
-  useEffect(() => {
-    // Use a small interval to pick up the element once CameraPreview mounts
-    const check = () => {
-      const el = cameraVideoRef.current;
-      setVideoElement((prev) => (prev !== el ? el : prev));
-    };
-    check();
-    const id = setInterval(check, 500);
-    return () => { clearInterval(id); };
-  }, [state]); // re-check when state changes (camera mounts/unmounts)
+  // Keep the recorder's quality ref in sync with local UI state (including the
+  // localStorage-restored initial value) before any permission request reads it.
+  recorder._setSelectedQuality(selectedQuality);
 
   /* ---- Derived state ---- */
   const isActive = state === 'recording' || state === 'paused' || state === 'countdown';
@@ -121,7 +118,8 @@ export function VideoRecorderModal({ isOpen, onClose, onUseVideo }: VideoRecorde
   const isSupported = capabilities.supportsCamera && capabilities.supportsMediaRecorder;
 
   /* ---- Phase 2 hooks (only active when camera is live) ---- */
-  const audioLevel = useAudioLevel(isCameraLive ? stream : null);
+  // Audio-level sampling itself lives inside <AudioLevelMeter> (see render below) — it is NOT
+  // consumed here, so its ~60fps updates never trigger a re-render of this modal.
   const { isTooDark } = useBrightnessCheck(videoElement, isCameraLive && state === 'ready');
   const { faceVisible } = useFaceDetection(videoElement, isCameraLive && state === 'ready');
 
@@ -210,12 +208,54 @@ export function VideoRecorderModal({ isOpen, onClose, onUseVideo }: VideoRecorde
     }
   }, [devices.isDeviceDisconnected, isActive, pauseRecording]);
 
-  /* ---- Quality change persists to localStorage ---- */
+  /**
+   * Quality change persists to localStorage and, if the camera is already live, reconfigures
+   * the ACTIVE stream in place. Uses reconfigureActiveStream() (-> mediaCapture.reconfigure()),
+   * NOT requestPermission() (-> mediaCapture.open()) — open() intentionally no-ops when the
+   * camera is already READY/OPENING (see MediaCameraController.open()'s guard), so calling it
+   * again here would update the UI selection without ever replacing the live MediaStream.
+   */
   const handleQualityChange = useCallback((q: VideoQuality) => {
     setSelectedQuality(q);
     try { localStorage.setItem(StorageKeys.LAST_QUALITY, q); } catch { /* */ }
     trackRecorderEvent('quality_changed', { quality: q });
-  }, []);
+    // Set the ref synchronously (ahead of the next render) so an immediate
+    // reconfigureActiveStream() call below picks up the new value rather than a stale one.
+    recorder._setSelectedQuality(q);
+    if (state === 'ready') {
+      void reconfigureActiveStream();
+    }
+  }, [state, reconfigureActiveStream, recorder]);
+
+  /**
+   * Camera device change — same fix as quality: reconfigureActiveStream() (-> reconfigure()),
+   * not requestPermission() (-> open(), which no-ops while READY). reconfigureActiveStream()
+   * always resends the full current quality/camera/mic selection, so the recording quality and
+   * selected microphone are preserved across a camera device change.
+   */
+  const handleCameraChange = useCallback((id: string) => {
+    devices.selectCamera(id);
+    recorder._setSelectedCamera(id);
+    trackRecorderEvent('camera_selected');
+    if (state === 'ready') {
+      void reconfigureActiveStream();
+    }
+  }, [state, reconfigureActiveStream, recorder, devices]);
+
+  /**
+   * Microphone device change — same mechanism as camera: reconfigureActiveStream() re-derives
+   * the full live-stream constraints (quality + camera + this new mic) and swaps the stream in
+   * place via MediaCameraController.reconfigure()'s stop-old-then-get-new pattern, so the old
+   * audio (and video) tracks are released and exactly one stream is ever active.
+   */
+  const handleMicChange = useCallback((id: string) => {
+    devices.selectMic(id);
+    recorder._setSelectedMic(id);
+    trackRecorderEvent('microphone_selected');
+    if (state === 'ready') {
+      void reconfigureActiveStream();
+    }
+  }, [state, reconfigureActiveStream, recorder, devices]);
 
   /* ---- Handlers ---- */
   const handleClose = useCallback(() => {
@@ -402,7 +442,7 @@ export function VideoRecorderModal({ isOpen, onClose, onUseVideo }: VideoRecorde
                       trackRecorderEvent('camera_selected', { source: 'flip_button' });
                       void mediaCapture.switchCamera({ audio: true });
                     }}
-                    disabled={state === 'recording' || state === 'countdown'}
+                    disabled={state === 'recording' || state === 'paused' || state === 'countdown' || isReconfiguring}
                     className={clsx(
                       'flex items-center justify-center w-8 h-8 rounded-full',
                       'text-gray-400 hover:text-white hover:bg-white/10',
@@ -455,23 +495,9 @@ export function VideoRecorderModal({ isOpen, onClose, onUseVideo }: VideoRecorde
                         microphones={devices.microphones}
                         selectedCamera={devices.selectedCamera}
                         selectedMic={devices.selectedMic}
-                        onCameraChange={(id) => {
-                          devices.selectCamera(id);
-                          recorder._setSelectedCamera(id);
-                          trackRecorderEvent('camera_selected');
-                          if (state === 'ready') {
-                            void requestPermission();
-                          }
-                        }}
-                        onMicChange={(id) => {
-                          devices.selectMic(id);
-                          recorder._setSelectedMic(id);
-                          trackRecorderEvent('microphone_selected');
-                          if (state === 'ready') {
-                            void requestPermission();
-                          }
-                        }}
-                        disabled={state === 'recording'}
+                        onCameraChange={handleCameraChange}
+                        onMicChange={handleMicChange}
+                        disabled={state === 'recording' || state === 'paused' || state === 'countdown' || isReconfiguring}
                       />
                     )}
 
@@ -480,7 +506,7 @@ export function VideoRecorderModal({ isOpen, onClose, onUseVideo }: VideoRecorde
                       <QualitySelector
                         selectedQuality={selectedQuality}
                         onQualityChange={handleQualityChange}
-                        disabled={state === 'recording'}
+                        disabled={state === 'recording' || state === 'paused' || state === 'countdown' || isReconfiguring}
                       />
                     )}
                   </div>
@@ -508,6 +534,7 @@ export function VideoRecorderModal({ isOpen, onClose, onUseVideo }: VideoRecorde
               {isSupported && state === 'error' && error && !showDraftDialog && (
                 <PermissionDialog
                   errorType={error.type}
+                  message={error.message}
                   onRetry={requestPermission}
                   onFallbackUpload={handleFallbackUpload}
                 />
@@ -588,10 +615,10 @@ export function VideoRecorderModal({ isOpen, onClose, onUseVideo }: VideoRecorde
               {/* ======== AUDIO LEVEL METER (below preview) ======== */}
               {isSupported && isCameraLive && !showDraftDialog && enableAudioMeter && (
                 <div className="mt-3">
-                  <AudioLevelMeter level={audioLevel.level} isSilent={audioLevel.isSilent} />
+                  <AudioLevelMeter stream={stream} isActive={isCameraLive} onSilenceChange={setIsAudioSilent} />
                   {/* Silence warning */}
                   <AnimatePresence>
-                    {audioLevel.isSilent && (state === 'recording' || state === 'ready') && (
+                    {isAudioSilent && (state === 'recording' || state === 'ready') && (
                       <motion.p
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: 'auto' }}

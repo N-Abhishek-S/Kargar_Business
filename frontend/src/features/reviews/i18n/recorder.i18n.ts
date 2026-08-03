@@ -43,6 +43,9 @@ export const recorderStrings = {
   permissionDeniedTitle: 'Permission Denied',
   permissionDeniedDescription:
     'Camera or microphone access was denied. Please update your browser settings to allow access.',
+  recordingFailedTitle: 'Recording Failed',
+  recordingFailedDescription:
+    'Something went wrong while recording. Please try again.',
   tryAgain: 'Try Again',
   uploadInstead: 'Upload a video instead',
 

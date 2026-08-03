@@ -22,13 +22,15 @@ export interface MediaCaptureSDK {
   facingMode: FacingMode | null;
   recordingState: RecordingState | "destroyed";
   
-  open: (options?: { facingMode?: FacingMode; deviceId?: string; audio?: boolean }) => Promise<void>;
+  open: (options?: { facingMode?: FacingMode; deviceId?: string; audio?: boolean; width?: number; height?: number; frameRate?: number; audioDeviceId?: string }) => Promise<void>;
+  /** Change resolution/framerate/camera-device/mic-device of the ALREADY-ACTIVE stream (open() intentionally no-ops when already READY/OPENING). Omitted fields are preserved. */
+  reconfigure: (options?: { width?: number; height?: number; frameRate?: number; deviceId?: string; audioDeviceId?: string; audio?: boolean }) => Promise<void>;
   close: () => void;
   switchCamera: (options?: { audio?: boolean }) => Promise<void>;
   capturePhoto: (videoElement: HTMLVideoElement) => Promise<Blob>;
   
   // Recording Actions
-  startRecording: (mimeType?: string) => void;
+  startRecording: (options?: { mimeType?: string; videoBitsPerSecond?: number; audioBitsPerSecond?: number }) => void;
   pauseRecording: () => void;
   resumeRecording: () => void;
   stopRecording: () => Promise<Blob>;
@@ -144,23 +146,44 @@ export const CameraProvider: React.FC<CameraProviderProps> = ({ children, onSDKE
       }
       
       unsubscribeDevices();
-      
-      // Do NOT destroy the controllers here, as they are owned by the provider component.
-      // If the user wants to close the camera when the provider unmounts, they should call close() explicitly,
-      // or we can stop the stream but not destroy the controller structure.
-      // We'll let the garbage collector handle it or rely on a dedicated cleanup hook if needed.
+
+      // Deliberately reset(), NOT destroy(), here — confirmed by direct testing that this
+      // effect's cleanup fires immediately at mount under React StrictMode's dev-only
+      // double-invoke (mount -> cleanup -> mount), against the SAME `core`/controller
+      // instance (it persists across the phantom cycle: useState's lazy initializer is not
+      // re-run just because an effect re-runs). destroy() is a one-way terminal operation
+      // with no "undestroy" — calling it here meant every recorder session was permanently
+      // destroyed before the user ever pressed Record, causing recording to silently fail
+      // after a real countdown (this was the Commit A regression: countdown completed,
+      // VideoRecorderController.start() threw InvalidStateError since destroyed was already
+      // true, and the UI had no way to show it — see the `error` handling below).
+      // reset() is idempotent/reversible (safe to call on a real cleanup too) and provides
+      // everything actually needed here: any in-flight recorder is safely stopped and the
+      // camera stream is released. The controller is naturally garbage-collected on a real
+      // unmount regardless of whether `destroyed` was ever set — nothing in this codebase
+      // reuses a `core` object after its owning CameraProvider truly unmounts, so the
+      // one-way guard destroy() provides no realized safety benefit here, only this hazard.
+      core.videoRecorderController.reset();
       core.cameraController.close();
     };
   }, [core, onSDKEvent]);
 
   // Stabilize actions to prevent React dependency loops
   const actions = useMemo(() => ({
-    open: async (options?: { facingMode?: FacingMode; deviceId?: string; audio?: boolean }) => {
+    open: async (options?: { facingMode?: FacingMode; deviceId?: string; audio?: boolean; width?: number; height?: number; frameRate?: number; audioDeviceId?: string }) => {
       // Intentionally not setting error here directly to keep dependencies simple
       // Errors will be captured and emitted by the core controller anyway
       await core.cameraController.open(options);
     },
+    reconfigure: async (options?: { width?: number; height?: number; frameRate?: number; deviceId?: string; audioDeviceId?: string; audio?: boolean }) => {
+      await core.cameraController.reconfigure(options);
+    },
     close: () => {
+      // Ordinary session close (modal closed, navigated away) — NOT terminal. Safely stops
+      // any in-flight recording and releases the recorder WITHOUT permanently destroying it
+      // (reset(), not destroy()), so the same core instance can open/record again later.
+      // Both calls are idempotent/safe to call multiple times or when already stopped/closed.
+      core.videoRecorderController.reset();
       core.cameraController.close();
     },
     switchCamera: async (options?: { audio?: boolean }) => {
@@ -177,10 +200,10 @@ export const CameraProvider: React.FC<CameraProviderProps> = ({ children, onSDKE
       }
       return core.imageProcessor.capture(videoElement, mode);
     },
-    startRecording: (mimeType?: string) => {
+    startRecording: (options?: { mimeType?: string; videoBitsPerSecond?: number; audioBitsPerSecond?: number }) => {
       const currentStream = core.cameraController.getStream();
       if (!currentStream) throw new Error("Cannot start recording: no active stream");
-      core.videoRecorderController.start(currentStream, mimeType);
+      core.videoRecorderController.start(currentStream, options);
     },
     pauseRecording: () => {
       core.videoRecorderController.pause();

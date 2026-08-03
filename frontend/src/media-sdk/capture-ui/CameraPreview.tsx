@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useCallback, useEffect, useRef } from "react";
 import { useMediaCapture } from "../capture-react";
 
 
@@ -9,14 +9,25 @@ export interface CameraPreviewProps {
 export const CameraPreview = React.forwardRef<HTMLVideoElement, CameraPreviewProps>(({ className }, forwardedRef) => {
   const { stream, state, facingMode, recordingState } = useMediaCapture();
   const internalRef = useRef<HTMLVideoElement>(null);
-  
-  const videoRef = (forwardedRef as React.RefObject<HTMLVideoElement | null> | null) ?? internalRef;
+
+  // Own the DOM node via internalRef (needed for the srcObject effect below regardless
+  // of what the caller forwards), and mirror it out to whatever `ref` the caller passed —
+  // supports both a plain RefObject (existing consumers, e.g. SharedCameraCapture) and a
+  // callback ref (e.g. VideoRecorderModal, which uses one instead of polling for the node).
+  const setRefs = useCallback((el: HTMLVideoElement | null) => {
+    internalRef.current = el;
+    if (typeof forwardedRef === "function") {
+      forwardedRef(el);
+    } else if (forwardedRef) {
+      forwardedRef.current = el;
+    }
+  }, [forwardedRef]);
 
   useEffect(() => {
-    if (videoRef.current) {
+    if (internalRef.current) {
       if (stream) {
-        videoRef.current.srcObject = stream;
-        videoRef.current.play().catch((err: unknown) => {
+        internalRef.current.srcObject = stream;
+        internalRef.current.play().catch((err: unknown) => {
           if (err instanceof DOMException && err.name === "AbortError") {
             // Expected when stream is quickly replaced (e.g., flipping camera)
             return;
@@ -24,10 +35,10 @@ export const CameraPreview = React.forwardRef<HTMLVideoElement, CameraPreviewPro
           console.warn("[MediaSDK] Failed to auto-play video stream:", err);
         });
       } else {
-        videoRef.current.srcObject = null;
+        internalRef.current.srcObject = null;
       }
     }
-  }, [stream, videoRef]);
+  }, [stream]);
 
   // Strict Mirroring Rules: Front camera is mirrored in preview. Rear camera is not.
   const isMirrored = facingMode === "user";
@@ -49,7 +60,7 @@ export const CameraPreview = React.forwardRef<HTMLVideoElement, CameraPreviewPro
       ) : null}
 
       <video
-        ref={videoRef}
+        ref={setRefs}
         autoPlay
         playsInline
         muted

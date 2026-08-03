@@ -212,6 +212,9 @@ export interface UseVideoRecorderReturn {
   readonly elapsedSeconds: number;
   readonly countdownValue: number | null;
 
+  /** True while a live-stream reconfiguration (quality change, camera flip) is in flight. */
+  readonly isReconfiguring: boolean;
+
   /* Actions */
   readonly open: () => void;
   readonly requestPermission: () => Promise<void>;
@@ -220,6 +223,8 @@ export interface UseVideoRecorderReturn {
   readonly resumeRecording: () => void;
   readonly stopRecording: () => void;
   readonly retake: () => void;
+  /** Apply the current quality/camera/mic selection to an already-live camera stream. No-op unless state is 'ready'. */
+  readonly reconfigureActiveStream: () => Promise<void>;
   readonly getRecordedFile: () => File | null;
   readonly cleanup: () => void;
 
@@ -331,6 +336,8 @@ export interface VideoPreviewProps {
 
 export interface PermissionDialogProps {
   readonly errorType: RecorderErrorType;
+  /** Optional specific, already user-safe message (e.g. from a caught recording-start/stop failure) — falls back to generic per-errorType copy when omitted. */
+  readonly message?: string;
   readonly onRetry: () => void;
   readonly onFallbackUpload: () => void;
 }
@@ -346,8 +353,13 @@ export interface RecordingTimerProps {
 }
 
 export interface AudioLevelMeterProps {
-  readonly level: number;
-  readonly isSilent: boolean;
+  /** The live camera/mic stream — the meter subscribes to audio-level updates internally. */
+  readonly stream: MediaStream | null;
+  /** Whether the meter should be actively sampling (e.g. camera live), gates the analysis loop. */
+  readonly isActive: boolean;
+  /** Fires only when the (debounced) silence state changes — not per audio frame — so a
+   *  parent can show a separate "no audio detected" banner without holding frame-rate state. */
+  readonly onSilenceChange?: (isSilent: boolean) => void;
 }
 
 export interface DeviceSelectorProps {

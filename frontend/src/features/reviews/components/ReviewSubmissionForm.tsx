@@ -36,7 +36,7 @@ const videoFileSchema = z.custom<File>((val) => val instanceof File, 'Please upl
 const reviewFormSchema = z.object({
   customerName: z.string().trim().min(2, 'Enter your full name').max(120),
   companyName: z.string().trim().min(2, 'Enter your company name').max(160),
-  email: z.string().trim().max(160).pipe(z.email('Enter a valid email address')),
+  email: z.string().trim().max(160).email('Enter a valid email address'),
   phone: z
     .string()
     .trim()
@@ -385,7 +385,7 @@ export function ReviewSubmissionForm() {
         
         {galleryImages.length > 0 && (
           <div className="flex flex-wrap gap-3 mb-4">
-            {galleryImages.map((img, idx) => (
+            {galleryImages.map((img: z.infer<typeof imageFileSchema>, idx: number) => (
               <div key={idx} className="relative w-24 h-24 rounded-md overflow-hidden border border-gray-200 bg-white group">
                 <img src={img.data} alt={`Gallery preview ${idx + 1}`} className="w-full h-full object-cover" />
                 <button

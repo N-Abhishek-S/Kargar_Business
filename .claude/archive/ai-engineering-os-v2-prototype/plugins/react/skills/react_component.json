@@ -1,0 +1,18 @@
+{
+  "id": "react_component",
+  "version": "2.0.0",
+  "kind": "skill",
+  "description": "Scaffolds a React component adhering to Tailwind and accessibility standards.",
+  "dependencies": ["plugin:react", "plugin:tailwind"],
+  "inputs": [
+    { "name": "component_name", "type": "string", "required": true },
+    { "name": "has_hooks", "type": "boolean", "required": false }
+  ],
+  "outputs": [
+    "src/components/{component_name}.tsx"
+  ],
+  "validation": [
+    { "rule": "Must compile under strict TS", "type": "tsc" },
+    { "rule": "Must pass ESLint React hooks rules", "type": "eslint" }
+  ]
+}

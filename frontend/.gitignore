@@ -25,3 +25,75 @@ dist-ssr
 *.sw?
 
 .vercel
+# ==========================
+# Environment & Secrets
+# ==========================
+.env
+.env.*
+!.env.example
+
+# ==========================
+# AI / Claude
+# ==========================
+.claude/
+CLAUDE.md
+
+# ==========================
+# AI Reports & Plans
+# ==========================
+*_AUDIT.md
+*_REPORT.md
+*_IMPLEMENTATION_PLAN.md
+implementation_plan.md
+
+# ==========================
+# Build Output
+# ==========================
+dist/
+build/
+coverage/
+.cache/
+*.tsbuildinfo
+
+# ==========================
+# Logs
+# ==========================
+*.log
+vite-*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# ==========================
+# Local Test Scripts
+# ==========================
+scratch.js
+signup.mjs
+populate-test-review.mjs
+test-fetch-reviews.mjs
+test-tech.mjs
+test-db.mjs
+test-e2e-review.mjs
+test-submit.js
+test.mjs
+run_migration.mjs
+temp_update.sql
+
+# ==========================
+# Local Test Assets
+# ==========================
+sample.mp4
+gallery_*.png
+
+# ==========================
+# IDE
+# ==========================
+.vscode/
+.idea/
+
+# ==========================
+# Operating System
+# ==========================
+.DS_Store
+Thumbs.db
+desktop.ini

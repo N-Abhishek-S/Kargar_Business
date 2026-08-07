@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://ai-engineering-os.com/schemas/capability.schema.json",
+  "title": "OS Capability",
+  "description": "Defines a high-level domain capability and its underlying technical requirements.",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier (e.g., 'mentor_management')"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "kind": {
+      "type": "string",
+      "const": "capability"
+    },
+    "description": {
+      "type": "string"
+    },
+    "domain": {
+      "type": "string"
+    },
+    "required_skills": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "IDs of skills required to fulfill this capability"
+    },
+    "required_blueprints": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "IDs of blueprints required for scaffolding"
+    }
+  },
+  "required": ["id", "version", "kind", "description", "domain", "required_skills", "required_blueprints"]
+}

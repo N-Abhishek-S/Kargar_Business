@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://ai-engineering-os.com/schemas/workflow.schema.json",
+  "title": "OS Workflow Graph",
+  "description": "Defines a DAG (Directed Acyclic Graph) of execution nodes for automation.",
+  "type": "object",
+  "properties": {
+    "id": { "type": "string" },
+    "version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+    "kind": { "type": "string", "const": "workflow" },
+    "description": { "type": "string" },
+    "nodes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "node_id": { "type": "string" },
+          "action": { "type": "string" },
+          "target": { "type": "string", "description": "The skill or blueprint ID invoked" }
+        },
+        "required": ["node_id", "action", "target"]
+      }
+    },
+    "edges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "from": { "type": "string" },
+          "to": { "type": "string" }
+        },
+        "required": ["from", "to"]
+      },
+      "description": "Defines execution order (from -> to) enabling parallel processing."
+    }
+  },
+  "required": ["id", "version", "kind", "description", "nodes", "edges"]
+}

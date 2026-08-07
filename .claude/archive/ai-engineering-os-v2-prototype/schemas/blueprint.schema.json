@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://ai-engineering-os.com/schemas/blueprint.schema.json",
+  "title": "OS Blueprint",
+  "description": "Defines an executable scaffolding template mapping inputs to output artifacts.",
+  "type": "object",
+  "properties": {
+    "id": { "type": "string" },
+    "version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+    "kind": { "type": "string", "const": "blueprint" },
+    "description": { "type": "string" },
+    "inputs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "description": { "type": "string" }
+        },
+        "required": ["name"]
+      }
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "path": { "type": "string", "description": "The destination path of the generated file" },
+          "template_uri": { "type": "string", "description": "Pointer to the actual template logic/source" }
+        },
+        "required": ["path", "template_uri"]
+      }
+    }
+  },
+  "required": ["id", "version", "kind", "description", "inputs", "artifacts"]
+}

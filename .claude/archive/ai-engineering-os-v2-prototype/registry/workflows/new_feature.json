@@ -1,0 +1,21 @@
+{
+  "id": "new_feature_pipeline",
+  "version": "2.0.0",
+  "kind": "workflow",
+  "description": "Orchestrates a vertically integrated DDD feature across all OS layers.",
+  "nodes": [
+    { "node_id": "db_migrations", "action": "execute", "target": "blueprint:migration" },
+    { "node_id": "backend_repository", "action": "execute", "target": "blueprint:edge_repository" },
+    { "node_id": "backend_service", "action": "execute", "target": "blueprint:edge_service" },
+    { "node_id": "api_sdk", "action": "execute", "target": "blueprint:client_sdk" },
+    { "node_id": "ui_components", "action": "execute", "target": "blueprint:react_feature" },
+    { "node_id": "validation", "action": "verify", "target": "skill:security_audit" }
+  ],
+  "edges": [
+    { "from": "db_migrations", "to": "backend_repository" },
+    { "from": "backend_repository", "to": "backend_service" },
+    { "from": "backend_service", "to": "api_sdk" },
+    { "from": "api_sdk", "to": "ui_components" },
+    { "from": "ui_components", "to": "validation" }
+  ]
+}

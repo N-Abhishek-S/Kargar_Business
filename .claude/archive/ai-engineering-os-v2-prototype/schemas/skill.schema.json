@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://ai-engineering-os.com/schemas/skill.schema.json",
+  "title": "OS Skill",
+  "description": "Defines an executable AI skill, its dependencies, and validation rules.",
+  "type": "object",
+  "properties": {
+    "id": { "type": "string" },
+    "version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+    "kind": { "type": "string", "const": "skill" },
+    "description": { "type": "string" },
+    "dependencies": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Other skills or plugins required"
+    },
+    "inputs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "type": { "type": "string", "enum": ["string", "boolean", "number", "object"] },
+          "required": { "type": "boolean" }
+        },
+        "required": ["name", "type", "required"]
+      }
+    },
+    "outputs": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "validation": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "rule": { "type": "string" },
+          "type": { "type": "string", "enum": ["eslint", "tsc", "vitest", "manual"] }
+        },
+        "required": ["rule", "type"]
+      }
+    }
+  },
+  "required": ["id", "version", "kind", "description", "dependencies", "inputs", "outputs", "validation"]
+}

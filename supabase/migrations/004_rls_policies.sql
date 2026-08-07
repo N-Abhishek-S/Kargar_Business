@@ -218,6 +218,17 @@ CREATE POLICY "Public can read approved review media"
     )
   );
 
+-- Anyone can insert review media for their pending review
+CREATE POLICY "Anyone can insert review media for pending reviews"
+  ON public.review_media FOR INSERT
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM public.reviews r
+      WHERE r.id = review_media.review_id
+        AND r.status = 'pending'
+    )
+  );
+
 -- Admins manage all review media
 CREATE POLICY "Admins manage review media"
   ON public.review_media FOR ALL
@@ -556,6 +567,7 @@ GRANT SELECT ON public.feature_flags        TO anon;
 
 -- ---- anon: public form submissions ----
 GRANT INSERT ON public.reviews              TO anon;
+GRANT INSERT ON public.review_media         TO anon;
 GRANT INSERT ON public.contact_messages     TO anon;
 GRANT INSERT ON public.quote_requests       TO anon;
 GRANT INSERT ON public.newsletter_subscribers TO anon;

@@ -6,7 +6,67 @@
   "outputDirectory": "dist",
   "rewrites": [
     {
-      "source": "/(.*)",
+      "source": "/",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/services",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/sectors",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/company-profile",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/support",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/contact-us",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/services/hard-services",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/services/soft-services",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/services/hard-services/electrical-maintenance",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/services/hard-services/hvac-maintenance",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/services/soft-services/housekeeping",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/services/soft-services/security-services",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/services/:categoryId",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/services/:categoryId/:serviceId",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/admin",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/admin/(.*)",
       "destination": "/index.html"
     }
   ],
@@ -14,6 +74,16 @@
     {
       "source": "/contact",
       "destination": "/contact-us",
+      "permanent": true
+    },
+    {
+      "source": "/about",
+      "destination": "/company-profile",
+      "permanent": true
+    },
+    {
+      "source": "/about-us",
+      "destination": "/company-profile",
       "permanent": true
     }
   ],

@@ -23,7 +23,11 @@ export interface RedirectRule {
 }
 
 /** Single source of truth for redirects — generated into vercel.json's `redirects` array. */
-export const REDIRECTS: RedirectRule[] = [{ from: '/contact', to: '/contact-us', permanent: true }];
+export const REDIRECTS: RedirectRule[] = [
+  { from: '/contact', to: '/contact-us', permanent: true },
+  { from: '/about', to: '/company-profile', permanent: true },
+  { from: '/about-us', to: '/company-profile', permanent: true },
+];
 
 /**
  * Known hero-image asset per route, for `<image:image>` sitemap entries.

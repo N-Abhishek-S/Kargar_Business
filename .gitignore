@@ -1,34 +1,105 @@
-# Dependencies
-node_modules/
+# ==================================================
+# Enterprise Git Security Hardening — KargarWeb
+# ==================================================
 
-# Build outputs
+# --------------------------------------------------
+# 1. Environment & Secrets (NEVER COMMIT)
+# --------------------------------------------------
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+*.pfx
+*.cer
+
+# --------------------------------------------------
+# 2. Dependencies
+# --------------------------------------------------
+node_modules/
+frontend/node_modules/
+
+# --------------------------------------------------
+# 3. Build & Compiler Outputs
+# --------------------------------------------------
 dist/
 build/
+frontend/dist/
+frontend/dist-ssr/
+frontend/.vercel/
+*.tsbuildinfo
+frontend/*.tsbuildinfo
+.cache/
 
-# Environment
-.env
-.env.local
-.env.*.local
+# --------------------------------------------------
+# 4. Logs, Debug & Tool Reports
+# --------------------------------------------------
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+vite-*.log
+eslint-*.txt
+eslint-*.json
+lint_results.txt
 
-# IDE
+# --------------------------------------------------
+# 5. AI Tooling & Workspace Directories
+# --------------------------------------------------
+.claude/
+frontend/.claude/
+.cursor/
+artifacts/
+
+# --------------------------------------------------
+# 6. Specific AI Planning & Audit Reports (Explicit)
+# --------------------------------------------------
+CLAUDE.md
+RESPONSIVE_UI_AUDIT.md
+RESPONSIVE_UI_IMPLEMENTATION_PLAN.md
+REVIEW_SYSTEM_AUDIT.md
+REVIEW_SYSTEM_IMPLEMENTATION_PLAN.md
+SEO_AUDIT_REPORT.md
+SEO_IMPLEMENTATION_PLAN.md
+frontend/implementation_plan.md
+
+# --------------------------------------------------
+# 7. Explicit Developer Scratch & Local Test Scripts
+# --------------------------------------------------
+temp_update.sql
+run_migration.mjs
+frontend/scratch.js
+frontend/audit.mjs
+frontend/populate-test-review.mjs
+frontend/signup.mjs
+frontend/test-db.mjs
+frontend/test-e2e-review.mjs
+frontend/test-fetch-reviews-2.mjs
+frontend/test-fetch-reviews.mjs
+frontend/test-fetch.mjs
+frontend/test_insert.js
+frontend/test_submit.js
+
+# --------------------------------------------------
+# 8. Local Test Media Fixtures
+# --------------------------------------------------
+frontend/sample_video.mp4
+frontend/gallery_1.png
+frontend/gallery_2.png
+frontend/gallery_3.png
+frontend/gallery_4.png
+frontend/gallery_5.png
+
+# --------------------------------------------------
+# 9. IDE & System Files
+# --------------------------------------------------
 .vscode/
+!.vscode/extensions.json
 .idea/
 *.swp
 *.swo
 *~
-
-# OS
 .DS_Store
 Thumbs.db
 desktop.ini
-
-# Logs
-*.log
-npm-debug.log*
-
-# Testing
-coverage/
-
-# Misc
-*.tsbuildinfo
-.cache/

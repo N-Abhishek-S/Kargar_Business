@@ -4,6 +4,7 @@
   "buildCommand": "npm run build",
   "devCommand": "vite",
   "outputDirectory": "dist",
+  "trailingSlash": false,
   "rewrites": [
     {
       "source": "/",

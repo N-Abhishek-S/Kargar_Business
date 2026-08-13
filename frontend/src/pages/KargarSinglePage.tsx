@@ -645,6 +645,25 @@ function Footer() {
         <div onDoubleClick={() => navigate('/admin/login')} className="cursor-pointer select-none">
           <BrandLogo />
         </div>
+        <div className="flex items-center justify-center my-2 md:my-0">
+          <a
+            href="https://fazier.com/launches/www.kargarbusinessservices.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Kargar Business Services on Fazier"
+            className="inline-block transition-opacity hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-orange-500 rounded"
+          >
+            <img
+              src="https://fazier.com/api/v1//public/badges/launch_badges.svg?badge_type=featured&theme=light"
+              width="250"
+              alt="Kargar Business Services on Fazier"
+              loading="lazy"
+              decoding="async"
+              className="max-w-[250px] w-full h-auto flex-shrink-0"
+              style={{ maxWidth: '250px', width: '100%', height: 'auto' }}
+            />
+          </a>
+        </div>
         <span>Copyright 2026 Kargar Business Services. All rights reserved.</span>
       </div>
     </footer>

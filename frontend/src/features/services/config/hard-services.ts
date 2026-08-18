@@ -44,6 +44,13 @@ export const hardServices: Record<string, Service> = {
       { title: 'Rapid Response', description: '24/7 emergency support for critical failures.', iconKey: 'clock' },
       { title: 'Energy Savings', description: 'Proven strategies to reduce overall power consumption.', iconKey: 'trending-down' }
     ],
+    industries: [
+      { title: 'Corporate Offices', iconKey: 'building' },
+      { title: 'IT Parks', iconKey: 'building-2' },
+      { title: 'Manufacturing', iconKey: 'factory' },
+      { title: 'Warehouses', iconKey: 'package' },
+      { title: 'Retail & Malls', iconKey: 'shopping-bag' }
+    ],
     faqs: [
       { question: 'How often should electrical maintenance be performed?', answer: 'We recommend comprehensive inspections at least annually, with more frequent checks for critical systems.' },
       { question: 'Do you provide emergency electrical services?', answer: 'Yes, our team is available 24/7 for emergency electrical troubleshooting and repairs.' },
@@ -96,6 +103,13 @@ export const hardServices: Record<string, Service> = {
       { title: 'Energy Efficiency', description: 'We tune your systems to operate at peak efficiency.', iconKey: 'battery-charging' },
       { title: 'Health & Safety', description: 'Prioritizing indoor air quality for occupant well-being.', iconKey: 'heart' },
       { title: 'Comprehensive Care', description: 'From split ACs to massive commercial chillers.', iconKey: 'maximize' }
+    ],
+    industries: [
+      { title: 'Corporate Offices', iconKey: 'building' },
+      { title: 'IT Parks', iconKey: 'building-2' },
+      { title: 'Healthcare', iconKey: 'plus-square' },
+      { title: 'Retail & Malls', iconKey: 'shopping-bag' },
+      { title: 'Manufacturing', iconKey: 'factory' }
     ],
     faqs: [
       { question: 'What is included in routine HVAC maintenance?', answer: 'Changing filters, cleaning coils, checking refrigerant levels, and testing controls.' },

@@ -1,4 +1,4 @@
-import { type SyntheticEvent, useEffect, useState } from 'react';
+import { type ReactNode, type SyntheticEvent, useEffect, useState } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router';
 import { useInView } from 'react-intersection-observer';
 import CountUpModule from 'react-countup';
@@ -105,12 +105,6 @@ const contactHighlights: FeatureItem[] = [
 ];
 
 const operatingCities = ['Mumbai', 'Pune', 'Delhi', 'Bengaluru', 'Hyderabad'];
-
-const routeSectionMap: Record<string, string> = {
-  '/sectors': 'sectors',
-  '/company-profile': 'company-profile',
-  '/support': 'support',
-};
 
 function isActiveRoute(currentPath: string, href: string) {
   if (href === '/') return currentPath === '/';
@@ -694,19 +688,115 @@ function ServicesPage() {
   );
 }
 
+function PageIntroHero({
+  breadcrumbLabel,
+  eyebrow,
+  heading,
+  headingAccent,
+  description,
+  image,
+}: {
+  breadcrumbLabel: string;
+  eyebrow: string;
+  heading: string;
+  headingAccent: string;
+  description: ReactNode;
+  image: string;
+}) {
+  return (
+    <section className="kb-services-hero">
+      <img src={image} alt="" aria-hidden="true" />
+      <div className="kb-services-hero__shade" />
+      <div className="kb-container kb-services-hero__inner">
+        <div className="kb-services-hero__copy">
+          <div className="kb-breadcrumb"><a href="/">Home</a><span>›</span><strong>{breadcrumbLabel}</strong></div>
+          <p className="kb-eyebrow">{eyebrow}</p>
+          <h1>{heading} <span>{headingAccent}</span></h1>
+          <p>{description}</p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function CompanyProfilePage() {
+  return (
+    <>
+      <PageIntroHero
+        breadcrumbLabel="Company Profile"
+        eyebrow="Company Profile"
+        heading="Trusted Facility Management,"
+        headingAccent="Built Over 10+ Years"
+        description="Kargar Business Services is a facility management company based in Baner, Pune, delivering integrated housekeeping, security, and maintenance services for corporate offices and commercial facilities. Our track record spans 10+ years of experience, 10,000+ clients served, and 50+ sites managed to date."
+        image="/images/page/contact-building.webp"
+      />
+      <CompanyProfileSection />
+      <SupportBand />
+    </>
+  );
+}
+
+function SectorsPage() {
+  return (
+    <>
+      <PageIntroHero
+        breadcrumbLabel="Sectors"
+        eyebrow="Sectors We Serve"
+        heading="Facility Management"
+        headingAccent="Across Diverse Sectors"
+        description={
+          <>
+            Kargar delivers{' '}
+            <Link to="/services" style={{ color: "#A74423", fontWeight: 600, textDecoration: "underline", textUnderlineOffset: "2px" }}>facility management solutions</Link>{' '}
+            across IT parks, manufacturing plants, corporate offices, healthcare facilities, retail spaces, and more — each supported with sector-specific service standards.
+          </>
+        }
+        image="/images/page/services-hero.webp"
+      />
+      <IndustriesSection />
+      <SupportBand />
+    </>
+  );
+}
+
+function SupportPage() {
+  return (
+    <>
+      <PageIntroHero
+        breadcrumbLabel="Support"
+        eyebrow="Support"
+        heading="Facility Support"
+        headingAccent="You Can Rely On"
+        description={
+          <>
+            Our support team coordinates{' '}
+            <Link to="/services/soft-services/housekeeping" style={{ color: "#A74423", fontWeight: 600, textDecoration: "underline", textUnderlineOffset: "2px" }}>housekeeping</Link>
+            , security, and maintenance service requests, with fast response times and expert follow-through from request to resolution.
+          </>
+        }
+        image="/images/page/hero-building.webp"
+      />
+      <div className="kb-container kb-contact-highlights" style={{ paddingTop: '3rem', paddingBottom: '1rem' }}>
+        {contactHighlights.map(({ title, text, icon: Icon }) => (
+          <article key={title}>
+            <span><Icon size={24} /></span>
+            <div><strong>{title}</strong><small>{text}</small></div>
+          </article>
+        ))}
+      </div>
+      <SupportBand />
+    </>
+  );
+}
+
 export function KargarSinglePage() {
   const { pathname } = useLocation();
 
-  useEffect(() => {
-    const target = routeSectionMap[pathname];
-    if (!target) return;
-    window.requestAnimationFrame(() => {
-      document.getElementById(target)?.scrollIntoView({ behavior: 'auto', block: 'start' });
-    });
-  }, [pathname]);
-
   const isServices = pathname === '/services';
   const isContact = pathname === '/contact-us' || pathname === '/contact';
+  const isCompanyProfile = pathname === '/company-profile';
+  const isSectors = pathname === '/sectors';
+  const isSupport = pathname === '/support';
 
   // /contact is a legacy alias for /contact-us (redirected at the edge in production);
   // canonicalize both to the same registry entry and URL so the SPA never emits duplicate metadata.
@@ -725,7 +815,12 @@ export function KargarSinglePage() {
       />
       <Header activePath={pathname} />
       <main>
-        {isContact ? <ContactPage /> : isServices ? <ServicesPage /> : <HomePage />}
+        {isContact ? <ContactPage />
+          : isServices ? <ServicesPage />
+          : isCompanyProfile ? <CompanyProfilePage />
+          : isSectors ? <SectorsPage />
+          : isSupport ? <SupportPage />
+          : <HomePage />}
       </main>
       <Footer />
     </div>

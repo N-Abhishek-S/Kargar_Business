@@ -41,6 +41,15 @@ export const softServices: Record<string, Service> = {
       { title: 'Trained Personnel', description: 'Rigorous training in hospitality and hygiene.', iconKey: 'users' },
       { title: 'Quality Assurance', description: 'Regular unannounced inspections by supervisors.', iconKey: 'check-circle' }
     ],
+    industries: [
+      { title: 'Corporate Offices', iconKey: 'building' },
+      { title: 'IT Parks', iconKey: 'building-2' },
+      { title: 'Healthcare', iconKey: 'plus-square' },
+      { title: 'Retail & Malls', iconKey: 'shopping-bag' },
+      { title: 'Hotels & Hospitality', iconKey: 'bed' },
+      { title: 'Warehouses', iconKey: 'package' },
+      { title: 'Manufacturing', iconKey: 'factory' }
+    ],
     faqs: [
       { question: 'Does Kargar provide housekeeping services in Pune?', answer: 'Yes. Kargar Business Services is based in Baner, Pune, and provides professional housekeeping services for corporate offices and commercial facilities across the city.' },
       { question: 'Does Kargar provide housekeeping staff for corporate offices?', answer: 'Yes, we provide trained housekeeping staff for corporate offices, commercial facilities, and workplace environments, with regular supervision and quality checks.' },

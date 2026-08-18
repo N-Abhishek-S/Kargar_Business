@@ -23,6 +23,13 @@ export const serviceCategories: Record<string, Category> = {
       { value: '150+', label: 'Engineers' },
       { value: '99%', label: 'SLA Compliance' },
     ],
+    industries: [
+      { title: 'Corporate Offices', iconKey: 'building' },
+      { title: 'IT Parks', iconKey: 'building-2' },
+      { title: 'Manufacturing', iconKey: 'factory' },
+      { title: 'Warehouses', iconKey: 'package' },
+      { title: 'Retail & Malls', iconKey: 'shopping-bag' },
+    ],
   },
   soft: {
     id: 'soft',
@@ -44,6 +51,14 @@ export const serviceCategories: Record<string, Category> = {
       { value: '500+', label: 'Trained Staff' },
       { value: '5M+', label: 'Sq. Ft. Managed' },
       { value: '24/7', label: 'Support Available' },
+    ],
+    industries: [
+      { title: 'Corporate Offices', iconKey: 'building' },
+      { title: 'IT Parks', iconKey: 'building-2' },
+      { title: 'Healthcare', iconKey: 'plus-square' },
+      { title: 'Retail & Malls', iconKey: 'shopping-bag' },
+      { title: 'Hotels & Hospitality', iconKey: 'bed' },
+      { title: 'Warehouses', iconKey: 'package' },
     ],
   },
 };

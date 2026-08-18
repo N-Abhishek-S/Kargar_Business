@@ -22,6 +22,8 @@ import { ScrollToTop } from '@/components/layout/ScrollToTop';
 import { Analytics } from '@/components/Analytics';
 import { GlobalCameraModal } from '@/media-sdk/capture-ui/GlobalCameraModal';
 
+import { PrivacyPolicyPage } from '@/pages/PrivacyPolicyPage';
+
 /**
  * Root application component.
  * - HomePage is eagerly loaded (main content)
@@ -43,6 +45,7 @@ export default function App() {
           <Route path="/company-profile" element={<KargarSinglePage />} />
           <Route path="/support" element={<KargarSinglePage />} />
           <Route path="/contact-us" element={<KargarSinglePage />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
           <Route path="/admin/login" element={<AdminLoginPage />} />
           <Route path="/admin/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/admin/update-password" element={<UpdatePasswordPage />} />

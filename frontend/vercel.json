@@ -31,6 +31,10 @@
       "destination": "/index.html"
     },
     {
+      "source": "/privacy-policy",
+      "destination": "/index.html"
+    },
+    {
       "source": "/services/hard-services",
       "destination": "/index.html"
     },
@@ -85,6 +89,16 @@
     {
       "source": "/about-us",
       "destination": "/company-profile",
+      "permanent": true
+    },
+    {
+      "source": "/category/services",
+      "destination": "/services",
+      "permanent": true
+    },
+    {
+      "source": "/amp",
+      "destination": "/",
       "permanent": true
     }
   ],

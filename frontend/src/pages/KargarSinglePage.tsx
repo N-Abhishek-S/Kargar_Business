@@ -156,7 +156,7 @@ function KargarButton({
   );
 }
 
-function Header({ activePath }: { activePath: string }) {
+export function Header({ activePath }: { activePath: string }) {
   const [isOpen, setIsOpen] = useState(false);
   const contactPage = activePath === '/contact' || activePath === '/contact-us';
   const { navigateToContact, buildContactUrl } = useContactNavigation();
@@ -637,7 +637,7 @@ function OperationsCard() {
   );
 }
 
-function Footer() {
+export function Footer() {
   const navigate = useNavigate();
   return (
     <footer className="kb-footer">

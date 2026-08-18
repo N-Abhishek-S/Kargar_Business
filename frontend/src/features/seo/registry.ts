@@ -72,6 +72,13 @@ export const seoRegistry: Record<string, RouteSEOEntry> = {
       'Contact Kargar, a facility management company for corporate offices in Pune, Baner. Request a proposal for housekeeping, security, or maintenance services.',
     keywords: ['Facility Management Company for Corporate Offices'],
   },
+  '/privacy-policy': {
+    path: '/privacy-policy',
+    title: 'Website Privacy Policy',
+    description:
+      'Privacy Policy for Kargar Business Services explaining how user enquiry and contact information submitted through this website is collected and protected.',
+    keywords: ['Privacy Policy'],
+  },
   '/404': {
     path: '/404',
     title: 'Page Not Found',

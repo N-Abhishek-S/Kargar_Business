@@ -10,8 +10,8 @@
 
 export const SITE_URL = 'https://www.kargarbusinessservices.com';
 
-/** Static routes that render `KargarSinglePage` and are covered by `src/features/seo/registry.ts`. */
-export const STATIC_ROUTES = ['/', '/services', '/sectors', '/company-profile', '/support', '/contact-us'];
+/** Static routes that render pages and are covered by `src/features/seo/registry.ts`. */
+export const STATIC_ROUTES = ['/', '/services', '/sectors', '/company-profile', '/support', '/contact-us', '/privacy-policy'];
 
 /** Route prefixes that must never appear in the sitemap and must be disallowed in robots.txt. */
 export const DISALLOWED_PREFIXES = ['/admin'];
@@ -27,6 +27,8 @@ export const REDIRECTS: RedirectRule[] = [
   { from: '/contact', to: '/contact-us', permanent: true },
   { from: '/about', to: '/company-profile', permanent: true },
   { from: '/about-us', to: '/company-profile', permanent: true },
+  { from: '/category/services', to: '/services', permanent: true },
+  { from: '/amp', to: '/', permanent: true },
 ];
 
 /**

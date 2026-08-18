@@ -161,7 +161,7 @@ export function Footer() {
         <div className="flex flex-col items-center justify-between py-6 text-xs text-gray-500 md:flex-row">
           <p>&copy; {currentYear} {config.siteName}. All rights reserved.</p>
           <div className="mt-4 flex items-center gap-6 md:mt-0">
-            <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
+            <Link to="/privacy-policy" className="hover:text-white transition-colors">Privacy Policy</Link>
             <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
             <a href="#" className="hover:text-white transition-colors">Sitemap</a>
             <Link to="/admin/login" className="hover:text-white transition-colors">Admin Portal</Link>

@@ -14,6 +14,7 @@ import { fileURLToPath } from 'node:url';
 const PAGE_FILES = [
   'src/pages/KargarSinglePage.tsx',
   'src/pages/NotFoundPage.tsx',
+  'src/pages/PrivacyPolicyPage.tsx',
   'src/features/services/components/HeroSection.tsx',
 ];
 

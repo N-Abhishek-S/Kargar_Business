@@ -1,3 +1,4 @@
+import { Link } from 'react-router';
 import { useDocument } from '@/shared/hooks/useDocument';
 import { DocumentShowcaseCard } from './DocumentShowcaseCard';
 import { CompanyStatsList } from './CompanyStatsList';
@@ -26,8 +27,11 @@ export function CompanyProfileSection() {
           </h2>
           <p className="text-[18px] md:text-[18px] font-[400] text-[#4B5563] leading-relaxed">
             Kargar Business Services delivers integrated facility management across
-            soft services, hard services, security, housekeeping, and support operations
-            with trained teams and dependable processes.
+            soft services, hard services, security, and support operations, including{' '}
+            <Link to="/services/soft-services/housekeeping" className="text-[#A74423] font-[600] underline underline-offset-2 hover:text-[#8a3319] rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-[#A74423]">
+              professional housekeeping services in Pune
+            </Link>
+            , with trained teams and dependable processes.
           </p>
         </div>
 

@@ -7,20 +7,20 @@ export const softServices: Record<string, Service> = {
     categoryId: 'soft',
     slug: 'housekeeping',
     title: 'Housekeeping Services',
-    shortDescription: 'Professional cleaning and hygiene management for a spotless workspace.',
-    overview: 'Maintain a pristine and healthy environment with our professional housekeeping services. We provide comprehensive cleaning solutions tailored to your facility\'s unique needs. From daily janitorial tasks to specialized deep cleaning, our trained staff uses industry-leading equipment and eco-friendly products to ensure the highest standards of cleanliness and hygiene.',
+    shortDescription: 'Professional housekeeping services in Pune for corporate offices and commercial facilities.',
+    overview: 'Kargar Business Services provides professional housekeeping services in Pune for corporate offices, commercial facilities, and workplaces. We deliver comprehensive cleaning solutions tailored to each facility\'s needs, from daily janitorial housekeeping to specialized deep cleaning. Our trained housekeeping staff uses industry-leading equipment and eco-friendly products, backed by regular supervision, to maintain consistently high standards of cleanliness and hygiene.',
     iconKey: 'sparkles',
     imageKey: 'housekeeping',
     seo: {
-      title: 'Corporate Housekeeping Services',
-      description: 'Top-tier corporate housekeeping and deep cleaning services to maintain a pristine, hygienic workspace, backed by trained and police-verified staff.',
-      keywords: ['Corporate Housekeeping', 'Housekeeping Services', 'Deep Cleaning', 'Facility Hygiene']
+      title: 'Housekeeping Services in Pune',
+      description: 'Professional housekeeping services in Pune for corporate offices and commercial facilities, with trained staff, eco-friendly cleaning, and reliable supervision.',
+      keywords: ['Housekeeping Services in Pune', 'Corporate Housekeeping Services Pune', 'Office Housekeeping Services Pune', 'Commercial Housekeeping Pune']
     },
     serviceType: 'cleaning',
     layoutPreset: 'enterpriseCleaning',
     marketing: {
-      headline: 'A Pristine Workspace for Peak Productivity.',
-      summary: 'Ensure a spotless, hygienic, and welcoming environment for your employees and visitors.',
+      headline: 'Professional Housekeeping Services in Pune',
+      summary: 'Ensure a spotless, hygienic, and welcoming workplace for your employees and visitors, with trained housekeeping staff based in Pune.',
       ctaText: 'Get a Cleaning Audit'
     },
     operations: {
@@ -42,9 +42,12 @@ export const softServices: Record<string, Service> = {
       { title: 'Quality Assurance', description: 'Regular unannounced inspections by supervisors.', iconKey: 'check-circle' }
     ],
     faqs: [
+      { question: 'Does Kargar provide housekeeping services in Pune?', answer: 'Yes. Kargar Business Services is based in Baner, Pune, and provides professional housekeeping services for corporate offices and commercial facilities across the city.' },
+      { question: 'Does Kargar provide housekeeping staff for corporate offices?', answer: 'Yes, we provide trained housekeeping staff for corporate offices, commercial facilities, and workplace environments, with regular supervision and quality checks.' },
       { question: 'What is included in daily housekeeping?', answer: 'Tasks include emptying trash, vacuuming, mopping, cleaning restrooms, and wiping surfaces.' },
       { question: 'Do you use eco-friendly cleaning products?', answer: 'Yes, we prioritize the use of environmentally friendly and non-toxic cleaning solutions.' },
-      { question: 'Are your housekeeping staff background-checked?', answer: 'Absolutely. All our personnel undergo thorough police verification and background checks.' }
+      { question: 'Are your housekeeping staff background-checked?', answer: 'Absolutely. All our personnel undergo thorough police verification and background checks.' },
+      { question: 'How can I request housekeeping services in Pune?', answer: 'You can request a housekeeping service quote through our contact page, and our team will follow up to understand your facility\'s requirements.' }
     ],
     relationships: {
       relatedServices: ['security']

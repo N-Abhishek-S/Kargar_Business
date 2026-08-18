@@ -36,7 +36,7 @@ export const serviceImages: Record<string, ImageConfig> = {
   // Soft Services
   housekeeping: {
     ...(baseImages.housekeeping ?? defaultHeroImage),
-    alt: 'Corporate Housekeeping and Deep Cleaning',
+    alt: 'Housekeeping staff cleaning a corporate office lobby floor',
   },
   security: {
     ...(baseImages.security ?? defaultHeroImage),

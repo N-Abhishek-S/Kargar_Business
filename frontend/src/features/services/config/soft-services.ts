@@ -8,7 +8,7 @@ export const softServices: Record<string, Service> = {
     slug: 'housekeeping',
     title: 'Housekeeping Services',
     shortDescription: 'Professional housekeeping services in Pune for corporate offices and commercial facilities.',
-    overview: 'Kargar Business Services provides professional housekeeping services in Pune for corporate offices, commercial facilities, and workplaces. We deliver comprehensive cleaning solutions tailored to each facility\'s needs, from daily janitorial housekeeping to specialized deep cleaning. Our trained housekeeping staff uses industry-leading equipment and eco-friendly products, backed by regular supervision, to maintain consistently high standards of cleanliness and hygiene.',
+    overview: 'Kargar Business Services provides professional housekeeping services in Pune for corporate offices, commercial facilities, and workplaces. We deliver comprehensive cleaning solutions tailored to each facility\'s needs, from daily janitorial housekeeping to specialized deep cleaning. Our trained housekeeping staff uses industry-leading equipment and eco-friendly products, backed by regular supervision, to maintain consistently high standards of cleanliness and hygiene. Based in Baner, Pune, our team supports office housekeeping for IT parks and corporate campuses, commercial housekeeping for retail and hospitality spaces, and industrial housekeeping for manufacturing plants and warehouses, with consistent standards across every environment.',
     iconKey: 'sparkles',
     imageKey: 'housekeeping',
     seo: {
@@ -21,7 +21,7 @@ export const softServices: Record<string, Service> = {
     marketing: {
       headline: 'Professional Housekeeping Services in Pune',
       summary: 'Ensure a spotless, hygienic, and welcoming workplace for your employees and visitors, with trained housekeeping staff based in Pune.',
-      ctaText: 'Get a Cleaning Audit'
+      ctaText: 'Request a Consultation'
     },
     operations: {
       scopeOfWork: [
@@ -36,6 +36,17 @@ export const softServices: Record<string, Service> = {
       ]
     },
     capabilities: ['police-verified', 'iso-compliance', 'sla-driven'],
+    compliance: [
+      { title: 'Verified Workforce', description: 'All housekeeping personnel undergo thorough police verification and background checks before deployment.', iconKey: 'shield-check' },
+      { title: 'ISO-Aligned Processes', description: 'Housekeeping operations follow ISO process guidelines for consistent quality standards.', iconKey: 'file-check' },
+      { title: 'Structured Service Delivery', description: 'Daily cleaning checklists and monthly hygiene reports provide measurable, deliverable-driven tracking.', iconKey: 'clipboard-check' }
+    ],
+    process: [
+      { step: 1, title: 'Enquiry & Consultation', description: 'Share your facility\'s housekeeping requirements through our contact page. Our team follows up to understand your site and cleaning needs.' },
+      { step: 2, title: 'Service Plan & Staff Deployment', description: 'We deploy trained housekeeping staff covering daily janitorial work, restroom hygiene, deep cleaning, and consumables management based on your facility.' },
+      { step: 3, title: 'Ongoing Supervision', description: 'Supervisors conduct regular unannounced inspections to maintain consistent quality standards.' },
+      { step: 4, title: 'Reporting & Quality Tracking', description: 'Cleaning activity is tracked through daily cleaning checklists and monthly hygiene reports.' }
+    ],
     whyChooseUs: [
       { title: 'Eco-Friendly', description: 'We use sustainable, non-toxic cleaning agents.', iconKey: 'leaf' },
       { title: 'Trained Personnel', description: 'Rigorous training in hospitality and hygiene.', iconKey: 'users' },
@@ -56,7 +67,8 @@ export const softServices: Record<string, Service> = {
       { question: 'What is included in daily housekeeping?', answer: 'Tasks include emptying trash, vacuuming, mopping, cleaning restrooms, and wiping surfaces.' },
       { question: 'Do you use eco-friendly cleaning products?', answer: 'Yes, we prioritize the use of environmentally friendly and non-toxic cleaning solutions.' },
       { question: 'Are your housekeeping staff background-checked?', answer: 'Absolutely. All our personnel undergo thorough police verification and background checks.' },
-      { question: 'How can I request housekeeping services in Pune?', answer: 'You can request a housekeeping service quote through our contact page, and our team will follow up to understand your facility\'s requirements.' }
+      { question: 'How can I request housekeeping services in Pune?', answer: 'You can request a housekeeping service quote through our contact page, and our team will follow up to understand your facility\'s requirements.' },
+      { question: 'Does Kargar provide commercial and industrial housekeeping services?', answer: 'Yes. Beyond corporate offices, our housekeeping teams support commercial facilities such as retail spaces and hotels, as well as industrial environments including manufacturing plants and warehouses.' }
     ],
     relationships: {
       relatedServices: ['security']

@@ -127,6 +127,7 @@ export interface OperationsData {
 export interface ServiceFeature {
   title: string;
   description: string;
+  iconKey?: string;
 }
 
 export interface ServiceProcessStep {
@@ -193,7 +194,7 @@ export interface Service extends BaseEntity {
   features?: ServiceFeature[];
   process?: ServiceProcessStep[];
   certifications?: string[];
-  compliance?: string[];
+  compliance?: ServiceFeature[];
   relationships?: Relationships;
   order: number;
 }

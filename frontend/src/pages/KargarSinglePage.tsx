@@ -748,7 +748,9 @@ function SectorsPage() {
           <>
             Kargar delivers{' '}
             <Link to="/services" style={{ color: "#A74423", fontWeight: 600, textDecoration: "underline", textUnderlineOffset: "2px" }}>facility management solutions</Link>{' '}
-            across IT parks, manufacturing plants, corporate offices, healthcare facilities, retail spaces, and more — each supported with sector-specific service standards.
+            across IT parks, manufacturing plants, corporate offices, healthcare facilities, retail spaces, and more, including{' '}
+            <Link to="/services/soft-services/housekeeping" style={{ color: "#A74423", fontWeight: 600, textDecoration: "underline", textUnderlineOffset: "2px" }}>corporate and industrial housekeeping services</Link>{' '}
+            — each supported with sector-specific service standards.
           </>
         }
         image="/images/page/services-hero.webp"

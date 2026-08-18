@@ -52,8 +52,8 @@ export const FeatureGridSection = memo(function FeatureGridSection({ entity, blo
       break;
     case 'compliance':
       items = serviceEntity.compliance || [];
-      title = 'Compliance & Standards';
-      eyebrow = 'Safety First';
+      title = 'Trust & Compliance';
+      eyebrow = 'Verified & Reliable';
       break;
     case 'scope':
       items = serviceEntity.operations?.scopeOfWork || [];
@@ -93,7 +93,7 @@ export const FeatureGridSection = memo(function FeatureGridSection({ entity, blo
             {items.map((item, i) => (
               <div key={i} className="flex items-start gap-4">
                 <div className="mt-1 flex-shrink-0 w-6 h-6 rounded-full bg-green-100 text-green-600 flex items-center justify-center">
-                   <LucideIcons.Check size={14} strokeWidth={3} />
+                   <LucideIcons.Check size={14} strokeWidth={3} aria-hidden="true" />
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-navy-900 mb-1">{item.title}</h3>
@@ -107,11 +107,11 @@ export const FeatureGridSection = memo(function FeatureGridSection({ entity, blo
       case 'list':
       case 'timeline':
         return (
-          <div className="max-w-3xl mx-auto space-y-8">
+          <ol className="max-w-3xl mx-auto space-y-8 list-none">
             {items.map((item, i) => (
-              <div key={i} className="flex gap-6">
+              <li key={i} className="flex gap-6">
                 <div className="flex flex-col items-center">
-                  <div className="w-10 h-10 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center font-bold">
+                  <div aria-hidden="true" className="w-10 h-10 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center font-bold">
                     {i + 1}
                   </div>
                   {i < items.length - 1 && <div className="w-px h-full bg-orange-100 my-2" />}
@@ -120,9 +120,9 @@ export const FeatureGridSection = memo(function FeatureGridSection({ entity, blo
                   <h3 className="text-xl font-bold text-navy-900 mb-2">{item.title}</h3>
                   {item.description && <p className="text-slate-600 leading-relaxed">{item.description}</p>}
                 </div>
-              </div>
+              </li>
             ))}
-          </div>
+          </ol>
         );
 
       case 'highlight':
@@ -146,7 +146,7 @@ export const FeatureGridSection = memo(function FeatureGridSection({ entity, blo
               return (
                 <div key={i} className="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm hover:shadow-lg transition-all duration-300 group">
                   <div className="w-14 h-14 bg-orange-50 text-orange-600 rounded-xl flex items-center justify-center mb-6 group-hover:bg-orange-600 group-hover:text-white transition-colors duration-300">
-                    <IconComponent size={28} />
+                    <IconComponent size={28} aria-hidden="true" />
                   </div>
                   <h3 className="text-xl font-bold text-navy-900 mb-3">{item.title}</h3>
                   {item.description && <p className="text-slate-600 leading-relaxed">{item.description}</p>}

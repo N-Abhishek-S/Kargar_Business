@@ -8,13 +8,13 @@ export const softServices: Record<string, Service> = {
     slug: 'housekeeping',
     title: 'Housekeeping Services',
     shortDescription: 'Professional housekeeping services in Pune for corporate offices and commercial facilities.',
-    overview: 'Kargar Business Services provides professional housekeeping services in Pune for corporate offices, commercial facilities, and workplaces. We deliver comprehensive cleaning solutions tailored to each facility\'s needs, from daily janitorial housekeeping to specialized deep cleaning. Our trained housekeeping staff uses industry-leading equipment and eco-friendly products, backed by regular supervision, to maintain consistently high standards of cleanliness and hygiene. Based in Baner, Pune, our team supports office housekeeping for IT parks and corporate campuses, commercial housekeeping for retail and hospitality spaces, and industrial housekeeping for manufacturing plants and warehouses, with consistent standards across every environment.',
+    overview: 'Kargar Business Services provides professional housekeeping services in Pune for corporate offices, commercial facilities, and workplaces. We deliver comprehensive cleaning solutions tailored to each facility\'s needs, from daily janitorial housekeeping to specialized deep cleaning. Our trained housekeeping staff uses industry-leading equipment and eco-friendly products, backed by regular supervision, to maintain consistently high standards of cleanliness and hygiene. Based in Baner, Pune, our team supports office housekeeping for IT parks and corporate campuses, commercial housekeeping for retail and hospitality spaces, and industrial housekeeping for manufacturing plants and warehouses, with consistent standards across every environment. We serve facilities across Pune and the wider Pune Metropolitan Region, including PCMC.',
     iconKey: 'sparkles',
     imageKey: 'housekeeping',
     seo: {
       title: 'Housekeeping Services in Pune',
       description: 'Professional housekeeping services in Pune for corporate offices and commercial facilities, with trained staff, eco-friendly cleaning, and reliable supervision.',
-      keywords: ['Housekeeping Services in Pune', 'Corporate Housekeeping Services Pune', 'Office Housekeeping Services Pune', 'Commercial Housekeeping Pune']
+      keywords: ['Housekeeping Services in Pune', 'Corporate Housekeeping Services Pune', 'Office Housekeeping Services Pune', 'Commercial Housekeeping Pune', 'Industrial Housekeeping Pune', 'Housekeeping Company Pune']
     },
     serviceType: 'cleaning',
     layoutPreset: 'enterpriseCleaning',
@@ -68,7 +68,9 @@ export const softServices: Record<string, Service> = {
       { question: 'Do you use eco-friendly cleaning products?', answer: 'Yes, we prioritize the use of environmentally friendly and non-toxic cleaning solutions.' },
       { question: 'Are your housekeeping staff background-checked?', answer: 'Absolutely. All our personnel undergo thorough police verification and background checks.' },
       { question: 'How can I request housekeeping services in Pune?', answer: 'You can request a housekeeping service quote through our contact page, and our team will follow up to understand your facility\'s requirements.' },
-      { question: 'Does Kargar provide commercial and industrial housekeeping services?', answer: 'Yes. Beyond corporate offices, our housekeeping teams support commercial facilities such as retail spaces and hotels, as well as industrial environments including manufacturing plants and warehouses.' }
+      { question: 'Does Kargar provide commercial and industrial housekeeping services?', answer: 'Yes. Beyond corporate offices, our housekeeping teams support commercial facilities such as retail spaces and hotels, as well as industrial environments including manufacturing plants and warehouses.' },
+      { question: 'Do you provide housekeeping services in PCMC and other parts of the Pune metropolitan region?', answer: 'Yes. Operating out of Baner, Pune, we serve corporate and industrial facilities across Pune and the wider Pune Metropolitan Region, including PCMC.' },
+      { question: 'What information do you need to prepare a housekeeping services proposal?', answer: 'Typically your facility type, site size, operating hours, and current staffing needs. Share these through our contact page and our team will follow up with a tailored proposal.' }
     ],
     relationships: {
       relatedServices: ['security']

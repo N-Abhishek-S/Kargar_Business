@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
 import { memo } from 'react';
+import { Link } from 'react-router';
 import { Container } from '@/components/ui/Container';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 import type { ServiceBlockProps } from '../registry/BlockRenderer';
@@ -97,7 +98,7 @@ export const CollectionSection = memo(function CollectionSection({ entity, block
              <SectionHeading title={title} eyebrow={eyebrow} align="center" className="mb-12" />
              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                {services.map((service) => (
-                 <a key={service.id} href={`/services/${service.categoryId}-services/${service.slug}`} className="group block bg-white rounded-2xl overflow-hidden border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+                 <Link key={service.id} to={`/services/${service.categoryId}-services/${service.slug}`} className="group block bg-white rounded-2xl overflow-hidden border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
                    <div className="p-8">
                      <div className="w-14 h-14 bg-navy-50 rounded-xl flex items-center justify-center text-navy-900 mb-6 group-hover:bg-navy-900 group-hover:text-white transition-colors">
                        <LucideIcons.Layers size={28} />
@@ -108,7 +109,7 @@ export const CollectionSection = memo(function CollectionSection({ entity, block
                        Learn More <LucideIcons.ArrowRight size={18} className="ml-1 group-hover:translate-x-1 transition-transform" />
                      </div>
                    </div>
-                 </a>
+                 </Link>
                ))}
              </div>
           </>

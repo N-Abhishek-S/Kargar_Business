@@ -15,6 +15,10 @@ export function buildOrganizationSchema() {
     name: config.siteName,
     url: config.siteUrl,
     logo: LOGO_URL,
+    sameAs: [
+      'https://in.linkedin.com/company/kargar',
+      'https://www.facebook.com/people/Kargar-Facility-and-Security-Services-PVT-LTD/100076064059281/',
+    ],
     contactPoint: {
       '@type': 'ContactPoint',
       telephone: '+91-8788726752',

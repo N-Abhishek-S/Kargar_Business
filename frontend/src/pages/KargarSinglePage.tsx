@@ -25,6 +25,7 @@ import {
   Send,
 } from 'lucide-react';
 import { BrandLogo } from '@/components/ui/BrandLogo';
+import { SocialLinks } from '@/components/ui/SocialLinks';
 import { OptimizedImage } from '@/components/ui/OptimizedImage';
 import { submitContactMessage } from '@/services/contact.service';
 import { ReviewsSection } from '@/features/reviews/components/ReviewsSection';
@@ -634,31 +635,53 @@ function OperationsCard() {
 export function Footer() {
   const navigate = useNavigate();
   return (
-    <footer className="kb-footer">
-      <div className="kb-container kb-footer__inner">
-        <div onDoubleClick={() => navigate('/admin/login')} className="cursor-pointer select-none">
-          <BrandLogo />
+    <footer className="bg-navy-950 text-gray-300 pt-8 pb-6 border-t border-navy-800/80">
+      <div className="kb-container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Main Footer Row: Brand Area (40-45%) & Social Media Area (55-60%) */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8 pb-6">
+          {/* Left Area: Logo & Fazier Badge */}
+          <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 shrink-0">
+            <div
+              onDoubleClick={() => navigate('/admin/login')}
+              className="cursor-pointer select-none max-w-[220px] sm:max-w-[250px] w-full bg-white p-2.5 rounded-lg shadow-sm"
+              aria-label="Kargar Admin Portal Trigger"
+            >
+              <BrandLogo className="w-full h-auto" />
+            </div>
+            <div className="hidden sm:block h-8 w-[1px] bg-navy-800" aria-hidden="true" />
+            <a
+              href="https://fazier.com/launches/www.kargarbusinessservices.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Kargar Business Services on Fazier"
+              className="inline-block transition-opacity hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-orange-500 rounded shrink-0"
+            >
+              <img
+                src="https://fazier.com/api/v1//public/badges/launch_badges.svg?badge_type=featured&theme=light"
+                width="200"
+                alt="Kargar Business Services on Fazier"
+                loading="lazy"
+                decoding="async"
+                className="max-w-[180px] sm:max-w-[200px] w-full h-auto flex-shrink-0"
+              />
+            </a>
+          </div>
+
+          {/* Right Area: Follow Us & Circular Social Media Icons */}
+          <div className="flex flex-col items-center lg:items-end">
+            <SocialLinks showHeading heading="FOLLOW US" align="center" />
+          </div>
         </div>
-        <div className="flex items-center justify-center my-2 md:my-0">
-          <a
-            href="https://fazier.com/launches/www.kargarbusinessservices.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="Kargar Business Services on Fazier"
-            className="inline-block transition-opacity hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-orange-500 rounded"
-          >
-            <img
-              src="https://fazier.com/api/v1//public/badges/launch_badges.svg?badge_type=featured&theme=light"
-              width="250"
-              alt="Kargar Business Services on Fazier"
-              loading="lazy"
-              decoding="async"
-              className="max-w-[250px] w-full h-auto flex-shrink-0"
-              style={{ maxWidth: '250px', width: '100%', height: 'auto' }}
-            />
-          </a>
+
+        {/* Full-width Divider */}
+        <div className="w-full h-[1px] bg-navy-800/80 my-2" aria-hidden="true" />
+
+        {/* Centered Copyright Section */}
+        <div className="pt-4 text-center text-xs text-gray-400 tracking-wide">
+          <p>
+            &copy; {new Date().getFullYear()} <span className="text-orange-500 font-medium">Kargar Business Services</span>. All rights reserved.
+          </p>
         </div>
-        <span>Copyright 2026 Kargar Business Services. All rights reserved.</span>
       </div>
     </footer>
   );
